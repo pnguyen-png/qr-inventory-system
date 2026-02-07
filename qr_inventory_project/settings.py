@@ -25,9 +25,7 @@ SECRET_KEY = 'django-insecure-i$u#wd8&dw#ns43=3@lk5k63f*ag+7(s!#bk&&en@5ph$_*b42
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '*']
-
-
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.railway.app', '.ngrok-free.dev', '*']
 # Application definition
 
 INSTALLED_APPS = [
@@ -37,11 +35,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'inventory',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ← ADD THIS LINE
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -117,3 +118,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 CORS_ALLOW_ALL_ORIGINS = True  # For development only
+CORS_ALLOW_ALL_CREDENTIALS = True
+
+# Static files configuration for production
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
