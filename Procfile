@@ -1,1 +1,1 @@
-web: python manage.py migrate --noinput && gunicorn qr_inventory_project.wsgi:application
+web: python3 manage.py migrate --noinput && python3 -m gunicorn qr_inventory_project.wsgi:application --bind 0.0.0.0:$PORT
