@@ -7,6 +7,6 @@
     "numReplicas": 1,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10,
-    "startCommand": "python3 manage.py migrate inventory zero --noinput || true && python3 manage.py migrate --noinput && python3 -m gunicorn qr_inventory_project.wsgi:application --bind 0.0.0.0:$PORT"
+    "startCommand": "python3 manage.py migrate --noinput && python3 manage.py shell -c \"import os; from django.contrib.auth import get_user_model; User=get_user_model(); u,created=User.objects.get_or_create(username=os.environ.get('DJANGO_SUPERUSER_USERNAME','admin')); u.is_staff=True; u.is_superuser=True; u.email=os.environ.get('DJANGO_SUPERUSER_EMAIL',''); u.set_password(os.environ.get('DJANGO_SUPERUSER_PASSWORD','StrongPass123')); u.save(); print('admin_bootstrap', 'created' if created else 'updated', u.username)\" && python3 -m gunicorn qr_inventory_project.wsgi:application --bind 0.0.0.0:$PORT"
   }
 }
