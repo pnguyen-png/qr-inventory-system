@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Inventory - Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+            min-height: 100vh;
+        }
+        .header {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 16px 24px;
+        }
+        .header h1 { font-size: 1.25rem; font-weight: 600; }
+        .header p { color: #94a3b8; font-size: 0.875rem; margin-top: 4px; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+
+        /* Summary cards */
+        .summary-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .summary-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .summary-card .number { font-size: 2rem; font-weight: 700; }
+        .summary-card .label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+        .c-total .number { color: #1a1a2e; }
+        .c-in .number { color: #16a34a; }
+        .c-out .number { color: #f59e0b; }
+        .c-damaged .number { color: #dc2626; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 16px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+        .tab.active { color: #1a1a2e; border-bottom-color: #2563eb; }
+        .tab:hover { color: #1a1a2e; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .filters input, .filters select {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: #fff;
+        }
+        .filters input { flex: 1; min-width: 200px; }
+
+        /* Table */
+        .table-wrap {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        thead { background: #f8fafc; }
+        th {
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        tr:hover td { background: #f8fafc; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .status-checked_in { background: #dcfce7; color: #166534; }
+        .status-checked_out { background: #fef3c7; color: #92400e; }
+        .status-tested { background: #dbeafe; color: #1e40af; }
+        .status-will_be_reused { background: #e0e7ff; color: #3730a3; }
+        .status-recycling { background: #fce7f3; color: #9d174d; }
+
+        .damage-yes { color: #dc2626; font-weight: 700; }
+        .damage-no { color: #16a34a; }
+
+        .desc-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .desc-cell:hover { white-space: normal; overflow: visible; }
+
+        .view-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .view-link:hover { text-decoration: underline; }
+
+        .empty-state {
+            padding: 60px 24px;
+            text-align: center;
+            color: #94a3b8;
+        }
+        .empty-state h3 { margin-bottom: 8px; color: #64748b; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>QR Inventory System</h1>
+        <p>Complete inventory overview - {{ items|length }} item{{ items|length|pluralize }}</p>
+    </div>
+
+    <div class="container">
+        <!-- Summary -->
+        <div class="summary-row">
+            <div class="summary-card c-total">
+                <div class="number">{{ items|length }}</div>
+                <div class="label">Total Items</div>
+            </div>
+            <div class="summary-card c-in">
+                <div class="number">{{ checked_in_count }}</div>
+                <div class="label">Checked In</div>
+            </div>
+            <div class="summary-card c-out">
+                <div class="number">{{ checked_out_count }}</div>
+                <div class="label">Checked Out</div>
+            </div>
+            <div class="summary-card c-damaged">
+                <div class="number">{{ damaged_count }}</div>
+                <div class="label">Damaged</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('all')">All Inventory</button>
+            <button class="tab" onclick="switchTab('checkedin')">Checked In</button>
+            <button class="tab" onclick="switchTab('checkedout')">Checked Out</button>
+            <button class="tab" onclick="switchTab('damaged')">Damaged</button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <input type="text" id="searchInput" placeholder="Search by manufacturer, pallet, location..." oninput="filterTable()">
+            <select id="statusFilter" onchange="filterTable()">
+                <option value="">All Statuses</option>
+                <option value="checked_in">Checked In</option>
+                <option value="checked_out">Checked Out</option>
+                <option value="tested">Tested</option>
+                <option value="will_be_reused">Will Be Reused</option>
+                <option value="recycling">Recycling</option>
+            </select>
+        </div>
+
+        <!-- Inventory Table -->
+        <div class="tab-content active" id="tab-all">
+            {% if items %}
+            <div class="table-wrap">
+                <table id="inventoryTable">
+                    <thead>
+                        <tr>
+                            <th>Manufacturer</th>
+                            <th>Pallet ID</th>
+                            <th>Box</th>
+                            <th>Contents</th>
+                            <th>Damage</th>
+                            <th>Location</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Updated</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr data-status="{{ item.status }}" data-damaged="{{ item.damaged|yesno:'true,false' }}"
+                            data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.location|lower }} {{ item.description|lower }}">
+                            <td>{{ item.manufacturer }}</td>
+                            <td>{{ item.pallet_id }}</td>
+                            <td>#{{ item.box_id }}</td>
+                            <td>{{ item.content }}</td>
+                            <td class="{% if item.damaged %}damage-yes{% else %}damage-no{% endif %}">
+                                {{ item.get_damaged_display }}
+                            </td>
+                            <td>{{ item.location }}</td>
+                            <td class="desc-cell" title="{{ item.description }}">{{ item.description|truncatewords:8 }}</td>
+                            <td><span class="status-badge status-{{ item.status }}">{{ item.get_status_display }}</span></td>
+                            <td>{{ item.updated_at|date:"M d, H:i" }}</td>
+                            <td><a class="view-link" href="/scan/?data={{ item.barcode_payload|urlencode }}">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <h3>No inventory items yet</h3>
+                <p>Run the Excel script to populate inventory from your Microsoft Form responses.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const statusFilter = document.getElementById('statusFilter');
+            const rows = document.querySelectorAll('#inventoryTable tbody tr');
+
+            if (tab === 'all') {
+                statusFilter.value = '';
+            } else if (tab === 'checkedin') {
+                statusFilter.value = 'checked_in';
+            } else if (tab === 'checkedout') {
+                statusFilter.value = 'checked_out';
+            } else if (tab === 'damaged') {
+                statusFilter.value = '';
+            }
+
+            rows.forEach(row => {
+                let show = true;
+                if (tab === 'checkedin' && row.dataset.status !== 'checked_in') show = false;
+                if (tab === 'checkedout' && row.dataset.status !== 'checked_out') show = false;
+                if (tab === 'damaged' && row.dataset.damaged !== 'true') show = false;
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        function filterTable() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            const rows = document.querySelectorAll('#inventoryTable tbody tr');
+
+            rows.forEach(row => {
+                const matchSearch = !search || row.dataset.search.includes(search);
+                const matchStatus = !status || row.dataset.status === status;
+                row.style.display = (matchSearch && matchStatus) ? '' : 'none';
+            });
+
+            // Reset tab highlights
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.tab').classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import urllib.parse
 from .models import InventoryItem
@@ -67,6 +68,7 @@ def scanner_landing(request):
         })
 
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def update_status(request):
     """HTMX endpoint to update item status"""
@@ -87,8 +89,17 @@ def update_status(request):
             return JsonResponse({'success': False, 'error': 'Invalid status'}, status=400)
         
         item = get_object_or_404(InventoryItem, id=item_id)
+        old_status = item.status
         item.status = status_value
         item.save()
+
+        # Record status change history
+        from .models import StatusHistory
+        StatusHistory.objects.create(
+            item=item,
+            old_status=old_status,
+            new_status=status_value,
+        )
         
         return JsonResponse({
             'success': True,
@@ -135,12 +146,19 @@ def item_api(request):
 
 
 def dashboard(request):
-    """Dashboard view - placeholder"""
-    items = InventoryItem.objects.all()
-    return render(request, 'inventory/dashboard.html', {'items': items})
+    """Dashboard view with full inventory listing"""
+    items = InventoryItem.objects.all().order_by('-updated_at')
+    return render(request, 'inventory/dashboard.html', {
+        'items': items,
+        'checked_in_count': items.filter(status='checked_in').count(),
+        'checked_out_count': items.filter(status='checked_out').count(),
+        'damaged_count': items.filter(damaged=True).count(),
+    })
 
 
 def item_history(request, item_id):
-    """Item history view - placeholder"""
+    """Item history view"""
+    from .models import StatusHistory
     item = get_object_or_404(InventoryItem, id=item_id)
-    return render(request, 'inventory/item_history.html', {'item': item})
+    history = StatusHistory.objects.filter(item=item).order_by('-changed_at')
+    return render(request, 'inventory/item_history.html', {'item': item, 'history': history})

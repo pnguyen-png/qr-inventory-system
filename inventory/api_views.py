@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
+import os
 import urllib.parse
 from .models import InventoryItem
 
@@ -58,7 +59,8 @@ def create_item_from_excel(request):
         
         # Build scanner URL
         encoded_payload = urllib.parse.quote(barcode_payload)
-        scanner_url = f"http://127.0.0.1:8000/scan/?data={encoded_payload}"
+        base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
+        scanner_url = f"{base_url}/scan/?data={encoded_payload}"
         
         # Build QR code URL
         qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(scanner_url)}"
@@ -185,7 +187,8 @@ def bulk_create_items(request):
                 
                 barcode_payload = f"MFR={manufacturer} | PALLET={pallet_id} | BOX={box_id}"
                 encoded_payload = urllib.parse.quote(barcode_payload)
-                scanner_url = f"http://127.0.0.1:8000/scan/?data={encoded_payload}"
+                base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
+                scanner_url = f"{base_url}/scan/?data={encoded_payload}"
                 qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(scanner_url)}"
                 
                 # Check if exists

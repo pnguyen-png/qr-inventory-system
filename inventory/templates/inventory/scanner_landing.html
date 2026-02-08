@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Inventory - Item Details</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+            min-height: 100vh;
+        }
+        .header {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 { font-size: 1.25rem; font-weight: 600; }
+        .header a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+        .header a:hover { color: #fff; }
+        .container { max-width: 640px; margin: 24px auto; padding: 0 16px; }
+
+        .error-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 40px 24px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .error-card h2 { color: #dc2626; margin-bottom: 8px; }
+        .error-card p { color: #64748b; }
+
+        .item-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .item-card-header {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 20px 24px;
+        }
+        .item-card-header h2 { font-size: 1.125rem; margin-bottom: 4px; }
+        .item-card-header .subtitle { color: #94a3b8; font-size: 0.875rem; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .status-checked_in { background: #dcfce7; color: #166534; }
+        .status-checked_out { background: #fef3c7; color: #92400e; }
+        .status-tested { background: #dbeafe; color: #1e40af; }
+        .status-will_be_reused { background: #e0e7ff; color: #3730a3; }
+        .status-recycling { background: #fce7f3; color: #9d174d; }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: #e5e7eb;
+        }
+        .detail-cell {
+            background: #fff;
+            padding: 14px 20px;
+        }
+        .detail-cell label {
+            display: block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        .detail-cell .value { font-size: 0.95rem; font-weight: 500; }
+        .damage-yes { color: #dc2626; font-weight: 700; }
+        .damage-no { color: #16a34a; }
+
+        .description-section {
+            padding: 16px 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .description-section label {
+            display: block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+        .description-section p { font-size: 0.95rem; line-height: 1.5; color: #374151; }
+
+        .actions {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .actions h3 { font-size: 0.875rem; margin-bottom: 12px; color: #374151; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-checkout { background: #f59e0b; color: #fff; }
+        .btn-checkin { background: #16a34a; color: #fff; }
+        .btn-tested { background: #2563eb; color: #fff; }
+        .btn-reuse { background: #6366f1; color: #fff; }
+        .btn-recycle { background: #ec4899; color: #fff; }
+
+        .status-message {
+            margin-top: 12px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            display: none;
+        }
+        .status-message.success { display: block; background: #dcfce7; color: #166534; }
+        .status-message.error { display: block; background: #fee2e2; color: #991b1b; }
+
+        .last-updated {
+            padding: 12px 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-align: right;
+        }
+
+        .nav-links { margin-top: 16px; text-align: center; }
+        .nav-links a {
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 0.875rem;
+            margin: 0 12px;
+        }
+        .nav-links a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>QR Inventory System</h1>
+        <a href="/dashboard/">View Full Inventory</a>
+    </div>
+
+    <div class="container">
+        {% if error %}
+        <div class="error-card">
+            <h2>Item Not Found</h2>
+            <p>{{ error }}</p>
+        </div>
+        <div class="nav-links">
+            <a href="/dashboard/">Browse All Inventory</a>
+        </div>
+
+        {% elif item %}
+        <div class="item-card">
+            <div class="item-card-header">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h2>{{ item.manufacturer }} - Box {{ item.box_id }}</h2>
+                        <div class="subtitle">Pallet: {{ item.pallet_id }}</div>
+                    </div>
+                    <span class="status-badge status-{{ item.status }}" id="statusBadge">
+                        {{ item.get_status_display }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-cell">
+                    <label>Manufacturer / Supplier</label>
+                    <div class="value">{{ item.manufacturer }}</div>
+                </div>
+                <div class="detail-cell">
+                    <label>Pallet ID</label>
+                    <div class="value">{{ item.pallet_id }}</div>
+                </div>
+                <div class="detail-cell">
+                    <label>Box ID</label>
+                    <div class="value">#{{ item.box_id }}</div>
+                </div>
+                <div class="detail-cell">
+                    <label>Contents (qty)</label>
+                    <div class="value">{{ item.content }}</div>
+                </div>
+                <div class="detail-cell">
+                    <label>Receiving Location</label>
+                    <div class="value">{{ item.location }}</div>
+                </div>
+                <div class="detail-cell">
+                    <label>Damage Reported</label>
+                    <div class="value {% if item.damaged %}damage-yes{% else %}damage-no{% endif %}">
+                        {{ item.get_damaged_display }}
+                    </div>
+                </div>
+            </div>
+
+            {% if item.description %}
+            <div class="description-section">
+                <label>Brief Description of Shipment</label>
+                <p>{{ item.description }}</p>
+            </div>
+            {% endif %}
+
+            <div class="actions">
+                <h3>Update Status</h3>
+                <div class="btn-group">
+                    <button class="btn btn-checkout" onclick="updateStatus({{ item.id }}, 'Checked Out')">Check Out</button>
+                    <button class="btn btn-checkin" onclick="updateStatus({{ item.id }}, 'Checked In')">Check In</button>
+                    <button class="btn btn-tested" onclick="updateStatus({{ item.id }}, 'Tested')">Tested</button>
+                    <button class="btn btn-reuse" onclick="updateStatus({{ item.id }}, 'Will Be Reused')">Will Be Reused</button>
+                    <button class="btn btn-recycle" onclick="updateStatus({{ item.id }}, 'Recycling')">Recycling</button>
+                </div>
+                <div class="status-message" id="statusMessage"></div>
+            </div>
+
+            <div class="last-updated" id="lastUpdated">
+                Last updated: {{ item.updated_at|date:"M d, Y H:i" }}
+            </div>
+        </div>
+
+        <div class="nav-links">
+            <a href="/dashboard/">View Full Inventory</a>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if item %}
+    <script>
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length === 2) return parts.pop().split(";").shift();
+            return "";
+        }
+
+        async function updateStatus(itemId, newStatus) {
+            const msgEl = document.getElementById('statusMessage');
+            msgEl.className = 'status-message';
+            msgEl.style.display = 'none';
+
+            document.querySelectorAll('.btn-group .btn').forEach(b => b.disabled = true);
+
+            try {
+                const formData = new FormData();
+                formData.append('item_id', itemId);
+                formData.append('status', newStatus);
+
+                const resp = await fetch('/api/update-status/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    body: formData
+                });
+
+                const data = await resp.json();
+
+                if (data.success) {
+                    msgEl.textContent = 'Status updated to: ' + data.status;
+                    msgEl.className = 'status-message success';
+
+                    const statusMap = {
+                        'Checked In': 'checked_in',
+                        'Checked Out': 'checked_out',
+                        'Tested': 'tested',
+                        'Will Be Reused': 'will_be_reused',
+                        'Recycling': 'recycling'
+                    };
+                    const badge = document.getElementById('statusBadge');
+                    const key = statusMap[data.status] || 'checked_in';
+                    badge.className = 'status-badge status-' + key;
+                    badge.textContent = data.status;
+
+                    document.getElementById('lastUpdated').textContent = 'Last updated: ' + data.last_updated;
+                } else {
+                    msgEl.textContent = 'Error: ' + (data.error || 'Unknown error');
+                    msgEl.className = 'status-message error';
+                }
+            } catch (err) {
+                msgEl.textContent = 'Network error. Please try again.';
+                msgEl.className = 'status-message error';
+            }
+
+            document.querySelectorAll('.btn-group .btn').forEach(b => b.disabled = false);
+        }
+    </script>
+    {% endif %}
+</body>
+</html>

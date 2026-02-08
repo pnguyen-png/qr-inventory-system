@@ -98,11 +98,7 @@ else:
     }
 
 
-def _is_postgres(url: str) -> bool:
-    return url.startswith(("postgresql://", "postgres://"))
-
-# If running on Railway, do NOT silently fall back to sqlite.
-# Railway injects multiple env vars; any one of these is usually present.
+# Validate Railway has Postgres attached
 IS_RAILWAY = any(
     os.environ.get(k)
     for k in (
@@ -113,28 +109,11 @@ IS_RAILWAY = any(
     )
 )
 
-if IS_RAILWAY:
-    if not _is_postgres(database_url):
-        raise RuntimeError(
-            "DATABASE_URL is not a Postgres URL in Railway. "
-            "Attach a Railway Postgres plugin to THIS service and ensure DATABASE_URL is injected."
-        )
-    database_url = _normalize_db_url(database_url)
-    DATABASES = {
-        "default": dj_database_url.parse(database_url, conn_max_age=600, ssl_require=True)
-    }
-else:
-    # Local dev: prefer Postgres if provided, else sqlite
-    if _is_postgres(database_url):
-        database_url = _normalize_db_url(database_url)
-        DATABASES = {"default": dj_database_url.parse(database_url, conn_max_age=600)}
-    else:
-        DATABASES = {
-            "default": {
-                "ENGINE": "django.db.backends.sqlite3",
-                "NAME": BASE_DIR / "db.sqlite3",
-            }
-        }
+if IS_RAILWAY and not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL is not set on Railway. "
+        "Attach a Railway Postgres plugin and ensure DATABASE_URL is injected."
+    )
 
 # -----------------------------------------------------------------------------
 # Auth / i18n
