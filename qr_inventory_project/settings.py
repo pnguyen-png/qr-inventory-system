@@ -123,3 +123,9 @@ CORS_ALLOW_ALL_CREDENTIALS = True
 # Static files configuration for production
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# CSRF Trusted Origins for Railway
+CSRF_TRUSTED_ORIGINS = [
+    'https://web-production-57c20.up.railway.app',
+    'https://*.railway.app',
+]
