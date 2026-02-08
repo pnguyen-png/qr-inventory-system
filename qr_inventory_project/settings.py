@@ -86,6 +86,11 @@ WSGI_APPLICATION = 'qr_inventory_project.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 # Use PostgreSQL on Railway (via DATABASE_URL), SQLite locally
+
+# Database
+# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+
+# Use PostgreSQL on Railway (via DATABASE_URL), SQLite locally
 database_url = os.environ.get('DATABASE_URL')
 
 if database_url:
@@ -104,7 +109,6 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
