@@ -21,46 +21,30 @@
             justify-content: space-between;
         }
         .header h1 { font-size: 1.25rem; font-weight: 600; }
-        .header a {
-            color: #94a3b8;
-            text-decoration: none;
-            font-size: 0.875rem;
-        }
+        .header a { color: #94a3b8; text-decoration: none; font-size: 0.875rem; }
         .header a:hover { color: #fff; }
-        .container { max-width: 640px; margin: 24px auto; padding: 0 16px; }
+        .container { max-width: 700px; margin: 24px auto; padding: 0 16px; }
 
         .error-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 40px 24px;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: #fff; border-radius: 12px; padding: 40px 24px;
+            text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .error-card h2 { color: #dc2626; margin-bottom: 8px; }
         .error-card p { color: #64748b; }
 
         .item-card {
-            background: #fff;
-            border-radius: 12px;
-            overflow: hidden;
+            background: #fff; border-radius: 12px; overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .item-card-header {
-            background: #1a1a2e;
-            color: #fff;
-            padding: 20px 24px;
+            background: #1a1a2e; color: #fff; padding: 20px 24px;
         }
         .item-card-header h2 { font-size: 1.125rem; margin-bottom: 4px; }
         .item-card-header .subtitle { color: #94a3b8; font-size: 0.875rem; }
 
         .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            display: inline-block; padding: 4px 12px; border-radius: 999px;
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
         }
         .status-checked_in { background: #dcfce7; color: #166534; }
         .status-checked_out { background: #fef3c7; color: #92400e; }
@@ -69,55 +53,39 @@
         .status-recycling { background: #fce7f3; color: #9d174d; }
 
         .detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1px;
-            background: #e5e7eb;
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 1px; background: #e5e7eb;
         }
-        .detail-cell {
-            background: #fff;
-            padding: 14px 20px;
-        }
+        .detail-cell { background: #fff; padding: 14px 20px; }
         .detail-cell label {
-            display: block;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748b;
-            margin-bottom: 4px;
+            display: block; font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: 0.05em; color: #64748b; margin-bottom: 4px;
         }
         .detail-cell .value { font-size: 0.95rem; font-weight: 500; }
         .damage-yes { color: #dc2626; font-weight: 700; }
         .damage-no { color: #16a34a; }
 
         .description-section {
-            padding: 16px 20px;
-            border-top: 1px solid #e5e7eb;
+            padding: 16px 20px; border-top: 1px solid #e5e7eb;
         }
         .description-section label {
-            display: block;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748b;
-            margin-bottom: 6px;
+            display: block; font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: 0.05em; color: #64748b; margin-bottom: 6px;
         }
         .description-section p { font-size: 0.95rem; line-height: 1.5; color: #374151; }
 
-        .actions {
-            padding: 20px;
-            border-top: 1px solid #e5e7eb;
+        .actions { padding: 20px; border-top: 1px solid #e5e7eb; }
+        .actions h3 { font-size: 0.875rem; margin-bottom: 8px; color: #374151; }
+        .notes-input {
+            width: 100%; padding: 8px 12px; border: 1px solid #d1d5db;
+            border-radius: 8px; font-size: 0.875rem; margin-bottom: 12px;
+            font-family: inherit; resize: vertical; min-height: 36px;
         }
-        .actions h3 { font-size: 0.875rem; margin-bottom: 12px; color: #374151; }
+        .notes-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
         .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
         .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.15s;
+            padding: 10px 20px; border: none; border-radius: 8px;
+            font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
         }
         .btn:hover { opacity: 0.85; }
         .btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -128,30 +96,69 @@
         .btn-recycle { background: #ec4899; color: #fff; }
 
         .status-message {
-            margin-top: 12px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            display: none;
+            margin-top: 12px; padding: 10px 14px; border-radius: 8px;
+            font-size: 0.875rem; display: none;
         }
         .status-message.success { display: block; background: #dcfce7; color: #166534; }
         .status-message.error { display: block; background: #fee2e2; color: #991b1b; }
 
         .last-updated {
-            padding: 12px 20px;
-            border-top: 1px solid #e5e7eb;
-            font-size: 0.75rem;
-            color: #94a3b8;
-            text-align: right;
+            padding: 12px 20px; border-top: 1px solid #e5e7eb;
+            font-size: 0.75rem; color: #94a3b8; text-align: right;
+        }
+
+        /* Status Log */
+        .log-section {
+            background: #fff; border-radius: 12px; margin-top: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;
+        }
+        .log-section-header {
+            padding: 16px 20px; border-bottom: 1px solid #e5e7eb;
+            font-size: 0.875rem; font-weight: 600; color: #374151;
+        }
+        .log-entry {
+            padding: 14px 20px; border-bottom: 1px solid #f1f5f9;
+        }
+        .log-entry:last-child { border-bottom: none; }
+        .log-entry-top {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .log-arrow { color: #94a3b8; font-size: 0.8rem; }
+        .log-date { color: #94a3b8; font-size: 0.75rem; margin-left: auto; }
+        .log-notes {
+            margin-top: 8px; font-size: 0.85rem; color: #475569;
+            line-height: 1.4;
+        }
+        .log-notes-empty {
+            margin-top: 6px; font-size: 0.8rem; color: #94a3b8; font-style: italic;
+        }
+        .log-notes-edit {
+            margin-top: 8px; display: flex; gap: 8px; align-items: flex-start;
+        }
+        .log-notes-input {
+            flex: 1; padding: 6px 10px; border: 1px solid #d1d5db;
+            border-radius: 6px; font-size: 0.8rem; font-family: inherit;
+            resize: vertical; min-height: 32px;
+        }
+        .log-notes-input:focus { outline: none; border-color: #2563eb; }
+        .btn-save-note {
+            padding: 6px 14px; background: #2563eb; color: #fff;
+            border: none; border-radius: 6px; font-size: 0.75rem;
+            font-weight: 600; cursor: pointer; white-space: nowrap;
+        }
+        .btn-save-note:hover { opacity: 0.85; }
+        .btn-edit-note {
+            padding: 4px 10px; background: #f1f5f9; color: #475569;
+            border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.7rem;
+            cursor: pointer; margin-left: 8px;
+        }
+        .btn-edit-note:hover { background: #e2e8f0; }
+        .log-empty {
+            padding: 30px 20px; text-align: center; color: #94a3b8; font-size: 0.875rem;
         }
 
         .nav-links { margin-top: 16px; text-align: center; }
-        .nav-links a {
-            color: #2563eb;
-            text-decoration: none;
-            font-size: 0.875rem;
-            margin: 0 12px;
-        }
+        .nav-links a { color: #2563eb; text-decoration: none; font-size: 0.875rem; margin: 0 12px; }
         .nav-links a:hover { text-decoration: underline; }
     </style>
 </head>
@@ -223,6 +230,7 @@
 
             <div class="actions">
                 <h3>Update Status</h3>
+                <textarea class="notes-input" id="statusNotes" placeholder="Add notes for this status change (optional)..." rows="1"></textarea>
                 <div class="btn-group">
                     <button class="btn btn-checkout" onclick="updateStatus({{ item.id }}, 'Checked Out')">Check Out</button>
                     <button class="btn btn-checkin" onclick="updateStatus({{ item.id }}, 'Checked In')">Check In</button>
@@ -238,6 +246,42 @@
             </div>
         </div>
 
+        <!-- Status History Log -->
+        <div class="log-section">
+            <div class="log-section-header">Status History Log</div>
+            <div id="historyLog">
+                {% for entry in history %}
+                <div class="log-entry" id="log-{{ entry.id }}">
+                    <div class="log-entry-top">
+                        <span class="status-badge status-{{ entry.old_status }}">{{ entry.old_status_label }}</span>
+                        <span class="log-arrow">&rarr;</span>
+                        <span class="status-badge status-{{ entry.new_status }}">{{ entry.new_status_label }}</span>
+                        <span class="log-date">{{ entry.changed_at|date:"M d, Y H:i:s" }}</span>
+                    </div>
+                    <div id="notes-display-{{ entry.id }}">
+                        {% if entry.notes %}
+                        <div class="log-notes">
+                            {{ entry.notes }}
+                            <button class="btn-edit-note" onclick="showEditNotes({{ entry.id }}, this)">Edit</button>
+                        </div>
+                        {% else %}
+                        <div class="log-notes-empty">
+                            No notes
+                            <button class="btn-edit-note" onclick="showEditNotes({{ entry.id }}, this)">Add</button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div id="notes-edit-{{ entry.id }}" style="display:none;" class="log-notes-edit">
+                        <textarea class="log-notes-input" id="notes-input-{{ entry.id }}">{{ entry.notes }}</textarea>
+                        <button class="btn-save-note" onclick="saveNotes({{ entry.id }})">Save</button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="log-empty">No status changes recorded yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+
         <div class="nav-links">
             <a href="/dashboard/">View Full Inventory</a>
         </div>
@@ -246,15 +290,17 @@
 
     {% if item %}
     <script>
-        function getCookie(name) {
-            let value = "; " + document.cookie;
-            let parts = value.split("; " + name + "=");
-            if (parts.length === 2) return parts.pop().split(";").shift();
-            return "";
-        }
+        const STATUS_MAP = {
+            'Checked In': 'checked_in',
+            'Checked Out': 'checked_out',
+            'Tested': 'tested',
+            'Will Be Reused': 'will_be_reused',
+            'Recycling': 'recycling'
+        };
 
         async function updateStatus(itemId, newStatus) {
             const msgEl = document.getElementById('statusMessage');
+            const notesEl = document.getElementById('statusNotes');
             msgEl.className = 'status-message';
             msgEl.style.display = 'none';
 
@@ -264,10 +310,10 @@
                 const formData = new FormData();
                 formData.append('item_id', itemId);
                 formData.append('status', newStatus);
+                formData.append('notes', notesEl.value);
 
                 const resp = await fetch('/api/update-status/', {
                     method: 'POST',
-                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
                     body: formData
                 });
 
@@ -277,19 +323,20 @@
                     msgEl.textContent = 'Status updated to: ' + data.status;
                     msgEl.className = 'status-message success';
 
-                    const statusMap = {
-                        'Checked In': 'checked_in',
-                        'Checked Out': 'checked_out',
-                        'Tested': 'tested',
-                        'Will Be Reused': 'will_be_reused',
-                        'Recycling': 'recycling'
-                    };
                     const badge = document.getElementById('statusBadge');
-                    const key = statusMap[data.status] || 'checked_in';
+                    const key = STATUS_MAP[data.status] || 'checked_in';
                     badge.className = 'status-badge status-' + key;
                     badge.textContent = data.status;
 
                     document.getElementById('lastUpdated').textContent = 'Last updated: ' + data.last_updated;
+
+                    // Add new log entry at top
+                    addLogEntry(data, notesEl.value);
+                    notesEl.value = '';
+
+                    // Remove "No status changes" message if present
+                    const emptyMsg = document.querySelector('.log-empty');
+                    if (emptyMsg) emptyMsg.remove();
                 } else {
                     msgEl.textContent = 'Error: ' + (data.error || 'Unknown error');
                     msgEl.className = 'status-message error';
@@ -300,6 +347,75 @@
             }
 
             document.querySelectorAll('.btn-group .btn').forEach(b => b.disabled = false);
+        }
+
+        function addLogEntry(data, notes) {
+            const log = document.getElementById('historyLog');
+            const oldKey = document.getElementById('statusBadge').className.match(/status-(\w+)$/);
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const newKey = STATUS_MAP[data.status] || 'checked_in';
+
+            const now = new Date().toLocaleString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+
+            const notesHtml = notes
+                ? `<div class="log-notes">${escapeHtml(notes)}</div>`
+                : `<div class="log-notes-empty">No notes</div>`;
+
+            entry.innerHTML = `
+                <div class="log-entry-top">
+                    <span class="status-badge status-${newKey}">${escapeHtml(data.status)}</span>
+                    <span class="log-date">${now} (just now)</span>
+                </div>
+                ${notesHtml}
+            `;
+            log.insertBefore(entry, log.firstChild);
+        }
+
+        function showEditNotes(historyId) {
+            document.getElementById('notes-display-' + historyId).style.display = 'none';
+            document.getElementById('notes-edit-' + historyId).style.display = 'flex';
+            document.getElementById('notes-input-' + historyId).focus();
+        }
+
+        async function saveNotes(historyId) {
+            const input = document.getElementById('notes-input-' + historyId);
+            const notes = input.value;
+
+            try {
+                const formData = new FormData();
+                formData.append('history_id', historyId);
+                formData.append('notes', notes);
+
+                const resp = await fetch('/api/update-notes/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await resp.json();
+
+                if (data.success) {
+                    const display = document.getElementById('notes-display-' + historyId);
+                    if (notes) {
+                        display.innerHTML = `<div class="log-notes">${escapeHtml(notes)} <button class="btn-edit-note" onclick="showEditNotes(${historyId})">Edit</button></div>`;
+                    } else {
+                        display.innerHTML = `<div class="log-notes-empty">No notes <button class="btn-edit-note" onclick="showEditNotes(${historyId})">Add</button></div>`;
+                    }
+                    display.style.display = 'block';
+                    document.getElementById('notes-edit-' + historyId).style.display = 'none';
+                }
+            } catch (err) {
+                alert('Failed to save notes. Please try again.');
+            }
+        }
+
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
         }
     </script>
     {% endif %}

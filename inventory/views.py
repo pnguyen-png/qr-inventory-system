@@ -2,8 +2,9 @@ from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+import json
 import urllib.parse
-from .models import InventoryItem
+from .models import InventoryItem, StatusHistory
 
 
 def scanner_landing(request):
@@ -40,23 +41,13 @@ def scanner_landing(request):
             box_id=int(box_id)
         )
         
-        import json
-        item_data = {
-            'id': item.id,
-            'manufacturer': item.manufacturer,
-            'pallet_id': item.pallet_id,
-            'box_id': item.box_id,
-            'content': item.content,
-            'damaged': item.get_damaged_display(),
-            'location': item.location,
-            'description': item.description,
-            'status': dict(item.STATUS_CHOICES).get(item.status, 'Unknown'),
-            'last_updated': item.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
-        }
-        
+        history = item.status_history.all()
+        status_labels = dict(item.STATUS_CHOICES)
+
         return render(request, 'inventory/scanner_landing.html', {
             'item': item,
-            'item_json': json.dumps(item_data),
+            'history': history,
+            'status_labels': status_labels,
             'error': None
         })
         
@@ -75,6 +66,7 @@ def update_status(request):
     try:
         item_id = request.POST.get('item_id')
         new_status = request.POST.get('status')
+        notes = request.POST.get('notes', '')
         
         status_mapping = {
             'Checked In': 'checked_in',
@@ -94,11 +86,11 @@ def update_status(request):
         item.save()
 
         # Record status change history
-        from .models import StatusHistory
         StatusHistory.objects.create(
             item=item,
             old_status=old_status,
             new_status=status_value,
+            notes=notes,
         )
         
         return JsonResponse({
@@ -158,7 +150,23 @@ def dashboard(request):
 
 def item_history(request, item_id):
     """Item history view"""
-    from .models import StatusHistory
     item = get_object_or_404(InventoryItem, id=item_id)
-    history = StatusHistory.objects.filter(item=item).order_by('-changed_at')
+    history = item.status_history.all()
     return render(request, 'inventory/item_history.html', {'item': item, 'history': history})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def update_history_notes(request):
+    """Update notes on a status history entry"""
+    try:
+        history_id = request.POST.get('history_id')
+        notes = request.POST.get('notes', '')
+
+        entry = get_object_or_404(StatusHistory, id=history_id)
+        entry.notes = notes
+        entry.save()
+
+        return JsonResponse({'success': True, 'notes': entry.notes})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

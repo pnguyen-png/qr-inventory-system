@@ -14,5 +14,6 @@ urlpatterns = [
     
     # Status update (HTMX)
     path('api/update-status/', views.update_status, name='update_status'),
+    path('api/update-notes/', views.update_history_notes, name='update_history_notes'),
     path('api/items/', views.item_api, name='item_api'),
 ]

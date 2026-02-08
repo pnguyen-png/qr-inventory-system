@@ -33,10 +33,22 @@ class InventoryItem(models.Model):
         return "Yes" if self.damaged else "No"
 
 class StatusHistory(models.Model):
-    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE)
+    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='status_history')
     old_status = models.CharField(max_length=20)
     new_status = models.CharField(max_length=20)
+    notes = models.TextField(blank=True, default='')
     changed_at = models.DateTimeField(auto_now_add=True)
-    
+
+    class Meta:
+        ordering = ['-changed_at']
+
+    STATUS_LABELS = dict(InventoryItem.STATUS_CHOICES)
+
     def __str__(self):
         return f"{self.item} - {self.old_status} to {self.new_status}"
+
+    def old_status_label(self):
+        return self.STATUS_LABELS.get(self.old_status, self.old_status)
+
+    def new_status_label(self):
+        return self.STATUS_LABELS.get(self.new_status, self.new_status)
