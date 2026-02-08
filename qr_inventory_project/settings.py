@@ -78,10 +78,18 @@ WSGI_APPLICATION = 'qr_inventory_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-# Use PostgreSQL on Railway (via DATABASE_URL), SQLite locally
+# Database
+# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+
+
+# Get DATABASE_URL and fix the scheme if needed
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///' + str(BASE_DIR / 'db.sqlite3'))
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
 DATABASES = {
     'default': dj_database_url.config(
-        default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
+        default=database_url,
         conn_max_age=600,
         conn_health_checks=True,
     )
