@@ -105,7 +105,7 @@ else:
     }
 
 
-# Validate Railway has Postgres attached
+# Warn if Railway is detected but no DATABASE_URL (will use sqlite fallback)
 IS_RAILWAY = any(
     os.environ.get(k)
     for k in (
@@ -117,10 +117,8 @@ IS_RAILWAY = any(
 )
 
 if IS_RAILWAY and not DATABASE_URL:
-    raise RuntimeError(
-        "DATABASE_URL is not set on Railway. "
-        "Attach a Railway Postgres plugin and ensure DATABASE_URL is injected."
-    )
+    import logging
+    logging.warning("DATABASE_URL is not set on Railway. Falling back to SQLite.")
 
 # -----------------------------------------------------------------------------
 # Auth / i18n
