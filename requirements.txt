@@ -23,3 +23,13 @@ urllib3==2.6.2
 whitenoise==6.11.0
 dj-database-url
 psycopg2-binary
+Django==6.0.2
+dj-database-url
+whitenoise
+django-cors-headers
+Django==6.0.2
+dj-database-url
+psycopg2-binary
+whitenoise
+django-cors-headers
+
