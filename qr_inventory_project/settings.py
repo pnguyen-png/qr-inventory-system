@@ -80,12 +80,18 @@ WSGI_APPLICATION = "qr_inventory_project.wsgi.application"
 # Railway commonly injects DATABASE_URL when Postgres plugin is attached
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 
+# Fix malformed scheme: Railway sometimes provides "://" instead of "postgresql://"
+if DATABASE_URL and DATABASE_URL.startswith("://"):
+    DATABASE_URL = "postgresql" + DATABASE_URL
+elif DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 if DATABASE_URL:
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
             conn_max_age=600,
-            ssl_require=True if "railway" in DATABASE_URL or "postgres" in DATABASE_URL else False,
+            ssl_require=True,
         )
     }
 else:
