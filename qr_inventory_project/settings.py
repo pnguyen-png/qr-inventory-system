@@ -76,28 +76,27 @@ WSGI_APPLICATION = "qr_inventory_project.wsgi.application"
 # -----------------------------------------------------------------------------
 # Database
 # -----------------------------------------------------------------------------
-DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
-# Railway Postgres URLs are usually postgres://... or postgresql://...
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+# Railway commonly injects DATABASE_URL when Postgres plugin is attached
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 
-if DATABASE_URL.startswith("postgresql://"):
+if DATABASE_URL:
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
             conn_max_age=600,
-            ssl_require=True,
+            ssl_require=True if "railway" in DATABASE_URL or "postgres" in DATABASE_URL else False,
         )
     }
 else:
-    # Fallback for local dev (prevents hard-crash)
+    # Local dev fallback
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+
 
 def _is_postgres(url: str) -> bool:
     return url.startswith(("postgresql://", "postgres://"))
