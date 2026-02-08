@@ -76,13 +76,28 @@ WSGI_APPLICATION = "qr_inventory_project.wsgi.application"
 # -----------------------------------------------------------------------------
 # Database
 # -----------------------------------------------------------------------------
-database_url = (os.environ.get("DATABASE_URL") or "").strip()
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
-def _normalize_db_url(url: str) -> str:
-    # Railway / Heroku style sometimes gives postgres:// which psycopg expects as postgresql://
-    if url.startswith("postgres://"):
-        return url.replace("postgres://", "postgresql://", 1)
-    return url
+# Railway Postgres URLs are usually postgres://... or postgresql://...
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True,
+        )
+    }
+else:
+    # Fallback for local dev (prevents hard-crash)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 def _is_postgres(url: str) -> bool:
     return url.startswith(("postgresql://", "postgres://"))
