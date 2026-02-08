@@ -1,1 +1,1 @@
-web: gunicorn qr_inventory_project.wsgi --log-file -
+web: python manage.py migrate --noinput && gunicorn qr_inventory_project.wsgi:application

@@ -32,4 +32,5 @@ dj-database-url
 psycopg2-binary
 whitenoise
 django-cors-headers
+gunicorn
 
