@@ -342,6 +342,17 @@
             font-size: 0.875rem;
             color: #64748b;
         }
+        #qr-reader {
+            width: 100%;
+            border: none !important;
+        }
+        #qr-reader video { border-radius: 8px; }
+        #qr-reader__scan_region { border: none !important; }
+        #qr-reader__dashboard { margin-top: 10px; }
+        #qr-reader__dashboard button {
+            padding: 8px 14px; border-radius: 6px; font-size: 0.8rem;
+            cursor: pointer;
+        }
 
         /* Overdue alert banner */
         .overdue-banner {
@@ -617,12 +628,13 @@
                 <button class="modal-close" onclick="closeScanner()">&times;</button>
             </div>
             <div class="modal-body">
-                <video id="qr-video" playsinline></video>
+                <div id="qr-reader"></div>
                 <div class="scanner-status" id="scannerStatus">Initializing camera...</div>
             </div>
         </div>
     </div>
 
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
         // ---- Tab switching ----
         let currentTab = 'all';
@@ -749,9 +761,8 @@
             }
         }
 
-        // ---- QR Scanner ----
-        let scannerStream = null;
-        let scannerInterval = null;
+        // ---- QR Scanner (html5-qrcode) ----
+        let html5QrCode = null;
 
         function openScanner() {
             document.getElementById('scannerModal').classList.add('active');
@@ -764,41 +775,44 @@
         }
 
         async function startScanner() {
-            const video = document.getElementById('qr-video');
             const statusEl = document.getElementById('scannerStatus');
+            statusEl.textContent = 'Initializing camera...';
 
             try {
-                scannerStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' }
-                });
-                video.srcObject = scannerStream;
-                video.play();
-                statusEl.textContent = 'Point your camera at a QR code...';
+                html5QrCode = new Html5Qrcode("qr-reader");
+                const config = {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                };
 
-                // Use BarcodeDetector API if available
-                if ('BarcodeDetector' in window) {
-                    const detector = new BarcodeDetector({ formats: ['qr_code'] });
-                    scannerInterval = setInterval(async () => {
-                        try {
-                            const barcodes = await detector.detect(video);
-                            if (barcodes.length > 0) {
-                                const url = barcodes[0].rawValue;
-                                stopScanner();
-                                handleScanResult(url);
-                            }
-                        } catch (e) {}
-                    }, 300);
-                } else {
-                    statusEl.textContent = 'QR scanning requires Chrome 83+ or a supported browser. You can also enter a URL manually.';
-                }
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    (decodedText) => {
+                        // QR code scanned successfully
+                        stopScanner();
+                        handleScanResult(decodedText);
+                    },
+                    (errorMessage) => {
+                        // Scan error (just means no QR found yet, ignore)
+                    }
+                );
+                statusEl.textContent = 'Point your camera at a QR code...';
             } catch (err) {
-                statusEl.textContent = 'Camera access denied. Please allow camera permissions and try again.';
+                statusEl.textContent = 'Camera access denied or not available. Please allow camera permissions and try again.';
+                console.error('Scanner error:', err);
             }
         }
 
-        function stopScanner() {
-            if (scannerInterval) { clearInterval(scannerInterval); scannerInterval = null; }
-            if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
+        async function stopScanner() {
+            if (html5QrCode) {
+                try {
+                    await html5QrCode.stop();
+                    html5QrCode.clear();
+                } catch (e) {}
+                html5QrCode = null;
+            }
         }
 
         function handleScanResult(url) {
