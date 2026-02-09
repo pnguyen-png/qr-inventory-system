@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -7,7 +7,8 @@ import json
 import csv
 import urllib.parse
 import os
-from .models import InventoryItem, StatusHistory, ItemPhoto, NotificationLog
+import uuid
+from .models import InventoryItem, StatusHistory, NotificationLog
 
 
 def scanner_landing(request):
@@ -43,13 +44,11 @@ def scanner_landing(request):
         )
 
         history = item.status_history.all()
-        photos = item.photos.all()
         status_labels = dict(item.STATUS_CHOICES)
 
         return render(request, 'inventory/scanner_landing.html', {
             'item': item,
             'history': history,
-            'photos': photos,
             'status_labels': status_labels,
             'error': None
         })
@@ -386,57 +385,6 @@ def bulk_archive(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
-@csrf_exempt
-@require_http_methods(["POST"])
-def upload_photo(request):
-    """Upload a photo for an item"""
-    try:
-        item_id = request.POST.get('item_id')
-        caption = request.POST.get('caption', '')
-        uploaded_by = request.POST.get('uploaded_by', '')
-
-        if not item_id:
-            return JsonResponse({'success': False, 'error': 'Missing item_id'}, status=400)
-
-        item = get_object_or_404(InventoryItem, id=item_id)
-
-        if 'photo' not in request.FILES:
-            return JsonResponse({'success': False, 'error': 'No photo file provided'}, status=400)
-
-        photo = ItemPhoto.objects.create(
-            item=item,
-            image=request.FILES['photo'],
-            caption=caption,
-            uploaded_by=uploaded_by,
-        )
-
-        return JsonResponse({
-            'success': True,
-            'photo_id': photo.id,
-            'url': photo.image.url,
-            'caption': photo.caption,
-        })
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def delete_photo(request):
-    """Delete a photo"""
-    try:
-        data = json.loads(request.body)
-        photo_id = data.get('photo_id')
-
-        photo = get_object_or_404(ItemPhoto, id=photo_id)
-        photo.image.delete(save=False)
-        photo.delete()
-
-        return JsonResponse({'success': True})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
-
 def overdue_items_api(request):
     """API endpoint returning overdue checked-out items"""
     items = InventoryItem.objects.filter(
@@ -464,7 +412,6 @@ def overdue_items_api(request):
 def inventory_report_api(request):
     """API endpoint for scheduled inventory report data"""
     active = InventoryItem.objects.filter(archived=False)
-    status_labels = dict(InventoryItem.STATUS_CHOICES)
 
     status_counts = {}
     for key, label in InventoryItem.STATUS_CHOICES:
@@ -480,3 +427,283 @@ def inventory_report_api(request):
         'archived_count': InventoryItem.objects.filter(archived=True).count(),
         'generated_at': timezone.now().isoformat(),
     })
+
+
+# ---- Shipment Form Views ----
+
+def add_shipment(request):
+    """Single-page form to create a new shipment (replaces Microsoft Form + Excel script)"""
+    if request.method == 'GET':
+        return render(request, 'inventory/add_shipment.html')
+
+    # POST — process the form
+    manufacturer = request.POST.get('manufacturer', '').strip()
+    pallet_id = request.POST.get('pallet_id', '').strip()
+    num_boxes = request.POST.get('num_boxes', '').strip()
+    items_per_box = request.POST.get('items_per_box', '').strip()
+    location = request.POST.get('location', '').strip()
+    damaged = request.POST.get('damaged', 'no')
+    description = request.POST.get('description', '').strip()
+    damaged_boxes_str = request.POST.get('damaged_boxes', '').strip()
+    count_exceptions_str = request.POST.get('count_exceptions', '').strip()
+
+    form_data = {
+        'manufacturer': manufacturer,
+        'pallet_id': pallet_id,
+        'num_boxes': num_boxes,
+        'items_per_box': items_per_box,
+        'location': location,
+        'damaged': damaged,
+        'description': description,
+        'damaged_boxes': damaged_boxes_str,
+        'count_exceptions': count_exceptions_str,
+    }
+
+    errors = []
+
+    # Validate required fields
+    if not manufacturer:
+        errors.append('Manufacturer / Supplier is required.')
+    if not pallet_id:
+        errors.append('Pallet ID is required.')
+    if not location:
+        errors.append('Receiving Location is required.')
+
+    try:
+        num_boxes_int = int(num_boxes)
+        if num_boxes_int < 1:
+            errors.append('Number of boxes must be at least 1.')
+    except (ValueError, TypeError):
+        errors.append('Number of boxes must be a valid number.')
+        num_boxes_int = 0
+
+    try:
+        items_per_box_int = int(items_per_box)
+        if items_per_box_int < 1:
+            errors.append('Items per box must be at least 1.')
+    except (ValueError, TypeError):
+        errors.append('Items per box must be a valid number.')
+        items_per_box_int = 0
+
+    # Parse damaged box numbers
+    damaged_box_set = set()
+    if damaged_boxes_str:
+        for part in damaged_boxes_str.split(','):
+            part = part.strip()
+            if part:
+                try:
+                    box_num = int(part)
+                    if num_boxes_int and (box_num < 1 or box_num > num_boxes_int):
+                        errors.append(f'Damaged box #{box_num} is outside the range 1-{num_boxes_int}.')
+                    else:
+                        damaged_box_set.add(box_num)
+                except ValueError:
+                    errors.append(f'Invalid damaged box number: "{part}".')
+
+    # Parse count exceptions (box:count pairs)
+    count_exceptions = {}
+    if count_exceptions_str:
+        for part in count_exceptions_str.split(','):
+            part = part.strip()
+            if part:
+                if ':' not in part:
+                    errors.append(f'Invalid count exception format: "{part}". Use box:count (e.g. 5:30).')
+                else:
+                    try:
+                        box_str, count_str = part.split(':', 1)
+                        box_num = int(box_str.strip())
+                        count_val = int(count_str.strip())
+                        if num_boxes_int and (box_num < 1 or box_num > num_boxes_int):
+                            errors.append(f'Exception box #{box_num} is outside the range 1-{num_boxes_int}.')
+                        elif count_val < 0:
+                            errors.append(f'Count for box #{box_num} cannot be negative.')
+                        else:
+                            count_exceptions[box_num] = count_val
+                    except ValueError:
+                        errors.append(f'Invalid count exception: "{part}". Use box:count (e.g. 5:30).')
+
+    if errors:
+        return render(request, 'inventory/add_shipment.html', {
+            'errors': errors,
+            'form_data': form_data,
+        })
+
+    # Create items
+    base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
+    created_items = []
+    shipment_key = str(uuid.uuid4())[:8]
+
+    for box_num in range(1, num_boxes_int + 1):
+        box_content = count_exceptions.get(box_num, items_per_box_int)
+        box_damaged = (damaged == 'yes') or (box_num in damaged_box_set)
+
+        barcode_payload = f"MFR={manufacturer} | PALLET={pallet_id} | BOX={box_num}"
+        encoded_payload = urllib.parse.quote(barcode_payload)
+        scanner_url = f"{base_url}/scan/?data={encoded_payload}"
+        qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(scanner_url)}"
+
+        # Check if item already exists (update it if so)
+        existing = InventoryItem.objects.filter(
+            manufacturer=manufacturer,
+            pallet_id=pallet_id,
+            box_id=box_num
+        ).first()
+
+        if existing:
+            existing.content = box_content
+            existing.damaged = box_damaged
+            existing.location = location
+            existing.description = description
+            existing.barcode_payload = barcode_payload
+            existing.qr_url = qr_url
+            existing.save()
+            created_items.append(existing)
+        else:
+            item = InventoryItem.objects.create(
+                manufacturer=manufacturer,
+                pallet_id=pallet_id,
+                box_id=box_num,
+                content=box_content,
+                damaged=box_damaged,
+                location=location,
+                description=description,
+                status='checked_in',
+                barcode_payload=barcode_payload,
+                qr_url=qr_url,
+            )
+            created_items.append(item)
+
+    # Store the shipment key in the session for downloads
+    request.session[f'shipment_{shipment_key}'] = [item.id for item in created_items]
+
+    return render(request, 'inventory/shipment_result.html', {
+        'items': created_items,
+        'manufacturer': manufacturer,
+        'pallet_id': pallet_id,
+        'shipment_key': shipment_key,
+    })
+
+
+def download_shipment_excel(request, shipment_key):
+    """Download shipment items as Excel file for QR code printer"""
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    item_ids = request.session.get(f'shipment_{shipment_key}', [])
+    if not item_ids:
+        return HttpResponse('Shipment not found or session expired.', status=404)
+
+    items = InventoryItem.objects.filter(id__in=item_ids).order_by('box_id')
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Shipment Items'
+
+    # Header styling
+    header_font = Font(bold=True, color='FFFFFF', size=11)
+    header_fill = PatternFill(start_color='8B1A1A', end_color='8B1A1A', fill_type='solid')
+    header_alignment = Alignment(horizontal='center', vertical='center')
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin'),
+    )
+
+    headers = ['Box ID', 'Manufacturer', 'Pallet ID', 'Contents (Qty)', 'Damaged',
+               'Location', 'Description', 'Barcode Payload', 'Scanner URL', 'QR Code URL']
+
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+
+    # Data rows
+    for row_num, item in enumerate(items, 2):
+        base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
+        encoded_payload = urllib.parse.quote(item.barcode_payload)
+        scanner_url = f"{base_url}/scan/?data={encoded_payload}"
+
+        row_data = [
+            item.box_id,
+            item.manufacturer,
+            item.pallet_id,
+            item.content,
+            'Yes' if item.damaged else 'No',
+            item.location,
+            item.description,
+            item.barcode_payload,
+            scanner_url,
+            item.qr_url,
+        ]
+
+        for col_num, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col_num, value=value)
+            cell.border = thin_border
+
+    # Auto-fit column widths
+    for col in ws.columns:
+        max_length = 0
+        col_letter = col[0].column_letter
+        for cell in col:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+        ws.column_dimensions[col_letter].width = min(max_length + 2, 50)
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    first_item = items.first()
+    if first_item:
+        filename = f"shipment_{first_item.manufacturer}_{first_item.pallet_id}.xlsx"
+    else:
+        filename = "shipment_items.xlsx"
+    filename = filename.replace(' ', '_')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response
+
+
+def download_shipment_csv(request, shipment_key):
+    """Download shipment items as CSV file"""
+    item_ids = request.session.get(f'shipment_{shipment_key}', [])
+    if not item_ids:
+        return HttpResponse('Shipment not found or session expired.', status=404)
+
+    items = InventoryItem.objects.filter(id__in=item_ids).order_by('box_id')
+
+    first_item = items.first()
+    if first_item:
+        filename = f"shipment_{first_item.manufacturer}_{first_item.pallet_id}.csv"
+    else:
+        filename = "shipment_items.csv"
+    filename = filename.replace(' ', '_')
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Box ID', 'Manufacturer', 'Pallet ID', 'Contents (Qty)', 'Damaged',
+                     'Location', 'Description', 'Barcode Payload', 'Scanner URL', 'QR Code URL'])
+
+    base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
+
+    for item in items:
+        encoded_payload = urllib.parse.quote(item.barcode_payload)
+        scanner_url = f"{base_url}/scan/?data={encoded_payload}"
+        writer.writerow([
+            item.box_id,
+            item.manufacturer,
+            item.pallet_id,
+            item.content,
+            'Yes' if item.damaged else 'No',
+            item.location,
+            item.description,
+            item.barcode_payload,
+            scanner_url,
+            item.qr_url,
+        ])
+
+    return response

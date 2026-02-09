@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, api_views
+from . import views
 
 app_name = 'inventory'
 
@@ -9,9 +9,10 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('item/<int:item_id>/history/', views.item_history, name='item_history'),
 
-    # API endpoints for Excel
-    path('api/create-item/', api_views.create_item_from_excel, name='create_item_api'),
-    path('api/bulk-create/', api_views.bulk_create_items, name='bulk_create_api'),
+    # Shipment form (replaces Microsoft Form + Excel script)
+    path('add-shipment/', views.add_shipment, name='add_shipment'),
+    path('shipment/<str:shipment_key>/download/excel/', views.download_shipment_excel, name='download_shipment_excel'),
+    path('shipment/<str:shipment_key>/download/csv/', views.download_shipment_csv, name='download_shipment_csv'),
 
     # Status update
     path('api/update-status/', views.update_status, name='update_status'),
@@ -24,10 +25,6 @@ urlpatterns = [
 
     # Archive
     path('api/archive-item/', views.archive_item, name='archive_item'),
-
-    # Photos
-    path('api/upload-photo/', views.upload_photo, name='upload_photo'),
-    path('api/delete-photo/', views.delete_photo, name='delete_photo'),
 
     # Export
     path('export/csv/', views.export_csv, name='export_csv'),

@@ -1,0 +1,201 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire &amp; Risk Alliance - Add Shipment</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f0eb;
+            color: #1a1a2e;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d1518 100%);
+            color: #fff;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #b8860b;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-brand img { height: 44px; width: auto; }
+        .header-brand-text h1 { font-size: 1.1rem; font-weight: 700; color: #fff; line-height: 1.2; }
+        .header-brand-text .subtitle { font-size: 0.7rem; color: #b8860b; text-transform: uppercase; letter-spacing: 0.1em; }
+        .header a { color: #d4a84b; text-decoration: none; font-size: 0.875rem; font-weight: 500; }
+        .header a:hover { color: #fff; }
+        .container { max-width: 700px; margin: 24px auto; padding: 0 16px; }
+
+        .form-card {
+            background: #fff; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .form-card-header {
+            background: linear-gradient(135deg, #8b1a1a 0%, #a02020 100%);
+            color: #fff; padding: 20px 24px;
+        }
+        .form-card-header h2 { font-size: 1.125rem; margin-bottom: 4px; }
+        .form-card-header p { color: #d4a3a3; font-size: 0.85rem; }
+
+        .form-body { padding: 24px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block; font-size: 0.8rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            color: #374151; margin-bottom: 6px;
+        }
+        .form-group .hint {
+            font-size: 0.75rem; color: #94a3b8; font-weight: 400;
+            text-transform: none; letter-spacing: normal;
+        }
+        .form-input {
+            width: 100%; padding: 10px 14px; border: 1px solid #d1d5db;
+            border-radius: 8px; font-size: 0.9rem; font-family: inherit;
+        }
+        .form-input:focus { outline: none; border-color: #8b1a1a; box-shadow: 0 0 0 2px rgba(139,26,26,0.15); }
+        textarea.form-input { resize: vertical; min-height: 60px; }
+
+        .form-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        }
+
+        .form-section {
+            border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 20px;
+        }
+        .form-section h3 {
+            font-size: 0.9rem; color: #374151; margin-bottom: 12px;
+        }
+
+        .btn-submit {
+            width: 100%; padding: 14px; background: #8b1a1a; color: #fff;
+            border: none; border-radius: 8px; font-size: 1rem; font-weight: 700;
+            cursor: pointer; margin-top: 8px;
+        }
+        .btn-submit:hover { opacity: 0.9; }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .error-list {
+            background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px;
+            padding: 12px 16px; margin-bottom: 20px; color: #991b1b; font-size: 0.85rem;
+        }
+        .error-list ul { margin: 6px 0 0 16px; }
+
+        .nav-links { margin-top: 16px; text-align: center; }
+        .nav-links a { color: #2563eb; text-decoration: none; font-size: 0.875rem; }
+        .nav-links a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/dashboard/" class="header-brand" style="text-decoration:none;">
+            <img src="{% static 'inventory/img/logo.png' %}" alt="Fire &amp; Risk Alliance">
+            <div class="header-brand-text">
+                <h1>Fire &amp; Risk Alliance</h1>
+                <div class="subtitle">Inventory Management System</div>
+            </div>
+        </a>
+        <a href="/dashboard/">Back to Dashboard</a>
+    </div>
+
+    <div class="container">
+        <div class="form-card">
+            <div class="form-card-header">
+                <h2>Add New Shipment</h2>
+                <p>Enter shipment details to create inventory items and generate QR codes</p>
+            </div>
+            <div class="form-body">
+                {% if errors %}
+                <div class="error-list">
+                    <strong>Please fix the following:</strong>
+                    <ul>
+                        {% for error in errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <form method="POST" id="shipmentForm">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Manufacturer / Supplier</label>
+                            <input type="text" name="manufacturer" class="form-input" required
+                                value="{{ form_data.manufacturer|default:'' }}" placeholder="e.g. Panasonic">
+                        </div>
+                        <div class="form-group">
+                            <label>Pallet ID</label>
+                            <input type="text" name="pallet_id" class="form-input" required
+                                value="{{ form_data.pallet_id|default:'' }}" placeholder="e.g. 255">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Number of Boxes</label>
+                            <input type="number" name="num_boxes" class="form-input" required min="1"
+                                value="{{ form_data.num_boxes|default:'' }}" placeholder="e.g. 67">
+                        </div>
+                        <div class="form-group">
+                            <label>Items Per Box <span class="hint">(default qty per box)</span></label>
+                            <input type="number" name="items_per_box" class="form-input" required min="1"
+                                value="{{ form_data.items_per_box|default:'' }}" placeholder="e.g. 50">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Receiving Location</label>
+                            <input type="text" name="location" class="form-input" required
+                                value="{{ form_data.location|default:'' }}" placeholder="e.g. Rockville, MD">
+                        </div>
+                        <div class="form-group">
+                            <label>Damage Reported?</label>
+                            <select name="damaged" class="form-input">
+                                <option value="no" {% if form_data.damaged == 'no' %}selected{% endif %}>No</option>
+                                <option value="yes" {% if form_data.damaged == 'yes' %}selected{% endif %}>Yes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Brief Description of Shipment</label>
+                        <textarea name="description" class="form-input" placeholder="e.g. Lithium-ion batteries for testing">{{ form_data.description|default:'' }}</textarea>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Exceptions (optional)</h3>
+
+                        <div class="form-group">
+                            <label>Damaged Box Numbers <span class="hint">(comma-separated, e.g. 3, 7, 12)</span></label>
+                            <input type="text" name="damaged_boxes" class="form-input"
+                                value="{{ form_data.damaged_boxes|default:'' }}" placeholder="Leave blank if none">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Box Count Exceptions <span class="hint">(box:count pairs, e.g. 5:30, 12:25)</span></label>
+                            <input type="text" name="count_exceptions" class="form-input"
+                                value="{{ form_data.count_exceptions|default:'' }}" placeholder="Leave blank if all boxes have the same count">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Create Items &amp; Generate QR Codes</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="nav-links">
+            <a href="/dashboard/">Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>
