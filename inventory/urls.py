@@ -23,6 +23,9 @@ urlpatterns = [
     path('api/bulk-update-status/', views.bulk_update_status, name='bulk_update_status'),
     path('api/bulk-archive/', views.bulk_archive, name='bulk_archive'),
 
+    # Edit item
+    path('api/edit-item/', views.edit_item, name='edit_item'),
+
     # Archive
     path('api/archive-item/', views.archive_item, name='archive_item'),
 

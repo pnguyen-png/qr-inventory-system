@@ -74,10 +74,12 @@
             border-bottom: 1px solid #e5e7eb; background: #f8fafc;
         }
         .summary-table td {
-            padding: 10px 14px; border-bottom: 1px solid #f1f5f9;
+            padding: 10px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle;
         }
         .damage-yes { color: #dc2626; font-weight: 700; }
         .damage-no { color: #16a34a; }
+        .qr-thumb { width: 60px; height: 60px; border-radius: 4px; cursor: pointer; }
+        .qr-thumb:hover { opacity: 0.8; }
 
         .nav-links { text-align: center; margin-top: 20px; }
         .nav-links a {
@@ -136,7 +138,8 @@
                         <th>Box</th>
                         <th>Qty</th>
                         <th>Damaged</th>
-                        <th>Barcode Payload</th>
+                        <th>QR Code</th>
+                        <th>View</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -147,7 +150,8 @@
                         <td class="{% if item.damaged %}damage-yes{% else %}damage-no{% endif %}">
                             {{ item.get_damaged_display }}
                         </td>
-                        <td style="font-size:0.75rem; color:#64748b;">{{ item.barcode_payload }}</td>
+                        <td><img class="qr-thumb" src="{{ item.qr_url }}" alt="QR #{{ item.box_id }}" onclick="window.open(this.src.replace('200x200','500x500'), '_blank')"></td>
+                        <td><a href="/scan/?data={{ item.barcode_payload|urlencode }}" style="color:#2563eb; font-size:0.85rem;">View</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>

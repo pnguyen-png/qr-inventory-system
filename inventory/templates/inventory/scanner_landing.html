@@ -102,6 +102,35 @@
         }
         .description-section p { font-size: 0.95rem; line-height: 1.5; color: #374151; }
 
+        /* Edit Details */
+        .edit-section { padding: 20px; border-top: 1px solid #e5e7eb; }
+        .edit-section h3 { font-size: 0.875rem; margin-bottom: 12px; color: #374151; }
+        .edit-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;
+        }
+        .edit-group label {
+            display: block; font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: 0.05em; color: #64748b; margin-bottom: 4px;
+        }
+        .edit-input {
+            width: 100%; padding: 8px 12px; border: 1px solid #d1d5db;
+            border-radius: 8px; font-size: 0.875rem; font-family: inherit;
+        }
+        .edit-input:focus { outline: none; border-color: #8b1a1a; box-shadow: 0 0 0 2px rgba(139,26,26,0.15); }
+        textarea.edit-input { resize: vertical; min-height: 50px; }
+        .btn-save-edit {
+            padding: 10px 24px; background: #8b1a1a; color: #fff; border: none;
+            border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;
+        }
+        .btn-save-edit:hover { opacity: 0.85; }
+        .btn-save-edit:disabled { opacity: 0.4; cursor: not-allowed; }
+        .edit-message {
+            margin-top: 10px; padding: 8px 12px; border-radius: 8px;
+            font-size: 0.85rem; display: none;
+        }
+        .edit-message.success { display: block; background: #dcfce7; color: #166534; }
+        .edit-message.error { display: block; background: #fee2e2; color: #991b1b; }
+
         .actions { padding: 20px; border-top: 1px solid #e5e7eb; }
         .actions h3 { font-size: 0.875rem; margin-bottom: 8px; color: #374151; }
         .action-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
@@ -298,6 +327,35 @@
                 <p>{{ item.description }}</p>
             </div>
             {% endif %}
+
+            <div class="edit-section">
+                <h3>Edit Details</h3>
+                <div class="edit-row">
+                    <div class="edit-group">
+                        <label>Contents (Qty)</label>
+                        <input type="number" class="edit-input" id="editContent" value="{{ item.content }}" min="0">
+                    </div>
+                    <div class="edit-group">
+                        <label>Damage Reported</label>
+                        <select class="edit-input" id="editDamaged">
+                            <option value="false" {% if not item.damaged %}selected{% endif %}>No</option>
+                            <option value="true" {% if item.damaged %}selected{% endif %}>Yes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="edit-row">
+                    <div class="edit-group">
+                        <label>Receiving Location</label>
+                        <input type="text" class="edit-input" id="editLocation" value="{{ item.location }}">
+                    </div>
+                    <div class="edit-group">
+                        <label>Description</label>
+                        <input type="text" class="edit-input" id="editDescription" value="{{ item.description }}">
+                    </div>
+                </div>
+                <button class="btn-save-edit" id="btnSaveEdit" onclick="saveEdit({{ item.id }})">Save Changes</button>
+                <div class="edit-message" id="editMessage"></div>
+            </div>
 
             <div class="actions">
                 <h3>Update Status</h3>
@@ -500,6 +558,45 @@
             } catch (err) {
                 alert('Failed to save notes. Please try again.');
             }
+        }
+
+        // ---- Edit Details ----
+        async function saveEdit(itemId) {
+            const btn = document.getElementById('btnSaveEdit');
+            const msgEl = document.getElementById('editMessage');
+            btn.disabled = true;
+            msgEl.className = 'edit-message';
+            msgEl.style.display = 'none';
+
+            const payload = {
+                item_id: itemId,
+                content: parseInt(document.getElementById('editContent').value),
+                damaged: document.getElementById('editDamaged').value === 'true',
+                location: document.getElementById('editLocation').value,
+                description: document.getElementById('editDescription').value,
+            };
+
+            try {
+                const resp = await fetch('/api/edit-item/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    msgEl.textContent = 'Details saved successfully.';
+                    msgEl.className = 'edit-message success';
+                    // Update the detail cells on the page
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    msgEl.textContent = 'Error: ' + (data.error || 'Unknown');
+                    msgEl.className = 'edit-message error';
+                }
+            } catch (err) {
+                msgEl.textContent = 'Network error. Please try again.';
+                msgEl.className = 'edit-message error';
+            }
+            btn.disabled = false;
         }
 
         // ---- Archive ----

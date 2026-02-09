@@ -535,7 +535,12 @@ def add_shipment(request):
 
     for box_num in range(1, num_boxes_int + 1):
         box_content = count_exceptions.get(box_num, items_per_box_int)
-        box_damaged = (damaged == 'yes') or (box_num in damaged_box_set)
+        # If specific damaged boxes were listed, only those are damaged.
+        # Otherwise fall back to the global "Damage Reported?" flag.
+        if damaged_box_set:
+            box_damaged = box_num in damaged_box_set
+        else:
+            box_damaged = damaged == 'yes'
 
         barcode_payload = f"MFR={manufacturer} | PALLET={pallet_id} | BOX={box_num}"
         encoded_payload = urllib.parse.quote(barcode_payload)
@@ -664,6 +669,37 @@ def download_shipment_excel(request, shipment_key):
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     wb.save(response)
     return response
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def edit_item(request):
+    """Edit individual item fields (content, damaged, location, description)"""
+    try:
+        data = json.loads(request.body)
+        item_id = data.get('item_id')
+        item = get_object_or_404(InventoryItem, id=item_id)
+
+        if 'content' in data:
+            item.content = int(data['content'])
+        if 'damaged' in data:
+            item.damaged = data['damaged']
+        if 'location' in data:
+            item.location = data['location']
+        if 'description' in data:
+            item.description = data['description']
+
+        item.save()
+
+        return JsonResponse({
+            'success': True,
+            'content': item.content,
+            'damaged': item.damaged,
+            'location': item.location,
+            'description': item.description,
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 def download_shipment_csv(request, shipment_key):
