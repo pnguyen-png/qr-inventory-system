@@ -75,6 +75,11 @@
         .status-will_be_reused { background: #e0e7ff; color: #3730a3; }
         .status-recycling { background: #fce7f3; color: #9d174d; }
 
+        .overdue-alert {
+            background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;
+            padding: 10px 16px; margin: 16px 20px 0; font-size: 0.85rem; color: #92400e;
+        }
+
         .detail-grid {
             display: grid; grid-template-columns: 1fr 1fr;
             gap: 1px; background: #e5e7eb;
@@ -99,6 +104,12 @@
 
         .actions { padding: 20px; border-top: 1px solid #e5e7eb; }
         .actions h3 { font-size: 0.875rem; margin-bottom: 8px; color: #374151; }
+        .action-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .action-input {
+            flex: 1; min-width: 150px; padding: 8px 12px; border: 1px solid #d1d5db;
+            border-radius: 8px; font-size: 0.875rem; font-family: inherit;
+        }
+        .action-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
         .notes-input {
             width: 100%; padding: 8px 12px; border: 1px solid #d1d5db;
             border-radius: 8px; font-size: 0.875rem; margin-bottom: 12px;
@@ -130,6 +141,58 @@
             font-size: 0.75rem; color: #94a3b8; text-align: right;
         }
 
+        /* Archive bar */
+        .archive-bar {
+            padding: 12px 20px; border-top: 1px solid #e5e7eb;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .btn-archive {
+            padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            background: #f8fafc; color: #64748b;
+        }
+        .btn-archive:hover { background: #e2e8f0; }
+        .btn-archive.active { background: #f59e0b; color: #1a1a2e; border-color: #f59e0b; }
+
+        /* Photos Section */
+        .photos-section {
+            padding: 20px; border-top: 1px solid #e5e7eb;
+        }
+        .photos-section h3 { font-size: 0.875rem; margin-bottom: 12px; color: #374151; }
+        .photo-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px; margin-bottom: 12px;
+        }
+        .photo-thumb {
+            position: relative; border-radius: 8px; overflow: hidden;
+            aspect-ratio: 1; background: #f1f5f9;
+        }
+        .photo-thumb img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .photo-thumb .delete-btn {
+            position: absolute; top: 4px; right: 4px;
+            background: rgba(220,38,38,0.85); color: #fff;
+            border: none; border-radius: 50%; width: 22px; height: 22px;
+            font-size: 0.7rem; cursor: pointer; display: none;
+        }
+        .photo-thumb:hover .delete-btn { display: block; }
+        .photo-caption { font-size: 0.7rem; color: #64748b; text-align: center; margin-top: 4px; }
+        .photo-upload-form {
+            display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+        }
+        .photo-upload-form input[type="file"] { font-size: 0.8rem; }
+        .photo-upload-form input[type="text"] {
+            padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px;
+            font-size: 0.8rem; flex: 1; min-width: 120px;
+        }
+        .btn-upload {
+            padding: 8px 14px; background: #2563eb; color: #fff;
+            border: none; border-radius: 6px; font-size: 0.8rem;
+            font-weight: 600; cursor: pointer;
+        }
+        .btn-upload:hover { opacity: 0.85; }
+
         /* Status Log */
         .log-section {
             background: #fff; border-radius: 12px; margin-top: 16px;
@@ -148,6 +211,7 @@
         }
         .log-arrow { color: #94a3b8; font-size: 0.8rem; }
         .log-date { color: #94a3b8; font-size: 0.75rem; margin-left: auto; }
+        .log-changed-by { font-size: 0.75rem; color: #6366f1; font-weight: 500; }
         .log-notes {
             margin-top: 8px; font-size: 0.85rem; color: #475569;
             line-height: 1.4;
@@ -221,6 +285,13 @@
                 </div>
             </div>
 
+            {% if item.is_overdue %}
+            <div class="overdue-alert">
+                <strong>Overdue!</strong> This item has been checked out for {{ item.days_checked_out }} days
+                {% if item.checked_out_by %} by {{ item.checked_out_by }}{% endif %}.
+            </div>
+            {% endif %}
+
             <div class="detail-grid">
                 <div class="detail-cell">
                     <label>Manufacturer / Supplier</label>
@@ -248,6 +319,16 @@
                         {{ item.get_damaged_display }}
                     </div>
                 </div>
+                {% if item.checked_out_by %}
+                <div class="detail-cell">
+                    <label>Checked Out By</label>
+                    <div class="value">{{ item.checked_out_by }}</div>
+                </div>
+                <div class="detail-cell">
+                    <label>Checked Out Since</label>
+                    <div class="value">{{ item.checked_out_at|date:"M d, Y H:i" }}</div>
+                </div>
+                {% endif %}
             </div>
 
             {% if item.description %}
@@ -259,6 +340,9 @@
 
             <div class="actions">
                 <h3>Update Status</h3>
+                <div class="action-row">
+                    <input type="text" class="action-input" id="changedByInput" placeholder="Your name (for audit trail)">
+                </div>
                 <textarea class="notes-input" id="statusNotes" placeholder="Add notes for this status change (optional)..." rows="1"></textarea>
                 <div class="btn-group">
                     <button class="btn btn-checkout" onclick="updateStatus({{ item.id }}, 'Checked Out')">Check Out</button>
@@ -270,6 +354,38 @@
                 <div class="status-message" id="statusMessage"></div>
             </div>
 
+            <!-- Photos Section -->
+            <div class="photos-section">
+                <h3>Photos</h3>
+                <div class="photo-grid" id="photoGrid">
+                    {% for photo in photos %}
+                    <div class="photo-thumb" id="photo-{{ photo.id }}">
+                        <img src="{{ photo.image.url }}" alt="{{ photo.caption }}" onclick="window.open(this.src, '_blank')">
+                        <button class="delete-btn" onclick="deletePhoto({{ photo.id }})">&times;</button>
+                        {% if photo.caption %}<div class="photo-caption">{{ photo.caption }}</div>{% endif %}
+                    </div>
+                    {% empty %}
+                    <div id="noPhotosMsg" style="color:#94a3b8; font-size:0.85rem; font-style:italic; grid-column:1/-1;">No photos yet.</div>
+                    {% endfor %}
+                </div>
+                <form class="photo-upload-form" id="photoForm" onsubmit="uploadPhoto(event, {{ item.id }})">
+                    <input type="file" name="photo" accept="image/*" required>
+                    <input type="text" name="caption" placeholder="Caption (optional)">
+                    <button type="submit" class="btn-upload">Upload Photo</button>
+                </form>
+            </div>
+
+            <!-- Archive -->
+            <div class="archive-bar">
+                <span style="font-size:0.8rem; color:#64748b;">
+                    {% if item.archived %}This item is archived.{% else %}Move to archive when no longer needed.{% endif %}
+                </span>
+                <button class="btn-archive {% if item.archived %}active{% endif %}" id="archiveBtn"
+                    onclick="toggleArchive({{ item.id }}, {{ item.archived|yesno:'false,true' }})">
+                    {% if item.archived %}Unarchive{% else %}Archive Item{% endif %}
+                </button>
+            </div>
+
             <div class="last-updated" id="lastUpdated">
                 Last updated: {{ item.updated_at|date:"M d, Y H:i" }}
             </div>
@@ -277,7 +393,7 @@
 
         <!-- Status History Log -->
         <div class="log-section">
-            <div class="log-section-header">Status History Log</div>
+            <div class="log-section-header">Status History Log (Audit Trail)</div>
             <div id="historyLog">
                 {% for entry in history %}
                 <div class="log-entry" id="log-{{ entry.id }}">
@@ -285,18 +401,19 @@
                         <span class="status-badge status-{{ entry.old_status }}">{{ entry.old_status_label }}</span>
                         <span class="log-arrow">&rarr;</span>
                         <span class="status-badge status-{{ entry.new_status }}">{{ entry.new_status_label }}</span>
+                        {% if entry.changed_by %}<span class="log-changed-by">by {{ entry.changed_by }}</span>{% endif %}
                         <span class="log-date">{{ entry.changed_at|date:"M d, Y H:i:s" }}</span>
                     </div>
                     <div id="notes-display-{{ entry.id }}">
                         {% if entry.notes %}
                         <div class="log-notes">
                             {{ entry.notes }}
-                            <button class="btn-edit-note" onclick="showEditNotes({{ entry.id }}, this)">Edit</button>
+                            <button class="btn-edit-note" onclick="showEditNotes({{ entry.id }})">Edit</button>
                         </div>
                         {% else %}
                         <div class="log-notes-empty">
                             No notes
-                            <button class="btn-edit-note" onclick="showEditNotes({{ entry.id }}, this)">Add</button>
+                            <button class="btn-edit-note" onclick="showEditNotes({{ entry.id }})">Add</button>
                         </div>
                         {% endif %}
                     </div>
@@ -330,6 +447,7 @@
         async function updateStatus(itemId, newStatus) {
             const msgEl = document.getElementById('statusMessage');
             const notesEl = document.getElementById('statusNotes');
+            const changedByEl = document.getElementById('changedByInput');
             msgEl.className = 'status-message';
             msgEl.style.display = 'none';
 
@@ -340,6 +458,7 @@
                 formData.append('item_id', itemId);
                 formData.append('status', newStatus);
                 formData.append('notes', notesEl.value);
+                formData.append('changed_by', changedByEl.value);
 
                 const resp = await fetch('/api/update-status/', {
                     method: 'POST',
@@ -359,11 +478,9 @@
 
                     document.getElementById('lastUpdated').textContent = 'Last updated: ' + data.last_updated;
 
-                    // Add new log entry at top
-                    addLogEntry(data, notesEl.value);
+                    addLogEntry(data, notesEl.value, changedByEl.value);
                     notesEl.value = '';
 
-                    // Remove "No status changes" message if present
                     const emptyMsg = document.querySelector('.log-empty');
                     if (emptyMsg) emptyMsg.remove();
                 } else {
@@ -378,9 +495,8 @@
             document.querySelectorAll('.btn-group .btn').forEach(b => b.disabled = false);
         }
 
-        function addLogEntry(data, notes) {
+        function addLogEntry(data, notes, changedBy) {
             const log = document.getElementById('historyLog');
-            const oldKey = document.getElementById('statusBadge').className.match(/status-(\w+)$/);
             const entry = document.createElement('div');
             entry.className = 'log-entry';
             const newKey = STATUS_MAP[data.status] || 'checked_in';
@@ -394,9 +510,14 @@
                 ? `<div class="log-notes">${escapeHtml(notes)}</div>`
                 : `<div class="log-notes-empty">No notes</div>`;
 
+            const byHtml = changedBy
+                ? `<span class="log-changed-by">by ${escapeHtml(changedBy)}</span>`
+                : '';
+
             entry.innerHTML = `
                 <div class="log-entry-top">
                     <span class="status-badge status-${newKey}">${escapeHtml(data.status)}</span>
+                    ${byHtml}
                     <span class="log-date">${now} (just now)</span>
                 </div>
                 ${notesHtml}
@@ -438,6 +559,80 @@
                 }
             } catch (err) {
                 alert('Failed to save notes. Please try again.');
+            }
+        }
+
+        // ---- Photo upload ----
+        async function uploadPhoto(e, itemId) {
+            e.preventDefault();
+            const form = document.getElementById('photoForm');
+            const formData = new FormData(form);
+            formData.append('item_id', itemId);
+            formData.append('uploaded_by', document.getElementById('changedByInput').value);
+
+            try {
+                const resp = await fetch('/api/upload-photo/', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    const noMsg = document.getElementById('noPhotosMsg');
+                    if (noMsg) noMsg.remove();
+
+                    const grid = document.getElementById('photoGrid');
+                    const thumb = document.createElement('div');
+                    thumb.className = 'photo-thumb';
+                    thumb.id = 'photo-' + data.photo_id;
+                    thumb.innerHTML = `
+                        <img src="${data.url}" alt="${escapeHtml(data.caption)}" onclick="window.open(this.src, '_blank')">
+                        <button class="delete-btn" onclick="deletePhoto(${data.photo_id})">&times;</button>
+                        ${data.caption ? `<div class="photo-caption">${escapeHtml(data.caption)}</div>` : ''}
+                    `;
+                    grid.appendChild(thumb);
+                    form.reset();
+                } else {
+                    alert('Upload failed: ' + data.error);
+                }
+            } catch (err) {
+                alert('Network error uploading photo.');
+            }
+        }
+
+        async function deletePhoto(photoId) {
+            if (!confirm('Delete this photo?')) return;
+            try {
+                const resp = await fetch('/api/delete-photo/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({photo_id: photoId})
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    const el = document.getElementById('photo-' + photoId);
+                    if (el) el.remove();
+                }
+            } catch (err) {
+                alert('Failed to delete photo.');
+            }
+        }
+
+        // ---- Archive ----
+        async function toggleArchive(itemId, archive) {
+            try {
+                const resp = await fetch('/api/archive-item/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({item_id: itemId, archive: archive})
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Network error.');
             }
         }
 
