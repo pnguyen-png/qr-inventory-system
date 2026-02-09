@@ -1,0 +1,163 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire &amp; Risk Alliance - Shipment Created</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f0eb;
+            color: #1a1a2e;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d1518 100%);
+            color: #fff;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #b8860b;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-brand img { height: 44px; width: auto; }
+        .header-brand-text h1 { font-size: 1.1rem; font-weight: 700; color: #fff; line-height: 1.2; }
+        .header-brand-text .subtitle { font-size: 0.7rem; color: #b8860b; text-transform: uppercase; letter-spacing: 0.1em; }
+        .header a { color: #d4a84b; text-decoration: none; font-size: 0.875rem; font-weight: 500; }
+        .header a:hover { color: #fff; }
+        .container { max-width: 800px; margin: 24px auto; padding: 0 16px; }
+
+        .success-banner {
+            background: #dcfce7; border: 1px solid #86efac; border-radius: 12px;
+            padding: 20px 24px; margin-bottom: 20px; text-align: center;
+        }
+        .success-banner h2 { color: #166534; margin-bottom: 6px; }
+        .success-banner p { color: #15803d; font-size: 0.9rem; }
+
+        .download-cards {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;
+        }
+        .download-card {
+            background: #fff; border-radius: 12px; padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center;
+        }
+        .download-card h3 { font-size: 1rem; margin-bottom: 8px; color: #374151; }
+        .download-card p { font-size: 0.8rem; color: #64748b; margin-bottom: 16px; }
+        .btn-download {
+            display: inline-block; padding: 12px 24px; border-radius: 8px;
+            font-size: 0.9rem; font-weight: 600; text-decoration: none; color: #fff;
+        }
+        .btn-excel { background: #16a34a; }
+        .btn-excel:hover { opacity: 0.9; }
+        .btn-csv { background: #2563eb; }
+        .btn-csv:hover { opacity: 0.9; }
+
+        .summary-card {
+            background: #fff; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;
+        }
+        .summary-header {
+            background: linear-gradient(135deg, #8b1a1a 0%, #a02020 100%);
+            color: #fff; padding: 16px 24px; font-size: 0.9rem; font-weight: 600;
+        }
+        .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .summary-table th {
+            padding: 10px 14px; text-align: left; font-weight: 600;
+            color: #475569; font-size: 0.75rem; text-transform: uppercase;
+            border-bottom: 1px solid #e5e7eb; background: #f8fafc;
+        }
+        .summary-table td {
+            padding: 10px 14px; border-bottom: 1px solid #f1f5f9;
+        }
+        .damage-yes { color: #dc2626; font-weight: 700; }
+        .damage-no { color: #16a34a; }
+
+        .nav-links { text-align: center; margin-top: 20px; }
+        .nav-links a {
+            display: inline-block; margin: 0 8px; color: #2563eb;
+            text-decoration: none; font-size: 0.875rem;
+        }
+        .nav-links a:hover { text-decoration: underline; }
+        .btn-add-another {
+            display: inline-block; padding: 10px 20px; background: #8b1a1a;
+            color: #fff; border-radius: 8px; text-decoration: none;
+            font-size: 0.875rem; font-weight: 600;
+        }
+        .btn-add-another:hover { opacity: 0.9; }
+
+        @media (max-width: 600px) {
+            .download-cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/dashboard/" class="header-brand" style="text-decoration:none;">
+            <img src="{% static 'inventory/img/logo.png' %}" alt="Fire &amp; Risk Alliance">
+            <div class="header-brand-text">
+                <h1>Fire &amp; Risk Alliance</h1>
+                <div class="subtitle">Inventory Management System</div>
+            </div>
+        </a>
+        <a href="/dashboard/">Back to Dashboard</a>
+    </div>
+
+    <div class="container">
+        <div class="success-banner">
+            <h2>Shipment Created Successfully!</h2>
+            <p>{{ items|length }} items created for {{ manufacturer }} - Pallet {{ pallet_id }}</p>
+        </div>
+
+        <div class="download-cards">
+            <div class="download-card">
+                <h3>Excel File (.xlsx)</h3>
+                <p>Download for your QR code printer</p>
+                <a href="/shipment/{{ shipment_key }}/download/excel/" class="btn-download btn-excel">Download Excel</a>
+            </div>
+            <div class="download-card">
+                <h3>CSV File (.csv)</h3>
+                <p>Alternative format for compatibility</p>
+                <a href="/shipment/{{ shipment_key }}/download/csv/" class="btn-download btn-csv">Download CSV</a>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-header">Items Created ({{ items|length }})</div>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Box</th>
+                        <th>Qty</th>
+                        <th>Damaged</th>
+                        <th>Barcode Payload</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>#{{ item.box_id }}</td>
+                        <td>{{ item.content }}</td>
+                        <td class="{% if item.damaged %}damage-yes{% else %}damage-no{% endif %}">
+                            {{ item.get_damaged_display }}
+                        </td>
+                        <td style="font-size:0.75rem; color:#64748b;">{{ item.barcode_payload }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="nav-links">
+            <a href="/add-shipment/" class="btn-add-another">Add Another Shipment</a>
+            <a href="/dashboard/">View Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

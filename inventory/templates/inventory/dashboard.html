@@ -389,6 +389,7 @@
         <!-- Toolbar -->
         <div class="toolbar">
             <div class="toolbar-group">
+                <a class="btn-tool primary" href="/add-shipment/">Add Shipment</a>
                 <button class="btn-tool primary" onclick="openScanner()">Scan QR Code</button>
                 <a class="btn-tool" href="/export/csv/{% if show_archived %}?archived=1{% endif %}">Export CSV</a>
                 <a class="btn-tool" href="/export/pdf/{% if show_archived %}?archived=1{% endif %}" target="_blank">Print Report</a>
@@ -503,7 +504,7 @@
         {% else %}
         <div class="empty-state">
             <h3>{% if show_archived %}No archived items{% else %}No inventory items yet{% endif %}</h3>
-            <p>{% if show_archived %}Archive items from the main inventory view.{% else %}Run the Excel script to populate inventory from your Microsoft Form responses.{% endif %}</p>
+            <p>{% if show_archived %}Archive items from the main inventory view.{% else %}<a href="/add-shipment/" style="color:#2563eb;">Add a shipment</a> to create inventory items and generate QR codes.{% endif %}</p>
         </div>
         {% endif %}
     </div>
