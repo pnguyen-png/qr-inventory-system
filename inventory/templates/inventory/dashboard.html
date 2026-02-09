@@ -211,6 +211,34 @@
         }
         .qr-thumb:hover { border-color: #8b1a1a; }
 
+        /* Pallet group toggle */
+        .pallet-group-row td {
+            background: #f1f5f9 !important;
+            padding: 8px 14px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #374151;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .pallet-group-row:hover td { background: #e2e8f0 !important; }
+        .pallet-group-row .toggle-arrow {
+            display: inline-block;
+            transition: transform 0.2s;
+            margin-right: 8px;
+            font-size: 0.75rem;
+        }
+        .pallet-group-row.collapsed .toggle-arrow {
+            transform: rotate(-90deg);
+        }
+        .pallet-group-row .group-count {
+            color: #64748b;
+            font-weight: 400;
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+
         .view-link {
             color: #8b1a1a;
             text-decoration: none;
@@ -467,6 +495,7 @@
                         <th class="checkbox-col"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
                         <th>Manufacturer</th>
                         <th>Pallet ID</th>
+                        <th>Project #</th>
                         <th>Box</th>
                         <th>Contents</th>
                         <th>Damage</th>
@@ -483,11 +512,13 @@
                     {% for item in items %}
                     <tr data-id="{{ item.id }}" data-status="{{ item.status }}" data-damaged="{{ item.damaged|yesno:'true,false' }}"
                         data-overdue="{{ item.is_overdue|yesno:'true,false' }}"
-                        data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.location|lower }} {{ item.description|lower }} {{ item.checked_out_by|lower }}"
-                        class="{% if item.is_overdue %}overdue-row{% endif %}">
+                        data-pallet="{{ item.manufacturer|lower }}-{{ item.pallet_id|lower }}"
+                        data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.project_number|lower }} {{ item.location|lower }} {{ item.description|lower }} {{ item.checked_out_by|lower }}"
+                        class="{% if item.is_overdue %}overdue-row{% endif %} pallet-item">
                         <td class="checkbox-col"><input type="checkbox" class="row-check" value="{{ item.id }}" onchange="updateSelection()"></td>
                         <td>{{ item.manufacturer }}</td>
                         <td>{{ item.pallet_id }}</td>
+                        <td>{{ item.project_number|default:"-" }}</td>
                         <td>#{{ item.box_id }}</td>
                         <td>{{ item.content }}</td>
                         <td class="{% if item.damaged %}damage-yes{% else %}damage-no{% endif %}">
@@ -725,6 +756,59 @@
                 window.location.href = '/scan/?data=' + encodeURIComponent(url);
             }
         }
+
+        // ---- Collapsible Pallet Groups ----
+        function initPalletGroups() {
+            const tbody = document.querySelector('#inventoryTable tbody');
+            if (!tbody) return;
+
+            const rows = Array.from(tbody.querySelectorAll('tr.pallet-item'));
+            if (!rows.length) return;
+
+            // Find unique pallets in order of appearance
+            const seen = new Set();
+            const palletOrder = [];
+            rows.forEach(row => {
+                const key = row.dataset.pallet;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    palletOrder.push(key);
+                }
+            });
+
+            // Only create group headers for pallets with more than 1 item
+            const colCount = tbody.closest('table').querySelector('thead tr').children.length;
+
+            palletOrder.forEach(key => {
+                const groupRows = rows.filter(r => r.dataset.pallet === key);
+                if (groupRows.length <= 1) return;
+
+                // Extract display info from first row
+                const firstRow = groupRows[0];
+                const mfr = firstRow.children[1].textContent.trim();
+                const palletId = firstRow.children[2].textContent.trim();
+
+                // Create group header row
+                const groupRow = document.createElement('tr');
+                groupRow.className = 'pallet-group-row';
+                groupRow.dataset.palletGroup = key;
+                groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>${mfr} - Pallet ${palletId}<span class="group-count">(${groupRows.length} items)</span></td>`;
+
+                // Insert before the first row of this group
+                firstRow.parentNode.insertBefore(groupRow, firstRow);
+
+                // Click to toggle
+                groupRow.addEventListener('click', () => {
+                    const isCollapsed = groupRow.classList.toggle('collapsed');
+                    groupRows.forEach(r => {
+                        r.style.display = isCollapsed ? 'none' : '';
+                    });
+                });
+            });
+        }
+
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', initPalletGroups);
     </script>
 </body>
 </html>

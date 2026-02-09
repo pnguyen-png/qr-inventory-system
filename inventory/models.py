@@ -15,6 +15,7 @@ class InventoryItem(models.Model):
     manufacturer = models.CharField(max_length=255)
     pallet_id = models.CharField(max_length=100)
     box_id = models.IntegerField()
+    project_number = models.CharField(max_length=100, blank=True, default='')
     content = models.IntegerField()
     damaged = models.BooleanField(default=False)
     location = models.CharField(max_length=255)

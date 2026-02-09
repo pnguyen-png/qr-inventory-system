@@ -198,9 +198,9 @@ def dashboard(request):
     show_archived = request.GET.get('archived', '') == '1'
 
     if show_archived:
-        items = InventoryItem.objects.filter(archived=True).order_by('-archived_at')
+        items = InventoryItem.objects.filter(archived=True).order_by('manufacturer', 'pallet_id', 'box_id')
     else:
-        items = InventoryItem.objects.filter(archived=False).order_by('-updated_at')
+        items = InventoryItem.objects.filter(archived=False).order_by('manufacturer', 'pallet_id', 'box_id')
 
     all_active = InventoryItem.objects.filter(archived=False)
     overdue_items = [i for i in all_active if i.is_overdue]
@@ -516,6 +516,7 @@ def add_shipment(request):
     # POST — process the form
     manufacturer = request.POST.get('manufacturer', '').strip()
     pallet_id = request.POST.get('pallet_id', '').strip()
+    project_number = request.POST.get('project_number', '').strip()
     num_boxes = request.POST.get('num_boxes', '').strip()
     items_per_box = request.POST.get('items_per_box', '').strip()
     location = request.POST.get('location', '').strip()
@@ -527,6 +528,7 @@ def add_shipment(request):
     form_data = {
         'manufacturer': manufacturer,
         'pallet_id': pallet_id,
+        'project_number': project_number,
         'num_boxes': num_boxes,
         'items_per_box': items_per_box,
         'location': location,
@@ -636,6 +638,7 @@ def add_shipment(request):
             existing.damaged = box_damaged
             existing.location = location
             existing.description = description
+            existing.project_number = project_number
             existing.barcode_payload = barcode_payload
             existing.qr_url = qr_url
             existing.save()
@@ -645,6 +648,7 @@ def add_shipment(request):
                 manufacturer=manufacturer,
                 pallet_id=pallet_id,
                 box_id=box_num,
+                project_number=project_number,
                 content=box_content,
                 damaged=box_damaged,
                 location=location,
@@ -765,6 +769,8 @@ def edit_item(request):
             item.location = data['location']
         if 'description' in data:
             item.description = data['description']
+        if 'project_number' in data:
+            item.project_number = data['project_number']
 
         item.save()
 
@@ -774,6 +780,7 @@ def edit_item(request):
             'damaged': item.damaged,
             'location': item.location,
             'description': item.description,
+            'project_number': item.project_number,
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)

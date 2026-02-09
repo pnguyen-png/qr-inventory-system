@@ -319,6 +319,10 @@
                     <div class="value">{{ item.content }}</div>
                 </div>
                 <div class="detail-cell">
+                    <label>Project Number</label>
+                    <div class="value">{{ item.project_number|default:"-" }}</div>
+                </div>
+                <div class="detail-cell">
                     <label>Receiving Location</label>
                     <div class="value">{{ item.location }}</div>
                 </div>
@@ -383,6 +387,13 @@
                         <label>Description</label>
                         <input type="text" class="edit-input" id="editDescription" value="{{ item.description }}">
                     </div>
+                </div>
+                <div class="edit-row">
+                    <div class="edit-group">
+                        <label>Project Number</label>
+                        <input type="text" class="edit-input" id="editProjectNumber" value="{{ item.project_number }}">
+                    </div>
+                    <div class="edit-group"></div>
                 </div>
                 <button class="btn-save-edit" id="btnSaveEdit" onclick="saveEdit({{ item.id }})">Save Changes</button>
                 <div class="edit-message" id="editMessage"></div>
@@ -605,6 +616,7 @@
                 damaged: document.getElementById('editDamaged').value === 'true',
                 location: document.getElementById('editLocation').value,
                 description: document.getElementById('editDescription').value,
+                project_number: document.getElementById('editProjectNumber').value,
             };
 
             try {
