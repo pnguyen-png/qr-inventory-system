@@ -211,6 +211,11 @@
             font-weight: 500;
         }
         .view-link:hover { text-decoration: underline; }
+        .view-col { position: sticky; right: 0; background: #fff; }
+        thead .view-col { background: #f8fafc; }
+        tr:hover .view-col { background: #f8fafc; }
+        tr.selected .view-col { background: #eff6ff; }
+        tr.overdue-row .view-col { background: #fef2f2; }
 
         .empty-state {
             padding: 60px 24px;
@@ -403,6 +408,9 @@
             {% if not show_archived %}
             <button class="tab" onclick="switchTab('checkedin')">Checked In</button>
             <button class="tab" onclick="switchTab('checkedout')">Checked Out</button>
+            <button class="tab" onclick="switchTab('tested')">Tested</button>
+            <button class="tab" onclick="switchTab('willbereused')">Will Be Reused</button>
+            <button class="tab" onclick="switchTab('recycling')">Recycling</button>
             <button class="tab" onclick="switchTab('damaged')">Damaged</button>
             <button class="tab" onclick="switchTab('overdue')">Overdue</button>
             {% endif %}
@@ -459,7 +467,7 @@
                         <th>Status</th>
                         {% if not show_archived %}<th>Checked Out By</th>{% endif %}
                         <th>Updated</th>
-                        <th></th>
+                        <th class="view-col"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -486,7 +494,7 @@
                         <td>{{ item.checked_out_by|default:"-" }}</td>
                         {% endif %}
                         <td>{{ item.updated_at|date:"M d, H:i" }}</td>
-                        <td><a class="view-link" href="/scan/?data={{ item.barcode_payload|urlencode }}">View</a></td>
+                        <td class="view-col"><a class="view-link" href="/scan/?data={{ item.barcode_payload|urlencode }}">View</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -526,6 +534,9 @@
             if (tab === 'all') statusFilter.value = '';
             else if (tab === 'checkedin') statusFilter.value = 'checked_in';
             else if (tab === 'checkedout') statusFilter.value = 'checked_out';
+            else if (tab === 'tested') statusFilter.value = 'tested';
+            else if (tab === 'willbereused') statusFilter.value = 'will_be_reused';
+            else if (tab === 'recycling') statusFilter.value = 'recycling';
             else if (tab === 'damaged') statusFilter.value = '';
             else if (tab === 'overdue') statusFilter.value = '';
 
