@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fire &amp; Risk Alliance - Inventory Report</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; font-size: 11px; color: #333; padding: 20px; }
+        h1 { font-size: 18px; margin-bottom: 4px; }
+        .subtitle { font-size: 12px; color: #666; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+        th { background: #f0f0f0; font-weight: bold; font-size: 10px; text-transform: uppercase; }
+        td { font-size: 10px; }
+        tr:nth-child(even) td { background: #fafafa; }
+        .damage-yes { color: red; font-weight: bold; }
+        .footer { margin-top: 20px; font-size: 10px; color: #999; text-align: center; }
+        @media print {
+            body { padding: 0; }
+            @page { margin: 0.5in; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Fire &amp; Risk Alliance LLC</h1>
+    <div class="subtitle">Inventory Report - Generated {{ generated_at|date:"M d, Y H:i" }}</div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Manufacturer</th>
+                <th>Pallet</th>
+                <th>Box</th>
+                <th>Qty</th>
+                <th>Damaged</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Checked Out By</th>
+                <th>Updated</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.id }}</td>
+                <td>{{ item.manufacturer }}</td>
+                <td>{{ item.pallet_id }}</td>
+                <td>#{{ item.box_id }}</td>
+                <td>{{ item.content }}</td>
+                <td class="{% if item.damaged %}damage-yes{% endif %}">{{ item.get_damaged_display }}</td>
+                <td>{{ item.location }}</td>
+                <td>{{ item.get_status_display }}</td>
+                <td>{{ item.checked_out_by|default:"-" }}</td>
+                <td>{{ item.updated_at|date:"M d, H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="10" style="text-align:center; color:#999;">No items found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Total items: {{ items|length }} | Fire &amp; Risk Alliance LLC Inventory Management System
+    </div>
+
+    <script>window.onload = function() { window.print(); }</script>
+</body>
+</html>

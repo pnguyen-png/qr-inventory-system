@@ -44,7 +44,9 @@
             letter-spacing: 0.1em;
         }
         .header-right {
-            text-align: right;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
         .header-right p { color: #94a3b8; font-size: 0.8rem; }
 
@@ -53,7 +55,7 @@
         /* Summary cards */
         .summary-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 12px;
             margin-bottom: 24px;
         }
@@ -65,11 +67,44 @@
             text-align: center;
         }
         .summary-card .number { font-size: 2rem; font-weight: 700; }
-        .summary-card .label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+        .summary-card .label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
         .c-total .number { color: #1a1a2e; }
         .c-in .number { color: #16a34a; }
         .c-out .number { color: #f59e0b; }
         .c-damaged .number { color: #dc2626; }
+        .c-overdue .number { color: #9333ea; }
+        .c-archived .number { color: #64748b; }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+        .toolbar-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .toolbar .btn-tool {
+            padding: 8px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: #fff;
+            color: #374151;
+            white-space: nowrap;
+        }
+        .toolbar .btn-tool:hover { background: #f1f5f9; }
+        .toolbar .btn-tool.primary { background: #8b1a1a; color: #fff; border-color: #8b1a1a; }
+        .toolbar .btn-tool.primary:hover { opacity: 0.9; }
+        .toolbar .btn-tool.danger { background: #dc2626; color: #fff; border-color: #dc2626; }
+        .toolbar .btn-tool.success { background: #16a34a; color: #fff; border-color: #16a34a; }
+        .toolbar .btn-tool:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* Tabs */
         .tabs {
@@ -77,6 +112,7 @@
             gap: 0;
             border-bottom: 2px solid #e5e7eb;
             margin-bottom: 16px;
+            flex-wrap: wrap;
         }
         .tab {
             padding: 10px 20px;
@@ -91,9 +127,6 @@
         }
         .tab.active { color: #1a1a2e; border-bottom-color: #8b1a1a; }
         .tab:hover { color: #1a1a2e; }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
 
         /* Filters */
         .filters {
@@ -137,6 +170,8 @@
             vertical-align: middle;
         }
         tr:hover td { background: #f8fafc; }
+        tr.selected td { background: #eff6ff; }
+        tr.overdue-row td { background: #fef2f2; }
 
         .status-badge {
             display: inline-block;
@@ -152,6 +187,17 @@
         .status-tested { background: #dbeafe; color: #1e40af; }
         .status-will_be_reused { background: #e0e7ff; color: #3730a3; }
         .status-recycling { background: #fce7f3; color: #9d174d; }
+
+        .overdue-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            background: #fbbf24;
+            color: #92400e;
+            margin-left: 6px;
+        }
 
         .damage-yes { color: #dc2626; font-weight: 700; }
         .damage-no { color: #16a34a; }
@@ -172,6 +218,112 @@
             color: #94a3b8;
         }
         .empty-state h3 { margin-bottom: 8px; color: #64748b; }
+
+        .checkbox-col { width: 40px; text-align: center; }
+        .checkbox-col input { width: 16px; height: 16px; cursor: pointer; }
+
+        /* Bulk action bar */
+        .bulk-bar {
+            display: none;
+            background: #1e3a5f;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .bulk-bar.active { display: flex; }
+        .bulk-bar span { font-size: 0.875rem; font-weight: 600; }
+        .bulk-bar select, .bulk-bar input {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #94a3b8;
+            font-size: 0.8rem;
+            background: #fff;
+            color: #1a1a2e;
+        }
+        .bulk-bar .btn-bulk {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #fff;
+        }
+        .bulk-bar .btn-bulk.apply { background: #16a34a; }
+        .bulk-bar .btn-bulk.archive { background: #f59e0b; color: #1a1a2e; }
+        .bulk-bar .btn-bulk.cancel { background: #64748b; }
+
+        /* QR Scanner Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            max-width: 480px;
+            width: 90%;
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 16px 20px;
+            background: #1a1a2e;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 { font-size: 1rem; }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .modal-body { padding: 20px; text-align: center; }
+        #qr-video {
+            width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            background: #000;
+        }
+        .scanner-status {
+            margin-top: 12px;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        /* Overdue alert banner */
+        .overdue-banner {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 1px solid #f59e0b;
+            border-radius: 10px;
+            padding: 14px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .overdue-banner .icon { font-size: 1.5rem; }
+        .overdue-banner .text { font-size: 0.875rem; color: #92400e; }
+        .overdue-banner .text strong { color: #78350f; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 8px; text-align: center; }
+            .toolbar { justify-content: center; }
+            .summary-row { grid-template-columns: repeat(3, 1fr); }
+        }
     </style>
 </head>
 <body>
@@ -184,16 +336,28 @@
             </div>
         </div>
         <div class="header-right">
-            <p>{{ items|length }} item{{ items|length|pluralize }} in inventory</p>
+            <p>{{ items|length }} item{{ items|length|pluralize }} {% if show_archived %}in archive{% else %}in inventory{% endif %}</p>
         </div>
     </div>
 
     <div class="container">
+        <!-- Overdue Alert Banner -->
+        {% if overdue_count > 0 and not show_archived %}
+        <div class="overdue-banner">
+            <div class="icon">&#9888;</div>
+            <div class="text">
+                <strong>{{ overdue_count }} item{{ overdue_count|pluralize }} overdue!</strong>
+                Items checked out for more than 7 days.
+                <a href="#" onclick="switchTab('overdue'); return false;" style="color:#78350f; text-decoration:underline;">View overdue items</a>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Summary -->
         <div class="summary-row">
             <div class="summary-card c-total">
                 <div class="number">{{ items|length }}</div>
-                <div class="label">Total Items</div>
+                <div class="label">{% if show_archived %}Archived{% else %}Total Items{% endif %}</div>
             </div>
             <div class="summary-card c-in">
                 <div class="number">{{ checked_in_count }}</div>
@@ -207,14 +371,41 @@
                 <div class="number">{{ damaged_count }}</div>
                 <div class="label">Damaged</div>
             </div>
+            <div class="summary-card c-overdue">
+                <div class="number">{{ overdue_count }}</div>
+                <div class="label">Overdue</div>
+            </div>
+            <div class="summary-card c-archived">
+                <div class="number">{{ archived_count }}</div>
+                <div class="label">Archived</div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button class="btn-tool primary" onclick="openScanner()">Scan QR Code</button>
+                <a class="btn-tool" href="/export/csv/{% if show_archived %}?archived=1{% endif %}">Export CSV</a>
+                <a class="btn-tool" href="/export/pdf/{% if show_archived %}?archived=1{% endif %}" target="_blank">Print Report</a>
+            </div>
+            <div class="toolbar-group" style="margin-left:auto;">
+                {% if show_archived %}
+                <a class="btn-tool success" href="/dashboard/">View Active Inventory</a>
+                {% else %}
+                <a class="btn-tool" href="/dashboard/?archived=1">View Archive ({{ archived_count }})</a>
+                {% endif %}
+            </div>
         </div>
 
         <!-- Tabs -->
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('all')">All Inventory</button>
+            <button class="tab active" onclick="switchTab('all')">{% if show_archived %}All Archived{% else %}All Inventory{% endif %}</button>
+            {% if not show_archived %}
             <button class="tab" onclick="switchTab('checkedin')">Checked In</button>
             <button class="tab" onclick="switchTab('checkedout')">Checked Out</button>
             <button class="tab" onclick="switchTab('damaged')">Damaged</button>
+            <button class="tab" onclick="switchTab('overdue')">Overdue</button>
+            {% endif %}
         </div>
 
         <!-- Filters -->
@@ -230,80 +421,115 @@
             </select>
         </div>
 
-        <!-- Inventory Table -->
-        <div class="tab-content active" id="tab-all">
-            {% if items %}
-            <div class="table-wrap">
-                <table id="inventoryTable">
-                    <thead>
-                        <tr>
-                            <th>Manufacturer</th>
-                            <th>Pallet ID</th>
-                            <th>Box</th>
-                            <th>Contents</th>
-                            <th>Damage</th>
-                            <th>Location</th>
-                            <th>Description</th>
-                            <th>Status</th>
-                            <th>Updated</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in items %}
-                        <tr data-status="{{ item.status }}" data-damaged="{{ item.damaged|yesno:'true,false' }}"
-                            data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.location|lower }} {{ item.description|lower }}">
-                            <td>{{ item.manufacturer }}</td>
-                            <td>{{ item.pallet_id }}</td>
-                            <td>#{{ item.box_id }}</td>
-                            <td>{{ item.content }}</td>
-                            <td class="{% if item.damaged %}damage-yes{% else %}damage-no{% endif %}">
-                                {{ item.get_damaged_display }}
-                            </td>
-                            <td>{{ item.location }}</td>
-                            <td class="desc-cell" title="{{ item.description }}">{{ item.description|truncatewords:8 }}</td>
-                            <td><span class="status-badge status-{{ item.status }}">{{ item.get_status_display }}</span></td>
-                            <td>{{ item.updated_at|date:"M d, H:i" }}</td>
-                            <td><a class="view-link" href="/scan/?data={{ item.barcode_payload|urlencode }}">View</a></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <!-- Bulk Action Bar -->
+        <div class="bulk-bar" id="bulkBar">
+            <span id="selectedCount">0 selected</span>
+            <select id="bulkStatus">
+                <option value="">Change Status To...</option>
+                <option value="checked_in">Checked In</option>
+                <option value="checked_out">Checked Out</option>
+                <option value="tested">Tested</option>
+                <option value="will_be_reused">Will Be Reused</option>
+                <option value="recycling">Recycling</option>
+            </select>
+            <input type="text" id="bulkChangedBy" placeholder="Your name" style="width:150px;">
+            <button class="btn-bulk apply" onclick="applyBulkStatus()">Apply Status</button>
+            {% if show_archived %}
+            <button class="btn-bulk archive" onclick="applyBulkArchive(false)">Unarchive Selected</button>
             {% else %}
-            <div class="empty-state">
-                <h3>No inventory items yet</h3>
-                <p>Run the Excel script to populate inventory from your Microsoft Form responses.</p>
-            </div>
+            <button class="btn-bulk archive" onclick="applyBulkArchive(true)">Archive Selected</button>
             {% endif %}
+            <button class="btn-bulk cancel" onclick="clearSelection()">Cancel</button>
+        </div>
+
+        <!-- Inventory Table -->
+        {% if items %}
+        <div class="table-wrap">
+            <table id="inventoryTable">
+                <thead>
+                    <tr>
+                        <th class="checkbox-col"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                        <th>Manufacturer</th>
+                        <th>Pallet ID</th>
+                        <th>Box</th>
+                        <th>Contents</th>
+                        <th>Damage</th>
+                        <th>Location</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        {% if not show_archived %}<th>Checked Out By</th>{% endif %}
+                        <th>Updated</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr data-id="{{ item.id }}" data-status="{{ item.status }}" data-damaged="{{ item.damaged|yesno:'true,false' }}"
+                        data-overdue="{{ item.is_overdue|yesno:'true,false' }}"
+                        data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.location|lower }} {{ item.description|lower }} {{ item.checked_out_by|lower }}"
+                        class="{% if item.is_overdue %}overdue-row{% endif %}">
+                        <td class="checkbox-col"><input type="checkbox" class="row-check" value="{{ item.id }}" onchange="updateSelection()"></td>
+                        <td>{{ item.manufacturer }}</td>
+                        <td>{{ item.pallet_id }}</td>
+                        <td>#{{ item.box_id }}</td>
+                        <td>{{ item.content }}</td>
+                        <td class="{% if item.damaged %}damage-yes{% else %}damage-no{% endif %}">
+                            {{ item.get_damaged_display }}
+                        </td>
+                        <td>{{ item.location }}</td>
+                        <td class="desc-cell" title="{{ item.description }}">{{ item.description|truncatewords:8 }}</td>
+                        <td>
+                            <span class="status-badge status-{{ item.status }}">{{ item.get_status_display }}</span>
+                            {% if item.is_overdue %}<span class="overdue-badge">{{ item.days_checked_out }}d overdue</span>{% endif %}
+                        </td>
+                        {% if not show_archived %}
+                        <td>{{ item.checked_out_by|default:"-" }}</td>
+                        {% endif %}
+                        <td>{{ item.updated_at|date:"M d, H:i" }}</td>
+                        <td><a class="view-link" href="/scan/?data={{ item.barcode_payload|urlencode }}">View</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h3>{% if show_archived %}No archived items{% else %}No inventory items yet{% endif %}</h3>
+            <p>{% if show_archived %}Archive items from the main inventory view.{% else %}Run the Excel script to populate inventory from your Microsoft Form responses.{% endif %}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- QR Scanner Modal -->
+    <div class="modal-overlay" id="scannerModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Scan QR Code</h3>
+                <button class="modal-close" onclick="closeScanner()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <video id="qr-video" playsinline></video>
+                <div class="scanner-status" id="scannerStatus">Initializing camera...</div>
+            </div>
         </div>
     </div>
 
     <script>
+        // ---- Tab switching ----
+        let currentTab = 'all';
         function switchTab(tab) {
+            currentTab = tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
 
             const statusFilter = document.getElementById('statusFilter');
-            const rows = document.querySelectorAll('#inventoryTable tbody tr');
+            if (tab === 'all') statusFilter.value = '';
+            else if (tab === 'checkedin') statusFilter.value = 'checked_in';
+            else if (tab === 'checkedout') statusFilter.value = 'checked_out';
+            else if (tab === 'damaged') statusFilter.value = '';
+            else if (tab === 'overdue') statusFilter.value = '';
 
-            if (tab === 'all') {
-                statusFilter.value = '';
-            } else if (tab === 'checkedin') {
-                statusFilter.value = 'checked_in';
-            } else if (tab === 'checkedout') {
-                statusFilter.value = 'checked_out';
-            } else if (tab === 'damaged') {
-                statusFilter.value = '';
-            }
-
-            rows.forEach(row => {
-                let show = true;
-                if (tab === 'checkedin' && row.dataset.status !== 'checked_in') show = false;
-                if (tab === 'checkedout' && row.dataset.status !== 'checked_out') show = false;
-                if (tab === 'damaged' && row.dataset.damaged !== 'true') show = false;
-                row.style.display = show ? '' : 'none';
-            });
+            filterTable();
         }
 
         function filterTable() {
@@ -313,13 +539,165 @@
 
             rows.forEach(row => {
                 const matchSearch = !search || row.dataset.search.includes(search);
-                const matchStatus = !status || row.dataset.status === status;
-                row.style.display = (matchSearch && matchStatus) ? '' : 'none';
-            });
+                let matchStatus = !status || row.dataset.status === status;
+                let matchTab = true;
 
-            // Reset tab highlights
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector('.tab').classList.add('active');
+                if (currentTab === 'damaged') matchTab = row.dataset.damaged === 'true';
+                if (currentTab === 'overdue') matchTab = row.dataset.overdue === 'true';
+
+                row.style.display = (matchSearch && matchStatus && matchTab) ? '' : 'none';
+            });
+        }
+
+        // ---- Selection & Bulk actions ----
+        function toggleSelectAll() {
+            const checked = document.getElementById('selectAll').checked;
+            document.querySelectorAll('.row-check').forEach(cb => {
+                const row = cb.closest('tr');
+                if (row.style.display !== 'none') {
+                    cb.checked = checked;
+                    row.classList.toggle('selected', checked);
+                }
+            });
+            updateSelection();
+        }
+
+        function updateSelection() {
+            const checked = document.querySelectorAll('.row-check:checked');
+            const count = checked.length;
+            document.getElementById('selectedCount').textContent = count + ' selected';
+            document.getElementById('bulkBar').classList.toggle('active', count > 0);
+
+            document.querySelectorAll('.row-check').forEach(cb => {
+                cb.closest('tr').classList.toggle('selected', cb.checked);
+            });
+        }
+
+        function clearSelection() {
+            document.getElementById('selectAll').checked = false;
+            document.querySelectorAll('.row-check').forEach(cb => {
+                cb.checked = false;
+                cb.closest('tr').classList.remove('selected');
+            });
+            updateSelection();
+        }
+
+        function getSelectedIds() {
+            return Array.from(document.querySelectorAll('.row-check:checked')).map(cb => parseInt(cb.value));
+        }
+
+        async function applyBulkStatus() {
+            const ids = getSelectedIds();
+            const status = document.getElementById('bulkStatus').value;
+            const changedBy = document.getElementById('bulkChangedBy').value;
+
+            if (!ids.length) return alert('No items selected');
+            if (!status) return alert('Select a status');
+
+            try {
+                const resp = await fetch('/api/bulk-update-status/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({item_ids: ids, status: status, changed_by: changedBy})
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    alert('Updated ' + data.updated_count + ' items');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Network error');
+            }
+        }
+
+        async function applyBulkArchive(archive) {
+            const ids = getSelectedIds();
+            if (!ids.length) return alert('No items selected');
+
+            const action = archive ? 'archive' : 'unarchive';
+            if (!confirm('Are you sure you want to ' + action + ' ' + ids.length + ' item(s)?')) return;
+
+            try {
+                const resp = await fetch('/api/bulk-archive/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({item_ids: ids, archive: archive})
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    alert((archive ? 'Archived ' : 'Unarchived ') + data.updated_count + ' items');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Network error');
+            }
+        }
+
+        // ---- QR Scanner ----
+        let scannerStream = null;
+        let scannerInterval = null;
+
+        function openScanner() {
+            document.getElementById('scannerModal').classList.add('active');
+            startScanner();
+        }
+
+        function closeScanner() {
+            document.getElementById('scannerModal').classList.remove('active');
+            stopScanner();
+        }
+
+        async function startScanner() {
+            const video = document.getElementById('qr-video');
+            const statusEl = document.getElementById('scannerStatus');
+
+            try {
+                scannerStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
+                video.srcObject = scannerStream;
+                video.play();
+                statusEl.textContent = 'Point your camera at a QR code...';
+
+                // Use BarcodeDetector API if available
+                if ('BarcodeDetector' in window) {
+                    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                    scannerInterval = setInterval(async () => {
+                        try {
+                            const barcodes = await detector.detect(video);
+                            if (barcodes.length > 0) {
+                                const url = barcodes[0].rawValue;
+                                stopScanner();
+                                handleScanResult(url);
+                            }
+                        } catch (e) {}
+                    }, 300);
+                } else {
+                    statusEl.textContent = 'QR scanning requires Chrome 83+ or a supported browser. You can also enter a URL manually.';
+                }
+            } catch (err) {
+                statusEl.textContent = 'Camera access denied. Please allow camera permissions and try again.';
+            }
+        }
+
+        function stopScanner() {
+            if (scannerInterval) { clearInterval(scannerInterval); scannerInterval = null; }
+            if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
+        }
+
+        function handleScanResult(url) {
+            closeScanner();
+            // If it's a full URL with /scan/, navigate to it
+            if (url.includes('/scan/')) {
+                window.location.href = url;
+            } else {
+                // Try to use raw data
+                window.location.href = '/scan/?data=' + encodeURIComponent(url);
+            }
         }
     </script>
 </body>
