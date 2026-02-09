@@ -26,6 +26,13 @@ urlpatterns = [
     # Edit item
     path('api/edit-item/', views.edit_item, name='edit_item'),
 
+    # Photos
+    path('api/upload-photo/', views.upload_photo, name='upload_photo'),
+    path('api/delete-photo/', views.delete_photo, name='delete_photo'),
+
+    # Next pallet ID
+    path('api/next-pallet/', views.next_pallet_api, name='next_pallet'),
+
     # Archive
     path('api/archive-item/', views.archive_item, name='archive_item'),
 

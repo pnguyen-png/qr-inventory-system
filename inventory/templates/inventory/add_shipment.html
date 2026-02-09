@@ -75,6 +75,12 @@
             font-size: 0.9rem; color: #374151; margin-bottom: 12px;
         }
 
+        .pallet-display {
+            background: #f0fdf4; border: 2px solid #16a34a; border-radius: 8px;
+            padding: 12px 14px; font-size: 1.1rem; font-weight: 700; color: #166534;
+            text-align: center;
+        }
+
         .btn-submit {
             width: 100%; padding: 14px; background: #8b1a1a; color: #fff;
             border: none; border-radius: 8px; font-size: 1rem; font-weight: 700;
@@ -89,9 +95,38 @@
         }
         .error-list ul { margin: 6px 0 0 16px; }
 
+        .photo-upload-area {
+            border: 2px dashed #d1d5db; border-radius: 8px; padding: 20px;
+            text-align: center; cursor: pointer; transition: border-color 0.2s;
+        }
+        .photo-upload-area:hover { border-color: #8b1a1a; }
+        .photo-upload-area.dragover { border-color: #8b1a1a; background: #fef2f2; }
+        .photo-upload-area p { color: #64748b; font-size: 0.85rem; }
+        .photo-upload-area .icon { font-size: 2rem; margin-bottom: 8px; }
+        .photo-preview-list {
+            display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px;
+        }
+        .photo-preview-item {
+            position: relative; width: 80px; height: 80px; border-radius: 8px;
+            overflow: hidden; border: 1px solid #e5e7eb;
+        }
+        .photo-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-preview-item .remove-photo {
+            position: absolute; top: 2px; right: 2px; background: rgba(220,38,38,0.9);
+            color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px;
+            font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+
+        .location-custom-wrap { margin-top: 8px; display: none; }
+
         .nav-links { margin-top: 16px; text-align: center; }
         .nav-links a { color: #2563eb; text-decoration: none; font-size: 0.875rem; }
         .nav-links a:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 8px; text-align: center; }
+        }
     </style>
 </head>
 <body>
@@ -124,7 +159,7 @@
                 </div>
                 {% endif %}
 
-                <form method="POST" id="shipmentForm">
+                <form method="POST" id="shipmentForm" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="form-row">
                         <div class="form-group">
@@ -133,9 +168,8 @@
                                 value="{{ form_data.manufacturer|default:'' }}" placeholder="e.g. Panasonic">
                         </div>
                         <div class="form-group">
-                            <label>Pallet ID</label>
-                            <input type="text" name="pallet_id" class="form-input" required
-                                value="{{ form_data.pallet_id|default:'' }}" placeholder="e.g. 255">
+                            <label>Pallet ID <span class="hint">(auto-assigned)</span></label>
+                            <div class="pallet-display" id="palletDisplay">{{ next_pallet_id }}</div>
                         </div>
                     </div>
 
@@ -161,8 +195,18 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Receiving Location</label>
-                            <input type="text" name="location" class="form-input" required
-                                value="{{ form_data.location|default:'' }}" placeholder="e.g. Rockville, MD">
+                            <select name="location" class="form-input" id="locationSelect" onchange="toggleCustomLocation()">
+                                <option value="">-- Select Location --</option>
+                                {% for loc in location_choices %}
+                                <option value="{{ loc }}" {% if form_data.location == loc %}selected{% endif %}>{{ loc }}</option>
+                                {% endfor %}
+                                <option value="other" {% if form_data.location and form_data.location not in location_choices %}selected{% endif %}>Other (enter below)</option>
+                            </select>
+                            <div class="location-custom-wrap" id="customLocationWrap">
+                                <input type="text" name="location_custom" class="form-input" id="customLocationInput"
+                                    placeholder="Enter custom location"
+                                    value="{% if form_data.location and form_data.location not in location_choices %}{{ form_data.location }}{% endif %}">
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Damage Reported?</label>
@@ -176,6 +220,17 @@
                     <div class="form-group">
                         <label>Brief Description of Shipment</label>
                         <textarea name="description" class="form-input" placeholder="e.g. Lithium-ion batteries for testing">{{ form_data.description|default:'' }}</textarea>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Photos (optional)</h3>
+                        <div class="photo-upload-area" id="photoUploadArea" onclick="document.getElementById('photoInput').click();">
+                            <div class="icon">&#128247;</div>
+                            <p>Click to upload photos or drag and drop</p>
+                            <p class="hint">Upload photos of the shipment, labels, or damage</p>
+                        </div>
+                        <input type="file" id="photoInput" name="photos" multiple accept="image/*" style="display:none;" onchange="previewPhotos(this)">
+                        <div class="photo-preview-list" id="photoPreviewList"></div>
                     </div>
 
                     <div class="form-section">
@@ -203,5 +258,56 @@
             <a href="/dashboard/">Back to Dashboard</a>
         </div>
     </div>
+
+    <script>
+        function toggleCustomLocation() {
+            const select = document.getElementById('locationSelect');
+            const wrap = document.getElementById('customLocationWrap');
+            const input = document.getElementById('customLocationInput');
+            if (select.value === 'other') {
+                wrap.style.display = 'block';
+                input.required = true;
+            } else {
+                wrap.style.display = 'none';
+                input.required = false;
+            }
+        }
+        // Initialize on page load
+        toggleCustomLocation();
+
+        // Photo preview
+        function previewPhotos(input) {
+            const list = document.getElementById('photoPreviewList');
+            list.innerHTML = '';
+            Array.from(input.files).forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'photo-preview-item';
+                    div.innerHTML = `<img src="${e.target.result}" alt="Photo ${idx + 1}">`;
+                    list.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Drag and drop
+        const uploadArea = document.getElementById('photoUploadArea');
+        const photoInput = document.getElementById('photoInput');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            photoInput.files = e.dataTransfer.files;
+            previewPhotos(photoInput);
+        });
+    </script>
 </body>
 </html>

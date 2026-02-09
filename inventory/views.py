@@ -3,12 +3,19 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
+from django.db.models import Max
 import json
 import csv
 import urllib.parse
 import os
 import uuid
-from .models import InventoryItem, StatusHistory, NotificationLog
+from .models import InventoryItem, StatusHistory, NotificationLog, ItemPhoto
+
+LOCATION_CHOICES = [
+    'York, PA',
+    'Rockville, MD',
+    'Cambridge, MD',
+]
 
 
 def scanner_landing(request):
@@ -45,11 +52,14 @@ def scanner_landing(request):
 
         history = item.status_history.all()
         status_labels = dict(item.STATUS_CHOICES)
+        photos = item.photos.all()
 
         return render(request, 'inventory/scanner_landing.html', {
             'item': item,
             'history': history,
             'status_labels': status_labels,
+            'photos': photos,
+            'location_choices': LOCATION_CHOICES,
             'error': None
         })
 
@@ -508,18 +518,38 @@ def inventory_report_api(request):
 
 # ---- Shipment Form Views ----
 
+def _next_pallet_id(manufacturer=None):
+    """Compute the next pallet ID (max existing + 1). Global across all manufacturers."""
+    result = InventoryItem.objects.aggregate(max_pallet=Max('pallet_id'))
+    max_pallet = result['max_pallet']
+    if max_pallet:
+        try:
+            return str(int(max_pallet) + 1)
+        except (ValueError, TypeError):
+            pass
+    return '1'
+
+
 def add_shipment(request):
     """Single-page form to create a new shipment (replaces Microsoft Form + Excel script)"""
     if request.method == 'GET':
-        return render(request, 'inventory/add_shipment.html')
+        next_pallet = _next_pallet_id()
+        return render(request, 'inventory/add_shipment.html', {
+            'next_pallet_id': next_pallet,
+            'location_choices': LOCATION_CHOICES,
+        })
 
     # POST — process the form
     manufacturer = request.POST.get('manufacturer', '').strip()
-    pallet_id = request.POST.get('pallet_id', '').strip()
     project_number = request.POST.get('project_number', '').strip()
+    # Auto-increment pallet ID
+    pallet_id = _next_pallet_id()
     num_boxes = request.POST.get('num_boxes', '').strip()
     items_per_box = request.POST.get('items_per_box', '').strip()
+    # Location: use custom if "other" is selected
     location = request.POST.get('location', '').strip()
+    if location == 'other':
+        location = request.POST.get('location_custom', '').strip()
     damaged = request.POST.get('damaged', 'no')
     description = request.POST.get('description', '').strip()
     damaged_boxes_str = request.POST.get('damaged_boxes', '').strip()
@@ -543,8 +573,6 @@ def add_shipment(request):
     # Validate required fields
     if not manufacturer:
         errors.append('Manufacturer / Supplier is required.')
-    if not pallet_id:
-        errors.append('Pallet ID is required.')
     if not location:
         errors.append('Receiving Location is required.')
 
@@ -605,6 +633,8 @@ def add_shipment(request):
         return render(request, 'inventory/add_shipment.html', {
             'errors': errors,
             'form_data': form_data,
+            'next_pallet_id': pallet_id,
+            'location_choices': LOCATION_CHOICES,
         })
 
     # Create items
@@ -658,6 +688,16 @@ def add_shipment(request):
                 qr_url=qr_url,
             )
             created_items.append(item)
+
+    # Handle photo uploads — attach to all created items
+    photos = request.FILES.getlist('photos')
+    for photo_file in photos:
+        for item in created_items:
+            ItemPhoto.objects.create(
+                item=item,
+                image=photo_file,
+                caption=f'Shipment photo - Pallet {pallet_id}',
+            )
 
     # Store the shipment key in the session for downloads
     request.session[f'shipment_{shipment_key}'] = [item.id for item in created_items]
@@ -784,6 +824,57 @@ def edit_item(request):
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def upload_photo(request):
+    """Upload a photo for an individual item"""
+    try:
+        item_id = request.POST.get('item_id')
+        caption = request.POST.get('caption', '')
+        item = get_object_or_404(InventoryItem, id=item_id)
+
+        photo_file = request.FILES.get('photo')
+        if not photo_file:
+            return JsonResponse({'success': False, 'error': 'No photo file provided'}, status=400)
+
+        photo = ItemPhoto.objects.create(
+            item=item,
+            image=photo_file,
+            caption=caption,
+        )
+
+        return JsonResponse({
+            'success': True,
+            'photo_id': photo.id,
+            'photo_url': photo.image.url,
+            'caption': photo.caption,
+            'uploaded_at': photo.uploaded_at.strftime('%b %d, %Y %H:%M'),
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def delete_photo(request):
+    """Delete a photo"""
+    try:
+        data = json.loads(request.body)
+        photo_id = data.get('photo_id')
+        photo = get_object_or_404(ItemPhoto, id=photo_id)
+        photo.image.delete(save=False)
+        photo.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+def next_pallet_api(request):
+    """API endpoint returning the next pallet ID"""
+    next_id = _next_pallet_id()
+    return JsonResponse({'next_pallet_id': next_id})
 
 
 def download_shipment_csv(request, shipment_key):

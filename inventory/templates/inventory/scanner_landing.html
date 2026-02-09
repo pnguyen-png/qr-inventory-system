@@ -253,9 +253,60 @@
         }
         .qr-download-link:hover { opacity: 0.85; }
 
+        /* Photos section */
+        .photos-section {
+            padding: 20px; border-top: 1px solid #e5e7eb;
+        }
+        .photos-section h3 {
+            font-size: 0.875rem; margin-bottom: 12px; color: #374151;
+        }
+        .photos-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px; margin-bottom: 16px;
+        }
+        .photo-card {
+            position: relative; border-radius: 8px; overflow: hidden;
+            border: 1px solid #e5e7eb; aspect-ratio: 1;
+        }
+        .photo-card img {
+            width: 100%; height: 100%; object-fit: cover; cursor: pointer;
+        }
+        .photo-card .photo-delete {
+            position: absolute; top: 4px; right: 4px; background: rgba(220,38,38,0.9);
+            color: #fff; border: none; border-radius: 50%; width: 24px; height: 24px;
+            font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .photo-card .photo-caption {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: rgba(0,0,0,0.6); color: #fff; padding: 4px 8px;
+            font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .photo-upload-inline {
+            border: 2px dashed #d1d5db; border-radius: 8px; padding: 16px;
+            text-align: center; cursor: pointer; transition: border-color 0.2s;
+        }
+        .photo-upload-inline:hover { border-color: #8b1a1a; }
+        .photo-upload-inline p { color: #64748b; font-size: 0.8rem; }
+        .photo-upload-inline .icon { font-size: 1.5rem; margin-bottom: 4px; }
+        .upload-progress {
+            margin-top: 8px; font-size: 0.8rem; color: #64748b; display: none;
+        }
+
+        .location-custom-wrap { margin-top: 8px; display: none; }
+
         .nav-links { margin-top: 16px; text-align: center; }
         .nav-links a { color: #2563eb; text-decoration: none; font-size: 0.875rem; margin: 0 12px; }
         .nav-links a:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            .detail-grid { grid-template-columns: 1fr; }
+            .edit-row { grid-template-columns: 1fr; }
+            .action-row { flex-direction: column; }
+            .btn-group { flex-direction: column; }
+            .btn-group .btn { width: 100%; text-align: center; }
+            .header { flex-direction: column; gap: 8px; text-align: center; }
+            .photos-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+        }
     </style>
 </head>
 <body>
@@ -363,6 +414,29 @@
             </div>
             {% endif %}
 
+            <!-- Photos -->
+            <div class="photos-section">
+                <h3>Photos</h3>
+                <div class="photos-grid" id="photosGrid">
+                    {% for photo in photos %}
+                    <div class="photo-card" id="photo-{{ photo.id }}">
+                        <img src="{{ photo.image.url }}" alt="{{ photo.caption }}"
+                             onclick="window.open('{{ photo.image.url }}', '_blank')">
+                        <button class="photo-delete" onclick="deletePhoto({{ photo.id }})" title="Delete photo">&times;</button>
+                        {% if photo.caption %}<div class="photo-caption">{{ photo.caption }}</div>{% endif %}
+                    </div>
+                    {% empty %}
+                    <p style="color:#94a3b8; font-size:0.85rem; grid-column:1/-1;">No photos yet.</p>
+                    {% endfor %}
+                </div>
+                <div class="photo-upload-inline" onclick="document.getElementById('itemPhotoInput').click();">
+                    <div class="icon">&#128247;</div>
+                    <p>Click to upload a photo</p>
+                </div>
+                <input type="file" id="itemPhotoInput" accept="image/*" style="display:none;" onchange="uploadItemPhoto({{ item.id }})">
+                <div class="upload-progress" id="uploadProgress">Uploading...</div>
+            </div>
+
             <div class="edit-section">
                 <h3>Edit Details</h3>
                 <div class="edit-row">
@@ -381,7 +455,18 @@
                 <div class="edit-row">
                     <div class="edit-group">
                         <label>Receiving Location</label>
-                        <input type="text" class="edit-input" id="editLocation" value="{{ item.location }}">
+                        <select class="edit-input" id="editLocationSelect" onchange="toggleEditCustomLocation()">
+                            {% for loc in location_choices %}
+                            <option value="{{ loc }}" {% if item.location == loc %}selected{% endif %}>{{ loc }}</option>
+                            {% endfor %}
+                            <option value="other" {% if item.location not in location_choices %}selected{% endif %}>Other</option>
+                        </select>
+                        <div class="location-custom-wrap" id="editCustomLocationWrap">
+                            <input type="text" class="edit-input" id="editLocationCustom"
+                                value="{% if item.location not in location_choices %}{{ item.location }}{% endif %}"
+                                placeholder="Enter custom location">
+                        </div>
+                        <input type="hidden" id="editLocation" value="{{ item.location }}">
                     </div>
                     <div class="edit-group">
                         <label>Description</label>
@@ -602,6 +687,95 @@
             }
         }
 
+        // ---- Location dropdown ----
+        function toggleEditCustomLocation() {
+            const sel = document.getElementById('editLocationSelect');
+            const wrap = document.getElementById('editCustomLocationWrap');
+            const hidden = document.getElementById('editLocation');
+            if (sel.value === 'other') {
+                wrap.style.display = 'block';
+                hidden.value = document.getElementById('editLocationCustom').value;
+            } else {
+                wrap.style.display = 'none';
+                hidden.value = sel.value;
+            }
+        }
+        // Update hidden field when custom input changes
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleEditCustomLocation();
+            const customInput = document.getElementById('editLocationCustom');
+            if (customInput) {
+                customInput.addEventListener('input', function() {
+                    document.getElementById('editLocation').value = this.value;
+                });
+            }
+        });
+
+        // ---- Photo upload ----
+        async function uploadItemPhoto(itemId) {
+            const input = document.getElementById('itemPhotoInput');
+            const progress = document.getElementById('uploadProgress');
+            if (!input.files.length) return;
+
+            progress.style.display = 'block';
+            progress.textContent = 'Uploading...';
+
+            const formData = new FormData();
+            formData.append('item_id', itemId);
+            formData.append('photo', input.files[0]);
+            formData.append('caption', '');
+
+            try {
+                const resp = await fetch('/api/upload-photo/', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    // Add photo to grid
+                    const grid = document.getElementById('photosGrid');
+                    const emptyMsg = grid.querySelector('p');
+                    if (emptyMsg) emptyMsg.remove();
+
+                    const card = document.createElement('div');
+                    card.className = 'photo-card';
+                    card.id = 'photo-' + data.photo_id;
+                    card.innerHTML = `
+                        <img src="${data.photo_url}" alt="Photo" onclick="window.open('${data.photo_url}', '_blank')">
+                        <button class="photo-delete" onclick="deletePhoto(${data.photo_id})" title="Delete photo">&times;</button>
+                    `;
+                    grid.appendChild(card);
+                    progress.textContent = 'Photo uploaded!';
+                    setTimeout(() => { progress.style.display = 'none'; }, 2000);
+                } else {
+                    progress.textContent = 'Error: ' + (data.error || 'Upload failed');
+                }
+            } catch (err) {
+                progress.textContent = 'Network error. Please try again.';
+            }
+            input.value = '';
+        }
+
+        async function deletePhoto(photoId) {
+            if (!confirm('Delete this photo?')) return;
+            try {
+                const resp = await fetch('/api/delete-photo/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({photo_id: photoId})
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    const card = document.getElementById('photo-' + photoId);
+                    if (card) card.remove();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                alert('Network error.');
+            }
+        }
+
         // ---- Edit Details ----
         async function saveEdit(itemId) {
             const btn = document.getElementById('btnSaveEdit');
@@ -609,6 +783,16 @@
             btn.disabled = true;
             msgEl.className = 'edit-message';
             msgEl.style.display = 'none';
+
+            // Update location from dropdown
+            const locSel = document.getElementById('editLocationSelect');
+            if (locSel) {
+                if (locSel.value === 'other') {
+                    document.getElementById('editLocation').value = document.getElementById('editLocationCustom').value;
+                } else {
+                    document.getElementById('editLocation').value = locSel.value;
+                }
+            }
 
             const payload = {
                 item_id: itemId,
