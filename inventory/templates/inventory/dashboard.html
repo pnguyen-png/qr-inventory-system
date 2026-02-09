@@ -328,13 +328,13 @@
 </head>
 <body>
     <div class="header">
-        <div class="header-brand">
+        <a href="/dashboard/" class="header-brand" style="text-decoration:none;">
             <img src="{% static 'inventory/img/logo.png' %}" alt="Fire &amp; Risk Alliance">
             <div class="header-brand-text">
                 <h1>Fire &amp; Risk Alliance</h1>
                 <div class="subtitle">Inventory Management System</div>
             </div>
-        </div>
+        </a>
         <div class="header-right">
             <p>{{ items|length }} item{{ items|length|pluralize }} {% if show_archived %}in archive{% else %}in inventory{% endif %}</p>
         </div>
