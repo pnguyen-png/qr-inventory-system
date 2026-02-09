@@ -205,6 +205,12 @@
         .desc-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .desc-cell:hover { white-space: normal; overflow: visible; }
 
+        .qr-thumb {
+            width: 50px; height: 50px; cursor: pointer;
+            border-radius: 4px; border: 1px solid #e5e7eb;
+        }
+        .qr-thumb:hover { border-color: #8b1a1a; }
+
         .view-link {
             color: #8b1a1a;
             text-decoration: none;
@@ -391,6 +397,7 @@
             <div class="toolbar-group">
                 <a class="btn-tool primary" href="/add-shipment/">Add Shipment</a>
                 <button class="btn-tool primary" onclick="openScanner()">Scan QR Code</button>
+                <a class="btn-tool" href="/export/qr-codes/{% if show_archived %}?archived=1{% endif %}">Download QR Codes</a>
                 <a class="btn-tool" href="/export/csv/{% if show_archived %}?archived=1{% endif %}">Export CSV</a>
                 <a class="btn-tool" href="/export/pdf/{% if show_archived %}?archived=1{% endif %}" target="_blank">Print Report</a>
             </div>
@@ -468,6 +475,7 @@
                         <th>Status</th>
                         {% if not show_archived %}<th>Checked Out By</th>{% endif %}
                         <th>Updated</th>
+                        <th>QR Code</th>
                         <th class="view-col"></th>
                     </tr>
                 </thead>
@@ -495,6 +503,12 @@
                         <td>{{ item.checked_out_by|default:"-" }}</td>
                         {% endif %}
                         <td>{{ item.updated_at|date:"M d, H:i" }}</td>
+                        <td>
+                            {% if item.qr_url %}
+                            <img class="qr-thumb" src="{{ item.qr_url }}" alt="QR #{{ item.box_id }}"
+                                 onclick="window.open(this.src.replace('200x200','500x500'), '_blank')" title="Click to enlarge">
+                            {% else %}-{% endif %}
+                        </td>
                         <td class="view-col"><a class="view-link" href="/scan/?data={{ item.barcode_payload|urlencode }}">View</a></td>
                     </tr>
                     {% endfor %}

@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/archive-item/', views.archive_item, name='archive_item'),
 
     # Export
+    path('export/qr-codes/', views.export_qr_codes, name='export_qr_codes'),
     path('export/csv/', views.export_csv, name='export_csv'),
     path('export/pdf/', views.export_pdf, name='export_pdf'),
 

@@ -330,6 +330,83 @@ def export_csv(request):
     return response
 
 
+def export_qr_codes(request):
+    """Download all inventory QR codes as an Excel file"""
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    show_archived = request.GET.get('archived', '') == '1'
+
+    if show_archived:
+        items = InventoryItem.objects.filter(archived=True).order_by('manufacturer', 'pallet_id', 'box_id')
+    else:
+        items = InventoryItem.objects.filter(archived=False).order_by('manufacturer', 'pallet_id', 'box_id')
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'QR Codes'
+
+    header_font = Font(bold=True, color='FFFFFF', size=11)
+    header_fill = PatternFill(start_color='8B1A1A', end_color='8B1A1A', fill_type='solid')
+    header_alignment = Alignment(horizontal='center', vertical='center')
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin'),
+    )
+
+    headers = ['Manufacturer', 'Pallet ID', 'Box ID', 'Contents (Qty)', 'Damaged',
+               'Location', 'Status', 'Barcode Payload', 'Scanner URL', 'QR Code URL']
+
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+
+    base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
+    status_labels = dict(InventoryItem.STATUS_CHOICES)
+
+    for row_num, item in enumerate(items, 2):
+        encoded_payload = urllib.parse.quote(item.barcode_payload)
+        scanner_url = f"{base_url}/scan/?data={encoded_payload}"
+
+        row_data = [
+            item.manufacturer,
+            item.pallet_id,
+            item.box_id,
+            item.content,
+            'Yes' if item.damaged else 'No',
+            item.location,
+            status_labels.get(item.status, item.status),
+            item.barcode_payload,
+            scanner_url,
+            item.qr_url,
+        ]
+
+        for col_num, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col_num, value=value)
+            cell.border = thin_border
+
+    for col in ws.columns:
+        max_length = 0
+        col_letter = col[0].column_letter
+        for cell in col:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+        ws.column_dimensions[col_letter].width = min(max_length + 2, 50)
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    label = 'archived' if show_archived else 'inventory'
+    response['Content-Disposition'] = f'attachment; filename="qr_codes_{label}.xlsx"'
+    wb.save(response)
+    return response
+
+
 def export_pdf(request):
     """Export inventory to a simple HTML-based printable report (PDF-ready)"""
     show_archived = request.GET.get('archived', '') == '1'
