@@ -311,18 +311,16 @@
         /* Print single label for Brother QL-820NWB */
         .print-single-label { display: none; }
         @media print {
-            body * { visibility: hidden; }
-            .print-single-label, .print-single-label * { visibility: visible; }
+            .header, .container { display: none !important; }
             .print-single-label {
                 display: flex !important;
-                position: absolute; top: 0; left: 0;
-                width: 62mm; height: 29mm;
-                align-items: center; padding: 1mm 2mm; gap: 2mm;
+                width: 58mm; min-height: 25mm;
+                align-items: center; padding: 2mm; gap: 3mm;
             }
-            .print-single-label img { width: 22mm; height: 22mm; }
-            .print-single-label .lbl-text { flex: 1; font-family: Arial, sans-serif; line-height: 1.3; }
-            .print-single-label .lbl-mfr { font-size: 8pt; font-weight: 700; }
-            .print-single-label .lbl-box { font-size: 10pt; font-weight: 700; }
+            .print-single-label img { width: 20mm !important; height: 20mm !important; display: block !important; }
+            .print-single-label .lbl-text { flex: 1; font-family: Arial, sans-serif; line-height: 1.4; }
+            .print-single-label .lbl-mfr { font-size: 9pt; font-weight: 700; }
+            .print-single-label .lbl-box { font-size: 11pt; font-weight: 700; }
             .print-single-label .lbl-detail { font-size: 7pt; color: #333; }
             @page { size: 62mm 29mm; margin: 0; }
         }
@@ -893,8 +891,8 @@
 
     {% if item %}
     <!-- Hidden print-only label for Brother QL-820NWB -->
-    <div class="print-single-label">
-        <img src="{{ item.qr_url }}" alt="QR">
+    <div class="print-single-label" id="printLabel">
+        <img src="/qr/{{ item.id }}/labeled.png" alt="QR">
         <div class="lbl-text">
             <div class="lbl-mfr">{{ item.manufacturer }}</div>
             <div class="lbl-box">Box #{{ item.box_id }}</div>
@@ -903,7 +901,11 @@
         </div>
     </div>
     <script>
-    function printSingleLabel() { window.print(); }
+    function printSingleLabel() {
+        const img = document.querySelector('#printLabel img');
+        if (img.complete) { window.print(); }
+        else { img.onload = () => window.print(); img.onerror = () => window.print(); }
+    }
     </script>
     {% endif %}
 </body>

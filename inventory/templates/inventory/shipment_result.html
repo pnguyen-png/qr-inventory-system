@@ -108,47 +108,46 @@
         .btn-print:hover { opacity: 0.9; }
 
         @media print {
-            /* Hide everything except labels */
-            body * { visibility: hidden; }
-            .print-labels, .print-labels * { visibility: visible; }
-            .print-labels {
-                display: block !important;
-                position: absolute; top: 0; left: 0; width: 100%;
-            }
-            .header, .container, .success-banner, .download-cards,
+            /* Hide screen UI */
+            .header, .success-banner, .download-cards,
             .summary-card, .nav-links { display: none !important; }
 
-            /* Each label fits a 62mm x 29mm die-cut label at 300 DPI */
+            /* Show print labels */
+            .print-labels {
+                display: block !important;
+            }
+
+            /* Each label: 62mm x 29mm die-cut for Brother QL-820NWB */
             .print-label {
-                width: 62mm;
-                height: 29mm;
+                width: 58mm;
+                min-height: 25mm;
+                page-break-inside: avoid;
+                break-inside: avoid;
                 page-break-after: always;
-                display: flex;
+                display: flex !important;
                 align-items: center;
-                padding: 1mm 2mm;
-                gap: 2mm;
-                border: none;
+                padding: 2mm;
+                gap: 3mm;
                 margin: 0;
             }
             .print-label:last-child { page-break-after: avoid; }
             .print-label img {
-                width: 22mm; height: 22mm;
+                width: 20mm !important; height: 20mm !important;
+                display: block !important;
             }
             .print-label-text {
                 flex: 1;
                 font-family: Arial, Helvetica, sans-serif;
-                line-height: 1.3;
+                line-height: 1.4;
             }
             .print-label-text .mfr {
-                font-size: 8pt; font-weight: 700;
-                overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-                max-width: 34mm;
+                font-size: 9pt; font-weight: 700;
             }
             .print-label-text .detail {
                 font-size: 7pt; color: #333;
             }
             .print-label-text .box-num {
-                font-size: 10pt; font-weight: 700;
+                font-size: 11pt; font-weight: 700;
             }
 
             @page {
@@ -180,7 +179,7 @@
             <div class="download-card">
                 <h3>Print Labels</h3>
                 <p>Print QR labels to your Brother QL-820NWB</p>
-                <button onclick="window.print()" class="btn-print">Print Labels</button>
+                <button onclick="printLabels()" class="btn-print">Print Labels</button>
             </div>
             <div class="download-card">
                 <h3>Excel File (.xlsx)</h3>
@@ -194,11 +193,11 @@
             </div>
         </div>
 
-        <!-- Hidden print-only layout: one label per item, sized for 62mm x 29mm -->
-        <div class="print-labels">
+        <!-- Print-only layout: one label per item, sized for 62mm x 29mm -->
+        <div class="print-labels" id="printLabels">
             {% for item in items %}
             <div class="print-label">
-                <img src="{{ item.qr_url }}" alt="QR">
+                <img src="/qr/{{ item.id }}/labeled.png" alt="QR" crossorigin="anonymous">
                 <div class="print-label-text">
                     <div class="mfr">{{ item.manufacturer }}</div>
                     <div class="box-num">Box #{{ item.box_id }}</div>
@@ -208,6 +207,25 @@
             </div>
             {% endfor %}
         </div>
+
+        <script>
+        function printLabels() {
+            // Pre-load all label images before opening print dialog
+            const imgs = document.querySelectorAll('#printLabels img');
+            let loaded = 0;
+            const total = imgs.length;
+            if (total === 0) { window.print(); return; }
+            imgs.forEach(img => {
+                if (img.complete) {
+                    loaded++;
+                    if (loaded === total) window.print();
+                } else {
+                    img.onload = () => { loaded++; if (loaded === total) window.print(); };
+                    img.onerror = () => { loaded++; if (loaded === total) window.print(); };
+                }
+            });
+        }
+        </script>
 
         <div class="summary-card">
             <div class="summary-header">Items Created ({{ items|length }})</div>
