@@ -73,48 +73,14 @@ WSGI_APPLICATION = "qr_inventory_project.wsgi.application"
 # Database
 # -----------------------------------------------------------------------------
 
-# Railway commonly injects DATABASE_URL when Postgres plugin is attached
-DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
-
-# Normalize DATABASE_URL scheme for dj_database_url compatibility
-if DATABASE_URL:
-    import re
-    # Strip any scheme and re-add "postgresql://"
-    normalized = re.sub(r'^[a-zA-Z]*://', '', DATABASE_URL)
-    DATABASE_URL = "postgresql://" + normalized
-
-if DATABASE_URL:
-    DATABASES = {
-        "default": dj_database_url.parse(
-            DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=False,
-        )
-    }
-else:
-    # Local dev fallback
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
-
-
-# Warn if Railway is detected but no DATABASE_URL (will use sqlite fallback)
-IS_RAILWAY = any(
-    os.environ.get(k)
-    for k in (
-        "RAILWAY_ENVIRONMENT",
-        "RAILWAY_PROJECT_ID",
-        "RAILWAY_SERVICE_ID",
-        "RAILWAY_DEPLOYMENT_ID",
+# Railway injects DATABASE_URL when Postgres plugin is attached.
+# dj_database_url.config() reads it from the env automatically.
+DATABASES = {
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
     )
-)
-
-if IS_RAILWAY and not DATABASE_URL:
-    import logging
-    logging.warning("DATABASE_URL is not set on Railway. Falling back to SQLite.")
+}
 
 # -----------------------------------------------------------------------------
 # Auth / i18n
