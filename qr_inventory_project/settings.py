@@ -74,13 +74,23 @@ WSGI_APPLICATION = "qr_inventory_project.wsgi.application"
 # -----------------------------------------------------------------------------
 
 # Railway injects DATABASE_URL when Postgres plugin is attached.
-# dj_database_url.config() reads it from the env automatically.
-DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-    )
-}
+# Fix: Railway may provide a URL with missing scheme (e.g. "://user:pass@host/db")
+_db_url = os.environ.get("DATABASE_URL", "").strip()
+if _db_url:
+    if _db_url.startswith("://"):
+        _db_url = "postgresql" + _db_url
+    elif "://" not in _db_url:
+        _db_url = "postgresql://" + _db_url
+    DATABASES = {
+        "default": dj_database_url.parse(_db_url, conn_max_age=600)
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # -----------------------------------------------------------------------------
 # Auth / i18n
