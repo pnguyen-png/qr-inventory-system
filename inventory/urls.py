@@ -1,9 +1,13 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import views
 
 app_name = 'inventory'
 
 urlpatterns = [
+    # Root redirect to dashboard
+    path('', RedirectView.as_view(url='/dashboard/', permanent=False), name='home'),
+
     # Web pages
     path('scan/', views.scanner_landing, name='scanner_landing'),
     path('dashboard/', views.dashboard, name='dashboard'),
