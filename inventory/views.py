@@ -341,9 +341,12 @@ def export_csv(request):
 
 
 def export_qr_codes(request):
-    """Download all inventory QR codes as an Excel file"""
+    """Download all inventory QR codes as an Excel file with embedded QR images"""
     import openpyxl
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.drawing.image import Image as XlImage
+    from io import BytesIO
+    import requests as http_requests
 
     show_archived = request.GET.get('archived', '') == '1'
 
@@ -359,6 +362,7 @@ def export_qr_codes(request):
     header_font = Font(bold=True, color='FFFFFF', size=11)
     header_fill = PatternFill(start_color='8B1A1A', end_color='8B1A1A', fill_type='solid')
     header_alignment = Alignment(horizontal='center', vertical='center')
+    center_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     thin_border = Border(
         left=Side(style='thin'),
         right=Side(style='thin'),
@@ -367,7 +371,7 @@ def export_qr_codes(request):
     )
 
     headers = ['Manufacturer', 'Pallet ID', 'Box ID', 'Contents (Qty)', 'Damaged',
-               'Location', 'Status', 'Barcode Payload', 'Scanner URL', 'QR Code URL']
+               'Location', 'Status', 'QR Code', 'Label']
 
     for col_num, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col_num, value=header)
@@ -380,9 +384,6 @@ def export_qr_codes(request):
     status_labels = dict(InventoryItem.STATUS_CHOICES)
 
     for row_num, item in enumerate(items, 2):
-        encoded_payload = urllib.parse.quote(item.barcode_payload)
-        scanner_url = f"{base_url}/scan/?data={encoded_payload}"
-
         row_data = [
             item.manufacturer,
             item.pallet_id,
@@ -391,22 +392,40 @@ def export_qr_codes(request):
             'Yes' if item.damaged else 'No',
             item.location,
             status_labels.get(item.status, item.status),
-            item.barcode_payload,
-            scanner_url,
-            item.qr_url,
+            '',  # QR Code column - image will be inserted
+            f"{item.manufacturer}\nPallet {item.pallet_id}\nBox #{item.box_id}",
         ]
 
         for col_num, value in enumerate(row_data, 1):
             cell = ws.cell(row=row_num, column=col_num, value=value)
             cell.border = thin_border
+            if col_num == 9:  # Label column
+                cell.alignment = center_alignment
 
-    for col in ws.columns:
-        max_length = 0
-        col_letter = col[0].column_letter
-        for cell in col:
-            if cell.value:
-                max_length = max(max_length, len(str(cell.value)))
-        ws.column_dimensions[col_letter].width = min(max_length + 2, 50)
+        # Set row height for QR code image
+        ws.row_dimensions[row_num].height = 80
+
+        # Download and embed QR code image
+        if item.qr_url:
+            try:
+                qr_resp = http_requests.get(item.qr_url, timeout=10)
+                if qr_resp.status_code == 200:
+                    img_data = BytesIO(qr_resp.content)
+                    img = XlImage(img_data)
+                    img.width = 95
+                    img.height = 95
+                    # Column H = QR Code column (8th column)
+                    cell_ref = f'H{row_num}'
+                    ws.add_image(img, cell_ref)
+            except Exception:
+                # If image download fails, put the URL as fallback
+                ws.cell(row=row_num, column=8, value=item.qr_url)
+
+    # Set column widths
+    col_widths = {'A': 18, 'B': 10, 'C': 8, 'D': 14, 'E': 10,
+                  'F': 16, 'G': 14, 'H': 15, 'I': 22}
+    for col_letter, width in col_widths.items():
+        ws.column_dimensions[col_letter].width = width
 
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -795,7 +814,7 @@ def download_shipment_excel(request, shipment_key):
 @csrf_exempt
 @require_http_methods(["POST"])
 def edit_item(request):
-    """Edit individual item fields (content, damaged, location, description)"""
+    """Edit individual item fields (content, damaged, location, description, manufacturer)"""
     try:
         data = json.loads(request.body)
         item_id = data.get('item_id')
@@ -811,11 +830,26 @@ def edit_item(request):
             item.description = data['description']
         if 'project_number' in data:
             item.project_number = data['project_number']
+        if 'manufacturer' in data:
+            new_mfr = data['manufacturer'].strip()
+            if new_mfr:
+                old_mfr = item.manufacturer
+                item.manufacturer = new_mfr
+                # Update barcode payload and QR URL if manufacturer changed
+                if old_mfr != new_mfr:
+                    base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
+                    barcode_payload = f"MFR={new_mfr} | PALLET={item.pallet_id} | BOX={item.box_id}"
+                    encoded_payload = urllib.parse.quote(barcode_payload)
+                    scanner_url = f"{base_url}/scan/?data={encoded_payload}"
+                    qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(scanner_url)}"
+                    item.barcode_payload = barcode_payload
+                    item.qr_url = qr_url
 
         item.save()
 
         return JsonResponse({
             'success': True,
+            'manufacturer': item.manufacturer,
             'content': item.content,
             'damaged': item.damaged,
             'location': item.location,

@@ -715,8 +715,8 @@
             const status = document.getElementById('bulkStatus').value;
             const changedBy = document.getElementById('bulkChangedBy').value;
 
-            if (!ids.length) return alert('No items selected');
-            if (!status) return alert('Select a status');
+            if (!ids.length) return showToast('No items selected', true);
+            if (!status) return showToast('Select a status', true);
 
             try {
                 const resp = await fetch('/api/bulk-update-status/', {
@@ -726,19 +726,18 @@
                 });
                 const data = await resp.json();
                 if (data.success) {
-                    alert('Updated ' + data.updated_count + ' items');
                     location.reload();
                 } else {
-                    alert('Error: ' + data.error);
+                    showToast('Error: ' + data.error, true);
                 }
             } catch (err) {
-                alert('Network error');
+                showToast('Network error', true);
             }
         }
 
         async function applyBulkArchive(archive) {
             const ids = getSelectedIds();
-            if (!ids.length) return alert('No items selected');
+            if (!ids.length) return showToast('No items selected', true);
 
             const action = archive ? 'archive' : 'unarchive';
             if (!confirm('Are you sure you want to ' + action + ' ' + ids.length + ' item(s)?')) return;
@@ -751,14 +750,28 @@
                 });
                 const data = await resp.json();
                 if (data.success) {
-                    alert((archive ? 'Archived ' : 'Unarchived ') + data.updated_count + ' items');
                     location.reload();
                 } else {
-                    alert('Error: ' + data.error);
+                    showToast('Error: ' + data.error, true);
                 }
             } catch (err) {
-                alert('Network error');
+                showToast('Network error', true);
             }
+        }
+
+        // Toast notification instead of alert
+        function showToast(message, isError) {
+            let toast = document.getElementById('toastNotif');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toastNotif';
+                toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:10px;font-size:0.875rem;font-weight:600;color:#fff;z-index:9999;transition:opacity 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+                document.body.appendChild(toast);
+            }
+            toast.style.background = isError ? '#dc2626' : '#16a34a';
+            toast.textContent = message;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 3000);
         }
 
         // ---- QR Scanner (html5-qrcode) ----

@@ -407,7 +407,10 @@
                 <h3>QR Code</h3>
                 <img class="qr-code-img" src="{{ item.qr_url }}" alt="QR Code for {{ item.manufacturer }} Box #{{ item.box_id }}"
                      onclick="window.open(this.src.replace('200x200','500x500'), '_blank')" title="Click to enlarge">
-                <br>
+                <div style="margin-top:8px; font-size:0.85rem; font-weight:600; color:#374151; line-height:1.5;">
+                    {{ item.manufacturer }}<br>
+                    Pallet {{ item.pallet_id }} &bull; Box #{{ item.box_id }}
+                </div>
                 <a class="qr-download-link" href="{{ item.qr_url }}" download="QR_{{ item.manufacturer }}_Pallet{{ item.pallet_id }}_Box{{ item.box_id }}.png">
                     Download QR Code
                 </a>
@@ -478,7 +481,10 @@
                         <label>Project Number</label>
                         <input type="text" class="edit-input" id="editProjectNumber" value="{{ item.project_number }}">
                     </div>
-                    <div class="edit-group"></div>
+                    <div class="edit-group">
+                        <label>Manufacturer / Supplier</label>
+                        <input type="text" class="edit-input" id="editManufacturer" value="{{ item.manufacturer }}">
+                    </div>
                 </div>
                 <button class="btn-save-edit" id="btnSaveEdit" onclick="saveEdit({{ item.id }})">Save Changes</button>
                 <div class="edit-message" id="editMessage"></div>
@@ -608,6 +614,12 @@
 
                     const emptyMsg = document.querySelector('.log-empty');
                     if (emptyMsg) emptyMsg.remove();
+
+                    // Auto-hide success message after 3 seconds
+                    setTimeout(() => {
+                        msgEl.style.display = 'none';
+                        msgEl.className = 'status-message';
+                    }, 3000);
                 } else {
                     msgEl.textContent = 'Error: ' + (data.error || 'Unknown error');
                     msgEl.className = 'status-message error';
@@ -801,6 +813,7 @@
                 location: document.getElementById('editLocation').value,
                 description: document.getElementById('editDescription').value,
                 project_number: document.getElementById('editProjectNumber').value,
+                manufacturer: document.getElementById('editManufacturer').value,
             };
 
             try {
@@ -813,8 +826,11 @@
                 if (data.success) {
                     msgEl.textContent = 'Details saved successfully.';
                     msgEl.className = 'edit-message success';
-                    // Update the detail cells on the page
-                    setTimeout(() => location.reload(), 800);
+                    // Fade out success message after 3 seconds
+                    setTimeout(() => {
+                        msgEl.style.display = 'none';
+                        msgEl.className = 'edit-message';
+                    }, 3000);
                 } else {
                     msgEl.textContent = 'Error: ' + (data.error || 'Unknown');
                     msgEl.className = 'edit-message error';
