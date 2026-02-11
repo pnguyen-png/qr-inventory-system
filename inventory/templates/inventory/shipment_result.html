@@ -87,6 +87,7 @@
             text-decoration: none; font-size: 0.875rem;
         }
         .nav-links a:hover { text-decoration: underline; }
+        .print-labels { display: none; }
         .btn-add-another {
             display: inline-block; padding: 10px 20px; background: #8b1a1a;
             color: #fff; border-radius: 8px; text-decoration: none;
@@ -96,6 +97,64 @@
 
         @media (max-width: 600px) {
             .download-cards { grid-template-columns: 1fr; }
+        }
+
+        /* --- Print Labels Layout for Brother QL-820NWB (62mm labels) --- */
+        .btn-print {
+            background: #7c3aed; display: inline-block; padding: 12px 24px;
+            border-radius: 8px; font-size: 0.9rem; font-weight: 600;
+            text-decoration: none; color: #fff; cursor: pointer; border: none;
+        }
+        .btn-print:hover { opacity: 0.9; }
+
+        @media print {
+            /* Hide everything except labels */
+            body * { visibility: hidden; }
+            .print-labels, .print-labels * { visibility: visible; }
+            .print-labels {
+                display: block !important;
+                position: absolute; top: 0; left: 0; width: 100%;
+            }
+            .header, .container, .success-banner, .download-cards,
+            .summary-card, .nav-links { display: none !important; }
+
+            /* Each label fits a 62mm x 29mm die-cut label at 300 DPI */
+            .print-label {
+                width: 62mm;
+                height: 29mm;
+                page-break-after: always;
+                display: flex;
+                align-items: center;
+                padding: 1mm 2mm;
+                gap: 2mm;
+                border: none;
+                margin: 0;
+            }
+            .print-label:last-child { page-break-after: avoid; }
+            .print-label img {
+                width: 22mm; height: 22mm;
+            }
+            .print-label-text {
+                flex: 1;
+                font-family: Arial, Helvetica, sans-serif;
+                line-height: 1.3;
+            }
+            .print-label-text .mfr {
+                font-size: 8pt; font-weight: 700;
+                overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+                max-width: 34mm;
+            }
+            .print-label-text .detail {
+                font-size: 7pt; color: #333;
+            }
+            .print-label-text .box-num {
+                font-size: 10pt; font-weight: 700;
+            }
+
+            @page {
+                size: 62mm 29mm;
+                margin: 0;
+            }
         }
     </style>
 </head>
@@ -117,10 +176,15 @@
             <p>{{ items|length }} items created for {{ manufacturer }} - Pallet {{ pallet_id }}</p>
         </div>
 
-        <div class="download-cards">
+        <div class="download-cards" style="grid-template-columns: 1fr 1fr 1fr;">
+            <div class="download-card">
+                <h3>Print Labels</h3>
+                <p>Print QR labels to your Brother QL-820NWB</p>
+                <button onclick="window.print()" class="btn-print">Print Labels</button>
+            </div>
             <div class="download-card">
                 <h3>Excel File (.xlsx)</h3>
-                <p>Download for your QR code printer</p>
+                <p>Download with embedded QR codes</p>
                 <a href="/shipment/{{ shipment_key }}/download/excel/" class="btn-download btn-excel">Download Excel</a>
             </div>
             <div class="download-card">
@@ -128,6 +192,21 @@
                 <p>Alternative format for compatibility</p>
                 <a href="/shipment/{{ shipment_key }}/download/csv/" class="btn-download btn-csv">Download CSV</a>
             </div>
+        </div>
+
+        <!-- Hidden print-only layout: one label per item, sized for 62mm x 29mm -->
+        <div class="print-labels">
+            {% for item in items %}
+            <div class="print-label">
+                <img src="{{ item.qr_url }}" alt="QR">
+                <div class="print-label-text">
+                    <div class="mfr">{{ item.manufacturer }}</div>
+                    <div class="box-num">Box #{{ item.box_id }}</div>
+                    <div class="detail">Pallet {{ item.pallet_id }}</div>
+                    <div class="detail">Qty: {{ item.content }}</div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
 
         <div class="summary-card">

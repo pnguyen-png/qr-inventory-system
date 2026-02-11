@@ -307,6 +307,25 @@
             .header { flex-direction: column; gap: 8px; text-align: center; }
             .photos-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
         }
+
+        /* Print single label for Brother QL-820NWB */
+        .print-single-label { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            .print-single-label, .print-single-label * { visibility: visible; }
+            .print-single-label {
+                display: flex !important;
+                position: absolute; top: 0; left: 0;
+                width: 62mm; height: 29mm;
+                align-items: center; padding: 1mm 2mm; gap: 2mm;
+            }
+            .print-single-label img { width: 22mm; height: 22mm; }
+            .print-single-label .lbl-text { flex: 1; font-family: Arial, sans-serif; line-height: 1.3; }
+            .print-single-label .lbl-mfr { font-size: 8pt; font-weight: 700; }
+            .print-single-label .lbl-box { font-size: 10pt; font-weight: 700; }
+            .print-single-label .lbl-detail { font-size: 7pt; color: #333; }
+            @page { size: 62mm 29mm; margin: 0; }
+        }
     </style>
 </head>
 <body>
@@ -414,6 +433,9 @@
                 <a class="qr-download-link" href="/qr/{{ item.id }}/labeled.png">
                     Download QR Code
                 </a>
+                <button onclick="printSingleLabel()" style="display:inline-block; margin-top:8px; padding:8px 16px; background:#7c3aed; color:#fff; border:none; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                    Print Label
+                </button>
             </div>
             {% endif %}
 
@@ -866,6 +888,22 @@
             d.textContent = text;
             return d.innerHTML;
         }
+    </script>
+    {% endif %}
+
+    {% if item %}
+    <!-- Hidden print-only label for Brother QL-820NWB -->
+    <div class="print-single-label">
+        <img src="{{ item.qr_url }}" alt="QR">
+        <div class="lbl-text">
+            <div class="lbl-mfr">{{ item.manufacturer }}</div>
+            <div class="lbl-box">Box #{{ item.box_id }}</div>
+            <div class="lbl-detail">Pallet {{ item.pallet_id }}</div>
+            <div class="lbl-detail">Qty: {{ item.content }}</div>
+        </div>
+    </div>
+    <script>
+    function printSingleLabel() { window.print(); }
     </script>
     {% endif %}
 </body>
