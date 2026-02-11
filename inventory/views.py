@@ -340,6 +340,52 @@ def export_csv(request):
     return response
 
 
+def _make_labeled_qr_image(item):
+    """Helper: download QR and add text label below it, returns BytesIO PNG or None."""
+    from PIL import Image as PilImage, ImageDraw, ImageFont
+    from io import BytesIO
+    import requests as http_requests
+
+    try:
+        qr_resp = http_requests.get(item.qr_url, timeout=10)
+        qr_resp.raise_for_status()
+        qr_img = PilImage.open(BytesIO(qr_resp.content)).convert('RGB')
+    except Exception:
+        return None
+
+    qr_size = qr_img.size[0]
+    label_height = 50
+    padding = 8
+    total_w = qr_size + padding * 2
+    total_h = qr_size + label_height + padding * 2
+
+    canvas = PilImage.new('RGB', (total_w, total_h), 'white')
+    canvas.paste(qr_img, (padding, padding))
+
+    draw = ImageDraw.Draw(canvas)
+    try:
+        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 12)
+        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 10)
+    except (OSError, IOError):
+        font_large = ImageFont.load_default()
+        font_small = font_large
+
+    text_y = qr_size + padding + 2
+    cx = total_w // 2
+
+    mfr_bbox = draw.textbbox((0, 0), item.manufacturer, font=font_large)
+    draw.text((cx - (mfr_bbox[2] - mfr_bbox[0]) // 2, text_y), item.manufacturer, fill='black', font=font_large)
+
+    detail = f"Pallet {item.pallet_id}  |  Box #{item.box_id}"
+    det_bbox = draw.textbbox((0, 0), detail, font=font_small)
+    draw.text((cx - (det_bbox[2] - det_bbox[0]) // 2, text_y + 18), detail, fill='black', font=font_small)
+
+    buf = BytesIO()
+    canvas.save(buf, format='PNG')
+    buf.seek(0)
+    return buf
+
+
 def export_qr_codes(request):
     """Download all inventory QR codes as an Excel file with embedded QR images"""
     import openpyxl
@@ -402,23 +448,19 @@ def export_qr_codes(request):
             if col_num == 9:  # Label column
                 cell.alignment = center_alignment
 
-        # Set row height for QR code image
-        ws.row_dimensions[row_num].height = 80
+        # Set row height for labeled QR code image
+        ws.row_dimensions[row_num].height = 95
 
-        # Download and embed QR code image
+        # Generate and embed labeled QR code image
         if item.qr_url:
-            try:
-                qr_resp = http_requests.get(item.qr_url, timeout=10)
-                if qr_resp.status_code == 200:
-                    img_data = BytesIO(qr_resp.content)
-                    img = XlImage(img_data)
-                    img.width = 95
-                    img.height = 95
-                    # Column H = QR Code column (8th column)
-                    cell_ref = f'H{row_num}'
-                    ws.add_image(img, cell_ref)
-            except Exception:
-                # If image download fails, put the URL as fallback
+            labeled_buf = _make_labeled_qr_image(item)
+            if labeled_buf:
+                img = XlImage(labeled_buf)
+                img.width = 110
+                img.height = 120
+                cell_ref = f'H{row_num}'
+                ws.add_image(img, cell_ref)
+            else:
                 ws.cell(row=row_num, column=8, value=item.qr_url)
 
     # Set column widths
@@ -909,6 +951,70 @@ def next_pallet_api(request):
     """API endpoint returning the next pallet ID"""
     next_id = _next_pallet_id()
     return JsonResponse({'next_pallet_id': next_id})
+
+
+def generate_labeled_qr(request, item_id):
+    """Generate a QR code image with manufacturer, pallet, and box labels baked in."""
+    from PIL import Image, ImageDraw, ImageFont
+    from io import BytesIO
+    import requests as http_requests
+
+    item = get_object_or_404(InventoryItem, id=item_id)
+
+    # Download the QR code image
+    try:
+        qr_resp = http_requests.get(item.qr_url, timeout=10)
+        qr_resp.raise_for_status()
+        qr_img = Image.open(BytesIO(qr_resp.content)).convert('RGB')
+    except Exception:
+        return HttpResponse('Failed to generate QR code image', status=500)
+
+    qr_size = qr_img.size[0]  # Should be 200x200
+
+    # Create a new image: QR + label area below
+    label_height = 70
+    padding = 10
+    total_width = qr_size + padding * 2
+    total_height = qr_size + label_height + padding * 2
+
+    canvas = Image.new('RGB', (total_width, total_height), 'white')
+    canvas.paste(qr_img, (padding, padding))
+
+    draw = ImageDraw.Draw(canvas)
+
+    # Use default font at different sizes
+    try:
+        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
+    except (OSError, IOError):
+        font_large = ImageFont.load_default()
+        font_small = font_large
+
+    # Draw label text below QR code
+    text_y = qr_size + padding + 5
+    center_x = total_width // 2
+
+    # Manufacturer
+    mfr_text = item.manufacturer
+    mfr_bbox = draw.textbbox((0, 0), mfr_text, font=font_large)
+    mfr_w = mfr_bbox[2] - mfr_bbox[0]
+    draw.text((center_x - mfr_w // 2, text_y), mfr_text, fill='black', font=font_large)
+
+    # Pallet + Box
+    detail_text = f"Pallet {item.pallet_id}  |  Box #{item.box_id}"
+    det_bbox = draw.textbbox((0, 0), detail_text, font=font_small)
+    det_w = det_bbox[2] - det_bbox[0]
+    draw.text((center_x - det_w // 2, text_y + 22), detail_text, fill='black', font=font_small)
+
+    # Return as PNG
+    buf = BytesIO()
+    canvas.save(buf, format='PNG')
+    buf.seek(0)
+
+    filename = f"QR_{item.manufacturer}_Pallet{item.pallet_id}_Box{item.box_id}.png"
+    response = HttpResponse(buf.read(), content_type='image/png')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 def download_shipment_csv(request, shipment_key):

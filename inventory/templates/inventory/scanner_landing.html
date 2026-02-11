@@ -406,12 +406,12 @@
             <div class="qr-section">
                 <h3>QR Code</h3>
                 <img class="qr-code-img" src="{{ item.qr_url }}" alt="QR Code for {{ item.manufacturer }} Box #{{ item.box_id }}"
-                     onclick="window.open(this.src.replace('200x200','500x500'), '_blank')" title="Click to enlarge">
+                     onclick="window.open('/qr/{{ item.id }}/labeled.png', '_blank')" title="Click to download">
                 <div style="margin-top:8px; font-size:0.85rem; font-weight:600; color:#374151; line-height:1.5;">
                     {{ item.manufacturer }}<br>
                     Pallet {{ item.pallet_id }} &bull; Box #{{ item.box_id }}
                 </div>
-                <a class="qr-download-link" href="{{ item.qr_url }}" download="QR_{{ item.manufacturer }}_Pallet{{ item.pallet_id }}_Box{{ item.box_id }}.png">
+                <a class="qr-download-link" href="/qr/{{ item.id }}/labeled.png">
                     Download QR Code
                 </a>
             </div>

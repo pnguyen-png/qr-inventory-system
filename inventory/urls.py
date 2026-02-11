@@ -36,6 +36,9 @@ urlpatterns = [
     # Archive
     path('api/archive-item/', views.archive_item, name='archive_item'),
 
+    # Labeled QR code image download
+    path('qr/<int:item_id>/labeled.png', views.generate_labeled_qr, name='generate_labeled_qr'),
+
     # Export
     path('export/qr-codes/', views.export_qr_codes, name='export_qr_codes'),
     path('export/csv/', views.export_csv, name='export_csv'),
