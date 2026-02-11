@@ -3,8 +3,8 @@ Django settings for qr_inventory_project project.
 """
 
 from pathlib import Path
+from urllib.parse import urlparse, unquote
 import os
-import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -74,15 +74,25 @@ WSGI_APPLICATION = "qr_inventory_project.wsgi.application"
 # -----------------------------------------------------------------------------
 
 # Railway injects DATABASE_URL when Postgres plugin is attached.
-# Fix: Railway may provide a URL with missing scheme (e.g. "://user:pass@host/db")
+# Parse manually to avoid dj_database_url version incompatibilities.
 _db_url = os.environ.get("DATABASE_URL", "").strip()
 if _db_url:
+    # Fix missing scheme from Railway
     if _db_url.startswith("://"):
         _db_url = "postgresql" + _db_url
     elif "://" not in _db_url:
         _db_url = "postgresql://" + _db_url
+    _parsed = urlparse(_db_url)
     DATABASES = {
-        "default": dj_database_url.parse(_db_url, conn_max_age=600)
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": unquote(_parsed.path.lstrip("/")),
+            "USER": unquote(_parsed.username or ""),
+            "PASSWORD": unquote(_parsed.password or ""),
+            "HOST": _parsed.hostname or "localhost",
+            "PORT": str(_parsed.port or 5432),
+            "CONN_MAX_AGE": 600,
+        }
     }
 else:
     DATABASES = {
