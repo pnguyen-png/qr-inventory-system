@@ -882,3 +882,183 @@ class TestDataPersistence(TestCase):
             n = (i + 1) * 2
             self.assertEqual(
                 InventoryItem.objects.filter(manufacturer=f'SeqCo-{i}').count(), n)
+
+
+# ===================================================================
+# 12. Status Preservation
+# ===================================================================
+
+class TestStatusPreservation(TestCase):
+    """Verify that item statuses are never reset by shipment creation,
+    editing, or other operations. This is a critical user requirement.
+    """
+
+    def setUp(self):
+        self.client = Client()
+
+    def _change_status(self, item_id, status_label, changed_by='tester'):
+        """Helper to change an item's status via the update_status API."""
+        return self.client.post('/api/update-status/', {
+            'item_id': item_id,
+            'status': status_label,
+            'changed_by': changed_by,
+        })
+
+    def test_new_shipment_does_not_reset_existing_item_status(self):
+        """Creating a new shipment must NOT change statuses of existing items."""
+        # Create first shipment
+        _create_shipment(self.client, manufacturer='StatusCo', num_boxes='3',
+                         items_per_box='10')
+        items = list(InventoryItem.objects.filter(manufacturer='StatusCo').order_by('id'))
+        self.assertEqual(len(items), 3)
+
+        # Change statuses on existing items
+        self._change_status(items[0].id, 'Checked Out')
+        self._change_status(items[1].id, 'Tested')
+        self._change_status(items[2].id, 'Recycling')
+
+        # Verify statuses changed
+        for item in items:
+            item.refresh_from_db()
+        self.assertEqual(items[0].status, 'checked_out')
+        self.assertEqual(items[1].status, 'tested')
+        self.assertEqual(items[2].status, 'recycling')
+
+        # Create a SECOND shipment
+        _create_shipment(self.client, manufacturer='OtherCo', num_boxes='2',
+                         items_per_box='5')
+
+        # Verify original items still have their changed statuses
+        for item in items:
+            item.refresh_from_db()
+        self.assertEqual(items[0].status, 'checked_out',
+                         'Status was reset to checked_in after new shipment!')
+        self.assertEqual(items[1].status, 'tested',
+                         'Status was reset to checked_in after new shipment!')
+        self.assertEqual(items[2].status, 'recycling',
+                         'Status was reset to checked_in after new shipment!')
+
+    def test_edit_item_preserves_status(self):
+        """Editing an item's content/location/description must NOT change its status."""
+        _create_shipment(self.client, manufacturer='EditStatusCo', num_boxes='1',
+                         items_per_box='10')
+        item = InventoryItem.objects.get(manufacturer='EditStatusCo')
+
+        # Change status to Tested
+        self._change_status(item.id, 'Tested')
+        item.refresh_from_db()
+        self.assertEqual(item.status, 'tested')
+
+        # Edit item fields
+        self.client.post('/api/edit-item/',
+                         json.dumps({
+                             'item_id': item.id,
+                             'content': 50,
+                             'location': 'Cambridge, MD',
+                             'description': 'Updated description',
+                         }),
+                         content_type='application/json')
+
+        # Status should still be 'tested'
+        item.refresh_from_db()
+        self.assertEqual(item.status, 'tested',
+                         'Status was reset after editing item fields!')
+        self.assertEqual(item.content, 50)
+        self.assertEqual(item.location, 'Cambridge, MD')
+
+    def test_edit_manufacturer_preserves_status(self):
+        """Editing an item's manufacturer must NOT change its status."""
+        _create_shipment(self.client, manufacturer='OldMfr', num_boxes='1',
+                         items_per_box='10')
+        item = InventoryItem.objects.get(manufacturer='OldMfr')
+
+        # Change status
+        self._change_status(item.id, 'Checked Out')
+        item.refresh_from_db()
+        self.assertEqual(item.status, 'checked_out')
+
+        # Edit manufacturer
+        self.client.post('/api/edit-item/',
+                         json.dumps({
+                             'item_id': item.id,
+                             'manufacturer': 'NewMfr',
+                         }),
+                         content_type='application/json')
+
+        item.refresh_from_db()
+        self.assertEqual(item.status, 'checked_out',
+                         'Status was reset after manufacturer edit!')
+        self.assertEqual(item.manufacturer, 'NewMfr')
+
+    def test_all_status_transitions_persist(self):
+        """Every valid status should persist correctly."""
+        _create_shipment(self.client, manufacturer='TransCo', num_boxes='5',
+                         items_per_box='1')
+        items = list(InventoryItem.objects.filter(
+            manufacturer='TransCo').order_by('id'))
+
+        statuses = ['Checked In', 'Checked Out', 'Tested',
+                     'Will Be Reused', 'Recycling']
+        expected = ['checked_in', 'checked_out', 'tested',
+                     'will_be_reused', 'recycling']
+
+        for item, status_label in zip(items, statuses):
+            self._change_status(item.id, status_label)
+
+        for item, exp in zip(items, expected):
+            item.refresh_from_db()
+            self.assertEqual(item.status, exp,
+                             f'Status {exp} did not persist!')
+
+    def test_status_survives_multiple_operations(self):
+        """Status should survive: create -> change status -> edit -> new shipment."""
+        # Create shipment
+        _create_shipment(self.client, manufacturer='SurviveCo', num_boxes='2',
+                         items_per_box='10')
+        item = InventoryItem.objects.filter(manufacturer='SurviveCo').first()
+
+        # Change to Checked Out
+        self._change_status(item.id, 'Checked Out')
+        item.refresh_from_db()
+        self.assertEqual(item.status, 'checked_out')
+
+        # Edit description
+        self.client.post('/api/edit-item/',
+                         json.dumps({'item_id': item.id, 'description': 'Edited'}),
+                         content_type='application/json')
+        item.refresh_from_db()
+        self.assertEqual(item.status, 'checked_out')
+
+        # Create another shipment
+        _create_shipment(self.client, manufacturer='AnotherCo', num_boxes='3',
+                         items_per_box='5')
+        item.refresh_from_db()
+        self.assertEqual(item.status, 'checked_out',
+                         'Status lost after edit + new shipment!')
+
+    def test_new_items_default_to_checked_in(self):
+        """Newly created items should default to checked_in status."""
+        _create_shipment(self.client, manufacturer='DefaultCo', num_boxes='3',
+                         items_per_box='10')
+        for item in InventoryItem.objects.filter(manufacturer='DefaultCo'):
+            self.assertEqual(item.status, 'checked_in')
+
+
+# ===================================================================
+# 13. Database Configuration
+# ===================================================================
+
+class TestDatabaseConfig(TestCase):
+    """Verify database settings are properly configured."""
+
+    def test_database_engine_is_set(self):
+        """Database engine should be configured (not empty)."""
+        from django.conf import settings
+        engine = settings.DATABASES['default']['ENGINE']
+        self.assertTrue(engine, 'Database ENGINE is empty!')
+
+    def test_database_name_is_set(self):
+        """Database NAME should be configured (not empty)."""
+        from django.conf import settings
+        name = settings.DATABASES['default']['NAME']
+        self.assertTrue(name, 'Database NAME is empty!')

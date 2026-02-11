@@ -13,11 +13,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # -----------------------------------------------------------------------------
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-insecure-secret-key-change-me")
 
-# DEBUG: temporarily ON to diagnose 500 error — revert after fixing
-DEBUG = True
+# DEBUG: default OFF; enable locally by setting DEBUG=1
+DEBUG = os.environ.get("DEBUG", "").strip() in ("1", "true", "True", "yes", "YES")
 
-# Railway hosts (temporarily wildcard for debugging)
-ALLOWED_HOSTS = ["*"]
+# Railway hosts
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    ".railway.app",
+]
 
 # If you are testing via ngrok locally
 if os.environ.get("ALLOW_NGROK", "").strip() in ("1", "true", "True"):
@@ -75,18 +79,7 @@ WSGI_APPLICATION = "qr_inventory_project.wsgi.application"
 
 # Railway injects DATABASE_URL when Postgres plugin is attached.
 # Parse manually to avoid dj_database_url version incompatibilities.
-_db_url_raw = os.environ.get("DATABASE_URL", "").strip()
-# DEBUG: print the raw URL structure (mask password) to Railway logs
-if _db_url_raw:
-    _debug_parsed = urlparse(_db_url_raw)
-    print(f"[DB DEBUG] Raw DATABASE_URL scheme='{_debug_parsed.scheme}' "
-          f"host='{_debug_parsed.hostname}' port='{_debug_parsed.port}' "
-          f"path='{_debug_parsed.path}' user='{_debug_parsed.username}' "
-          f"raw_url_starts='{_db_url_raw[:30]}...'", flush=True)
-else:
-    print("[DB DEBUG] DATABASE_URL is empty, using SQLite", flush=True)
-
-_db_url = _db_url_raw
+_db_url = os.environ.get("DATABASE_URL", "").strip()
 if _db_url:
     # Fix missing scheme from Railway
     if _db_url.startswith("://"):
@@ -95,9 +88,6 @@ if _db_url:
         _db_url = "postgresql://" + _db_url
     _parsed = urlparse(_db_url)
     _db_name = unquote(_parsed.path.lstrip("/")) or "railway"
-    print(f"[DB DEBUG] After fix: scheme='{_parsed.scheme}' "
-          f"host='{_parsed.hostname}' port='{_parsed.port}' "
-          f"path='{_parsed.path}' db_name='{_db_name}'", flush=True)
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
