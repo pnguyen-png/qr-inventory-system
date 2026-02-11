@@ -13,15 +13,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # -----------------------------------------------------------------------------
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-insecure-secret-key-change-me")
 
-# DEBUG: default OFF; enable locally by setting DEBUG=1
-DEBUG = os.environ.get("DEBUG", "").strip() in ("1", "true", "True", "yes", "YES")
+# DEBUG: temporarily ON to diagnose 500 error — revert after fixing
+DEBUG = True
 
-# Railway hosts
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    ".railway.app",
-]
+# Railway hosts (temporarily wildcard for debugging)
+ALLOWED_HOSTS = ["*"]
 
 # If you are testing via ngrok locally
 if os.environ.get("ALLOW_NGROK", "").strip() in ("1", "true", "True"):
@@ -147,7 +143,7 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.StaticFilesStorage",
     },
 }
 
