@@ -29,7 +29,7 @@ def _valid_shipment_data(**overrides):
         'damaged': 'no',
         'description': 'Standard widgets',
         'damaged_boxes': '',
-        'count_exceptions': '',
+        'tags': '',
     }
     data.update(overrides)
     return data
@@ -266,18 +266,10 @@ class TestDuplicateConflictingData(TestCase):
 # ===================================================================
 
 class TestFormatDrift(TestCase):
-    """Category 5 -- malformed count_exceptions and damaged_boxes strings."""
+    """Category 5 -- malformed damaged_boxes strings."""
 
     def setUp(self):
         self.client = Client()
-
-    def test_bad_exception_format_missing_colon(self):
-        """count_exceptions entry without colon should error."""
-        resp = self.client.post('/add-shipment/', _valid_shipment_data(
-            num_boxes='5', count_exceptions='3-20'))
-        self.assertEqual(resp.status_code, 200)
-        errors = resp.context['errors']
-        self.assertTrue(any('Invalid count exception format' in e for e in errors))
 
     def test_non_numeric_damaged_box_token(self):
         """Non-numeric tokens in damaged_boxes should produce an error."""
@@ -286,42 +278,6 @@ class TestFormatDrift(TestCase):
         self.assertEqual(resp.status_code, 200)
         errors = resp.context['errors']
         self.assertTrue(any('Invalid damaged box number' in e for e in errors))
-
-    def test_mixed_separators_in_exceptions(self):
-        """Using semicolons instead of commas in count_exceptions should error."""
-        resp = self.client.post('/add-shipment/', _valid_shipment_data(
-            num_boxes='5', count_exceptions='1:5;2:10'))
-        self.assertEqual(resp.status_code, 200)
-        # The whole '1:5;2:10' is treated as one token; int('5;2') fails.
-        errors = resp.context['errors']
-        self.assertTrue(any('Invalid count exception' in e for e in errors))
-
-    def test_valid_count_exception(self):
-        """Properly formatted count_exceptions should override items_per_box."""
-        resp = _create_shipment(self.client, num_boxes='3', items_per_box='10',
-                                count_exceptions='2:25')
-        self.assertEqual(resp.status_code, 200)
-        box2 = InventoryItem.objects.get(box_id=2)
-        self.assertEqual(box2.content, 25)
-        # Other boxes should retain the default.
-        box1 = InventoryItem.objects.get(box_id=1)
-        self.assertEqual(box1.content, 10)
-
-    def test_exception_with_negative_count(self):
-        """Negative count in count_exceptions should be rejected."""
-        resp = self.client.post('/add-shipment/', _valid_shipment_data(
-            num_boxes='3', count_exceptions='2:-5'))
-        self.assertEqual(resp.status_code, 200)
-        errors = resp.context['errors']
-        self.assertTrue(any('cannot be negative' in e for e in errors))
-
-    def test_exception_non_numeric_count(self):
-        """Non-numeric count value in count_exceptions should error."""
-        resp = self.client.post('/add-shipment/', _valid_shipment_data(
-            num_boxes='3', count_exceptions='2:abc'))
-        self.assertEqual(resp.status_code, 200)
-        errors = resp.context['errors']
-        self.assertTrue(any('Invalid count exception' in e for e in errors))
 
 
 # ===================================================================
@@ -571,14 +527,6 @@ class TestLogicalInconsistencies(TestCase):
         """Damaged box 0 should be outside the range 1..N."""
         resp = self.client.post('/add-shipment/', _valid_shipment_data(
             num_boxes='3', damaged_boxes='0'))
-        self.assertEqual(resp.status_code, 200)
-        errors = resp.context['errors']
-        self.assertTrue(any('outside the range' in e for e in errors))
-
-    def test_exception_box_outside_range(self):
-        """count_exceptions referencing a box beyond num_boxes should error."""
-        resp = self.client.post('/add-shipment/', _valid_shipment_data(
-            num_boxes='3', count_exceptions='10:50'))
         self.assertEqual(resp.status_code, 200)
         errors = resp.context['errors']
         self.assertTrue(any('outside the range' in e for e in errors))
@@ -1062,3 +1010,99 @@ class TestDatabaseConfig(TestCase):
         from django.conf import settings
         name = settings.DATABASES['default']['NAME']
         self.assertTrue(name, 'Database NAME is empty!')
+
+
+# ===================================================================
+# 14. Tags and Tag ID
+# ===================================================================
+
+class TestTagsAndTagId(TestCase):
+    """Verify tag functionality and Tag ID (FRA-P{pallet}-B{box}) format."""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_tag_id_format(self):
+        """Tag ID should follow FRA-P{pallet_id}-B{box_id} format."""
+        _create_shipment(self.client, manufacturer='TagCo', num_boxes='2',
+                         items_per_box='10')
+        items = InventoryItem.objects.filter(manufacturer='TagCo').order_by('box_id')
+        pallet = items[0].pallet_id
+        self.assertEqual(items[0].tag_id, f'FRA-P{pallet}-B1')
+        self.assertEqual(items[1].tag_id, f'FRA-P{pallet}-B2')
+
+    def test_tags_saved_on_shipment_creation(self):
+        """Tags submitted with shipment should be saved on all items."""
+        _create_shipment(self.client, manufacturer='TagShip', num_boxes='3',
+                         items_per_box='5', tags='Standard,RP12')
+        for item in InventoryItem.objects.filter(manufacturer='TagShip'):
+            self.assertEqual(item.tags, 'Standard,RP12')
+            self.assertIn('Standard', item.tags_list)
+            self.assertIn('RP12', item.tags_list)
+
+    def test_tags_list_property(self):
+        """tags_list should return a list of individual tags."""
+        item = InventoryItem.objects.create(
+            manufacturer='ListCo', pallet_id='99', box_id=1,
+            content=10, damaged=False, location='York, PA',
+            description='', status='checked_in',
+            barcode_payload='MFR=ListCo | PALLET=99 | BOX=1',
+            qr_url='https://example.com/qr',
+            tags='Standard,RP48-25kW,Custom Tag',
+        )
+        self.assertEqual(item.tags_list, ['Standard', 'RP48-25kW', 'Custom Tag'])
+
+    def test_empty_tags_list(self):
+        """Empty tags should return empty list."""
+        item = InventoryItem.objects.create(
+            manufacturer='EmptyTag', pallet_id='98', box_id=1,
+            content=10, damaged=False, location='York, PA',
+            description='', status='checked_in',
+            barcode_payload='MFR=EmptyTag | PALLET=98 | BOX=1',
+            qr_url='https://example.com/qr',
+            tags='',
+        )
+        self.assertEqual(item.tags_list, [])
+
+    def test_edit_tags_via_api(self):
+        """Tags should be editable via the edit-item API."""
+        _create_shipment(self.client, manufacturer='EditTag', num_boxes='1',
+                         items_per_box='10')
+        item = InventoryItem.objects.get(manufacturer='EditTag')
+        self.assertEqual(item.tags, '')
+
+        resp = self.client.post('/api/edit-item/',
+                                json.dumps({'item_id': item.id,
+                                            'tags': 'RP48,Target'}),
+                                content_type='application/json')
+        self.assertEqual(resp.status_code, 200)
+        item.refresh_from_db()
+        self.assertEqual(item.tags, 'RP48,Target')
+
+    def test_status_change_via_edit_item(self):
+        """Status change via edit-item API should create a StatusHistory entry."""
+        from .models import StatusHistory
+        _create_shipment(self.client, manufacturer='StatusEdit', num_boxes='1',
+                         items_per_box='10')
+        item = InventoryItem.objects.get(manufacturer='StatusEdit')
+        self.assertEqual(item.status, 'checked_in')
+
+        resp = self.client.post('/api/edit-item/',
+                                json.dumps({
+                                    'item_id': item.id,
+                                    'status': 'tested',
+                                    'changed_by': 'tester',
+                                    'notes': 'Test note',
+                                }),
+                                content_type='application/json')
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['status_changed'])
+
+        item.refresh_from_db()
+        self.assertEqual(item.status, 'tested')
+
+        history = StatusHistory.objects.filter(item=item)
+        self.assertEqual(history.count(), 1)
+        self.assertEqual(history.first().new_status, 'tested')
+        self.assertEqual(history.first().changed_by, 'tester')

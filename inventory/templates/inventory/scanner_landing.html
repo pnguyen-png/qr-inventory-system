@@ -292,6 +292,19 @@
             margin-top: 8px; font-size: 0.8rem; color: #64748b; display: none;
         }
 
+        .tag-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag-chip {
+            display: inline-block; padding: 6px 14px; border-radius: 999px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            background: #f1f5f9; color: #475569; border: 2px solid #d1d5db;
+            transition: all 0.15s; user-select: none;
+        }
+        .tag-chip:hover { border-color: #8b1a1a; }
+        .tag-chip.active { background: #8b1a1a; color: #fff; border-color: #8b1a1a; }
+        .tag-chip .remove-tag {
+            margin-left: 6px; font-weight: 700; font-size: 0.9rem;
+        }
+
         .location-custom-wrap { margin-top: 8px; display: none; }
 
         .nav-links { margin-top: 16px; text-align: center; }
@@ -383,6 +396,10 @@
                     <div class="value">#{{ item.box_id }}</div>
                 </div>
                 <div class="detail-cell">
+                    <label>Tag ID</label>
+                    <div class="value" style="font-weight:700; color:#8b1a1a;">{{ item.tag_id }}</div>
+                </div>
+                <div class="detail-cell">
                     <label>Contents (qty)</label>
                     <div class="value">{{ item.content }}</div>
                 </div>
@@ -416,6 +433,17 @@
             <div class="description-section">
                 <label>Brief Description of Shipment</label>
                 <p>{{ item.description }}</p>
+            </div>
+            {% endif %}
+
+            {% if item.tags %}
+            <div class="description-section">
+                <label>Tags</label>
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
+                    {% for tag in item.tags_list %}
+                    <span style="display:inline-block; padding:4px 12px; border-radius:999px; font-size:0.75rem; font-weight:600; background:#e0e7ff; color:#3730a3;">{{ tag }}</span>
+                    {% endfor %}
+                </div>
             </div>
             {% endif %}
 
@@ -461,7 +489,7 @@
             </div>
 
             <div class="edit-section">
-                <h3>Edit Details</h3>
+                <h3>Edit Details &amp; Update Status</h3>
                 <div class="edit-row">
                     <div class="edit-group">
                         <label>Contents (Qty)</label>
@@ -506,24 +534,46 @@
                         <input type="text" class="edit-input" id="editManufacturer" value="{{ item.manufacturer }}">
                     </div>
                 </div>
-                <button class="btn-save-edit" id="btnSaveEdit" onclick="saveEdit({{ item.id }})">Save Changes</button>
-                <div class="edit-message" id="editMessage"></div>
-            </div>
 
-            <div class="actions">
-                <h3>Update Status</h3>
-                <div class="action-row">
-                    <input type="text" class="action-input" id="changedByInput" placeholder="Your name (for audit trail)">
+                <!-- Tags -->
+                <div class="edit-group" style="margin-top:12px;">
+                    <label>Tags / Keywords</label>
+                    <div class="tag-chips" id="tagChips">
+                        {% for tag in preset_tags %}
+                        <span class="tag-chip" data-tag="{{ tag }}" onclick="toggleTag(this)">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <input type="text" class="edit-input" id="customTagInput" placeholder="Add custom tag..." style="flex:1;">
+                        <button type="button" onclick="addCustomTag()" style="padding:6px 14px; background:#8b1a1a; color:#fff; border:none; border-radius:6px; font-size:0.8rem; cursor:pointer;">Add</button>
+                    </div>
+                    <input type="hidden" id="tagsHidden" value="{{ item.tags }}">
                 </div>
-                <textarea class="notes-input" id="statusNotes" placeholder="Add notes for this status change (optional)..." rows="1"></textarea>
-                <div class="btn-group">
-                    <button class="btn btn-checkout" onclick="updateStatus({{ item.id }}, 'Checked Out')">Check Out</button>
-                    <button class="btn btn-checkin" onclick="updateStatus({{ item.id }}, 'Checked In')">Check In</button>
-                    <button class="btn btn-tested" onclick="updateStatus({{ item.id }}, 'Tested')">Tested</button>
-                    <button class="btn btn-reuse" onclick="updateStatus({{ item.id }}, 'Will Be Reused')">Will Be Reused</button>
-                    <button class="btn btn-recycle" onclick="updateStatus({{ item.id }}, 'Recycling')">Recycling</button>
+
+                <!-- Status Update (integrated into Edit Details) -->
+                <div style="border-top:1px solid #e5e7eb; margin-top:16px; padding-top:16px;">
+                    <label style="display:block; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:#64748b; margin-bottom:6px;">Status</label>
+                    <select class="edit-input" id="editStatus" style="margin-bottom:12px;">
+                        <option value="checked_in" {% if item.status == 'checked_in' %}selected{% endif %}>Checked In</option>
+                        <option value="checked_out" {% if item.status == 'checked_out' %}selected{% endif %}>Checked Out</option>
+                        <option value="tested" {% if item.status == 'tested' %}selected{% endif %}>Tested</option>
+                        <option value="will_be_reused" {% if item.status == 'will_be_reused' %}selected{% endif %}>Will Be Reused</option>
+                        <option value="recycling" {% if item.status == 'recycling' %}selected{% endif %}>Recycling</option>
+                    </select>
+                    <div class="edit-row">
+                        <div class="edit-group">
+                            <label>Your Name <span style="text-transform:none; letter-spacing:normal; font-weight:400;">(optional, for audit trail)</span></label>
+                            <input type="text" class="edit-input" id="changedByInput" placeholder="Your name">
+                        </div>
+                        <div class="edit-group">
+                            <label>Notes <span style="text-transform:none; letter-spacing:normal; font-weight:400;">(optional)</span></label>
+                            <input type="text" class="edit-input" id="statusNotes" placeholder="Add notes...">
+                        </div>
+                    </div>
                 </div>
-                <div class="status-message" id="statusMessage"></div>
+
+                <button class="btn-save-edit" id="btnSaveEdit" onclick="saveEdit({{ item.id }})" style="margin-top:12px;">Save Changes</button>
+                <div class="edit-message" id="editMessage"></div>
             </div>
 
             <!-- Archive -->
@@ -594,63 +644,6 @@
             'Will Be Reused': 'will_be_reused',
             'Recycling': 'recycling'
         };
-
-        async function updateStatus(itemId, newStatus) {
-            const msgEl = document.getElementById('statusMessage');
-            const notesEl = document.getElementById('statusNotes');
-            const changedByEl = document.getElementById('changedByInput');
-            msgEl.className = 'status-message';
-            msgEl.style.display = 'none';
-
-            document.querySelectorAll('.btn-group .btn').forEach(b => b.disabled = true);
-
-            try {
-                const formData = new FormData();
-                formData.append('item_id', itemId);
-                formData.append('status', newStatus);
-                formData.append('notes', notesEl.value);
-                formData.append('changed_by', changedByEl.value);
-
-                const resp = await fetch('/api/update-status/', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await resp.json();
-
-                if (data.success) {
-                    msgEl.textContent = 'Status updated to: ' + data.status;
-                    msgEl.className = 'status-message success';
-
-                    const badge = document.getElementById('statusBadge');
-                    const key = STATUS_MAP[data.status] || 'checked_in';
-                    badge.className = 'status-badge status-' + key;
-                    badge.textContent = data.status;
-
-                    document.getElementById('lastUpdated').textContent = 'Last updated: ' + data.last_updated;
-
-                    addLogEntry(data, notesEl.value, changedByEl.value);
-                    notesEl.value = '';
-
-                    const emptyMsg = document.querySelector('.log-empty');
-                    if (emptyMsg) emptyMsg.remove();
-
-                    // Auto-hide success message after 3 seconds
-                    setTimeout(() => {
-                        msgEl.style.display = 'none';
-                        msgEl.className = 'status-message';
-                    }, 3000);
-                } else {
-                    msgEl.textContent = 'Error: ' + (data.error || 'Unknown error');
-                    msgEl.className = 'status-message error';
-                }
-            } catch (err) {
-                msgEl.textContent = 'Network error. Please try again.';
-                msgEl.className = 'status-message error';
-            }
-
-            document.querySelectorAll('.btn-group .btn').forEach(b => b.disabled = false);
-        }
 
         function addLogEntry(data, notes, changedBy) {
             const log = document.getElementById('historyLog');
@@ -808,7 +801,60 @@
             }
         }
 
-        // ---- Edit Details ----
+        // ---- Tag management ----
+        function getSelectedTags() {
+            return Array.from(document.querySelectorAll('.tag-chip.active')).map(c => c.dataset.tag);
+        }
+        function updateTagsHidden() {
+            document.getElementById('tagsHidden').value = getSelectedTags().join(',');
+        }
+        function toggleTag(chip) {
+            chip.classList.toggle('active');
+            updateTagsHidden();
+        }
+        function addCustomTag() {
+            const input = document.getElementById('customTagInput');
+            const val = input.value.trim();
+            if (!val) return;
+            const existing = document.querySelector(`.tag-chip[data-tag="${val}"]`);
+            if (existing) { existing.classList.add('active'); updateTagsHidden(); input.value = ''; return; }
+            const chip = document.createElement('span');
+            chip.className = 'tag-chip active';
+            chip.dataset.tag = val;
+            chip.innerHTML = val + '<span class="remove-tag" onclick="event.stopPropagation(); this.parentElement.remove(); updateTagsHidden();">&times;</span>';
+            chip.onclick = function() { toggleTag(this); };
+            document.getElementById('tagChips').appendChild(chip);
+            updateTagsHidden();
+            input.value = '';
+        }
+        document.getElementById('customTagInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); addCustomTag(); }
+        });
+
+        // Initialize tags from item's current tags
+        (function() {
+            const savedTags = document.getElementById('tagsHidden').value;
+            if (savedTags) {
+                const presetNames = Array.from(document.querySelectorAll('.tag-chip')).map(c => c.dataset.tag);
+                savedTags.split(',').forEach(t => {
+                    t = t.trim();
+                    if (!t) return;
+                    const chip = document.querySelector(`.tag-chip[data-tag="${t}"]`);
+                    if (chip) { chip.classList.add('active'); }
+                    else {
+                        // Custom tag - add it
+                        const c = document.createElement('span');
+                        c.className = 'tag-chip active';
+                        c.dataset.tag = t;
+                        c.innerHTML = t + '<span class="remove-tag" onclick="event.stopPropagation(); this.parentElement.remove(); updateTagsHidden();">&times;</span>';
+                        c.onclick = function() { toggleTag(this); };
+                        document.getElementById('tagChips').appendChild(c);
+                    }
+                });
+            }
+        })();
+
+        // ---- Edit Details (with integrated status update) ----
         async function saveEdit(itemId) {
             const btn = document.getElementById('btnSaveEdit');
             const msgEl = document.getElementById('editMessage');
@@ -826,6 +872,9 @@
                 }
             }
 
+            // Update tags hidden input
+            updateTagsHidden();
+
             const payload = {
                 item_id: itemId,
                 content: parseInt(document.getElementById('editContent').value),
@@ -834,6 +883,10 @@
                 description: document.getElementById('editDescription').value,
                 project_number: document.getElementById('editProjectNumber').value,
                 manufacturer: document.getElementById('editManufacturer').value,
+                tags: document.getElementById('tagsHidden').value,
+                status: document.getElementById('editStatus').value,
+                changed_by: document.getElementById('changedByInput').value,
+                notes: document.getElementById('statusNotes').value,
             };
 
             try {
@@ -844,9 +897,32 @@
                 });
                 const data = await resp.json();
                 if (data.success) {
-                    msgEl.textContent = 'Details saved successfully.';
+                    let msg = 'Details saved successfully.';
+                    if (data.status_changed) {
+                        msg = 'Details and status saved successfully.';
+                        // Update status badge
+                        const badge = document.getElementById('statusBadge');
+                        const statusLabels = {
+                            'checked_in': 'Checked In', 'checked_out': 'Checked Out',
+                            'tested': 'Tested', 'will_be_reused': 'Will Be Reused',
+                            'recycling': 'Recycling'
+                        };
+                        badge.className = 'status-badge status-' + data.status;
+                        badge.textContent = statusLabels[data.status] || data.status;
+
+                        // Add log entry
+                        const notesVal = document.getElementById('statusNotes').value;
+                        const changedByVal = document.getElementById('changedByInput').value;
+                        addLogEntry({status: statusLabels[data.status] || data.status}, notesVal, changedByVal);
+                        const emptyMsg = document.querySelector('.log-empty');
+                        if (emptyMsg) emptyMsg.remove();
+
+                        // Clear notes after successful status change
+                        document.getElementById('statusNotes').value = '';
+                    }
+                    document.getElementById('lastUpdated').textContent = 'Last updated: just now';
+                    msgEl.textContent = msg;
                     msgEl.className = 'edit-message success';
-                    // Fade out success message after 3 seconds
                     setTimeout(() => {
                         msgEl.style.display = 'none';
                         msgEl.className = 'edit-message';

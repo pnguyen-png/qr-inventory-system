@@ -43,6 +43,9 @@ urlpatterns = [
     # Labeled QR code image download
     path('qr/<int:item_id>/labeled.png', views.generate_labeled_qr, name='generate_labeled_qr'),
 
+    # Pallet-specific QR download
+    path('export/pallet-qr/<str:manufacturer>/<str:pallet_id>/', views.download_pallet_qr, name='download_pallet_qr'),
+
     # Export
     path('export/qr-codes/', views.export_qr_codes, name='export_qr_codes'),
     path('export/csv/', views.export_csv, name='export_csv'),

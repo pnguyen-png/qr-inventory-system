@@ -123,6 +123,19 @@
         .nav-links a { color: #2563eb; text-decoration: none; font-size: 0.875rem; }
         .nav-links a:hover { text-decoration: underline; }
 
+        .tag-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag-chip {
+            display: inline-block; padding: 6px 14px; border-radius: 999px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            background: #f1f5f9; color: #475569; border: 2px solid #d1d5db;
+            transition: all 0.15s; user-select: none;
+        }
+        .tag-chip:hover { border-color: #8b1a1a; }
+        .tag-chip.active { background: #8b1a1a; color: #fff; border-color: #8b1a1a; }
+        .tag-chip .remove-tag {
+            margin-left: 6px; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+        }
+
         @media (max-width: 600px) {
             .form-row { grid-template-columns: 1fr; }
             .header { flex-direction: column; gap: 8px; text-align: center; }
@@ -234,18 +247,33 @@
                     </div>
 
                     <div class="form-section">
-                        <h3>Exceptions (optional)</h3>
+                        <h3>Tags / Keywords</h3>
+                        <div class="form-group">
+                            <label>Select Tags <span class="hint">(click to toggle)</span></label>
+                            <div class="tag-chips" id="tagChips">
+                                <span class="tag-chip" data-tag="Standard" onclick="toggleTag(this)">Standard</span>
+                                <span class="tag-chip" data-tag="Initiating" onclick="toggleTag(this)">Initiating</span>
+                                <span class="tag-chip" data-tag="Target" onclick="toggleTag(this)">Target</span>
+                                <span class="tag-chip" data-tag="RP12" onclick="toggleTag(this)">RP12</span>
+                                <span class="tag-chip" data-tag="RP48" onclick="toggleTag(this)">RP48</span>
+                                <span class="tag-chip" data-tag="RP48-25kW" onclick="toggleTag(this)">RP48-25kW</span>
+                                <span class="tag-chip" data-tag="RP48-40kW" onclick="toggleTag(this)">RP48-40kW</span>
+                                <span class="tag-chip" data-tag="RP240" onclick="toggleTag(this)">RP240</span>
+                            </div>
+                            <div style="display:flex; gap:8px; margin-top:8px;">
+                                <input type="text" class="form-input" id="customTagInput" placeholder="Add custom tag..." style="flex:1;">
+                                <button type="button" onclick="addCustomTag()" style="padding:8px 16px; background:#8b1a1a; color:#fff; border:none; border-radius:8px; font-size:0.85rem; cursor:pointer;">Add</button>
+                            </div>
+                            <input type="hidden" name="tags" id="tagsHidden" value="{{ form_data.tags|default:'' }}">
+                        </div>
+                    </div>
 
+                    <div class="form-section">
+                        <h3>Exceptions (optional)</h3>
                         <div class="form-group">
                             <label>Damaged Box Numbers <span class="hint">(comma-separated, e.g. 3, 7, 12)</span></label>
                             <input type="text" name="damaged_boxes" class="form-input"
                                 value="{{ form_data.damaged_boxes|default:'' }}" placeholder="Leave blank if none">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Box Count Exceptions <span class="hint">(box:count pairs, e.g. 5:30, 12:25)</span></label>
-                            <input type="text" name="count_exceptions" class="form-input"
-                                value="{{ form_data.count_exceptions|default:'' }}" placeholder="Leave blank if all boxes have the same count">
                         </div>
                     </div>
 
@@ -308,6 +336,57 @@
             photoInput.files = e.dataTransfer.files;
             previewPhotos(photoInput);
         });
+
+        // ---- Tag management ----
+        function getSelectedTags() {
+            return Array.from(document.querySelectorAll('.tag-chip.active')).map(c => c.dataset.tag);
+        }
+        function updateTagsHidden() {
+            document.getElementById('tagsHidden').value = getSelectedTags().join(',');
+        }
+        function toggleTag(chip) {
+            chip.classList.toggle('active');
+            updateTagsHidden();
+        }
+        function addCustomTag() {
+            const input = document.getElementById('customTagInput');
+            const val = input.value.trim();
+            if (!val) return;
+            // Check if already exists
+            const existing = document.querySelector(`.tag-chip[data-tag="${val}"]`);
+            if (existing) { existing.classList.add('active'); updateTagsHidden(); input.value = ''; return; }
+            const chip = document.createElement('span');
+            chip.className = 'tag-chip active';
+            chip.dataset.tag = val;
+            chip.innerHTML = val + '<span class="remove-tag" onclick="event.stopPropagation(); this.parentElement.remove(); updateTagsHidden();">&times;</span>';
+            chip.onclick = function() { toggleTag(this); };
+            document.getElementById('tagChips').appendChild(chip);
+            updateTagsHidden();
+            input.value = '';
+        }
+        document.getElementById('customTagInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); addCustomTag(); }
+        });
+        // Initialize tags from form_data on page load (for validation re-render)
+        (function() {
+            const savedTags = document.getElementById('tagsHidden').value;
+            if (savedTags) {
+                savedTags.split(',').forEach(t => {
+                    t = t.trim();
+                    if (!t) return;
+                    const chip = document.querySelector(`.tag-chip[data-tag="${t}"]`);
+                    if (chip) { chip.classList.add('active'); }
+                    else { addCustomTag.call(null); /* won't work, need to add dynamically */
+                        const c = document.createElement('span');
+                        c.className = 'tag-chip active';
+                        c.dataset.tag = t;
+                        c.innerHTML = t + '<span class="remove-tag" onclick="event.stopPropagation(); this.parentElement.remove(); updateTagsHidden();">&times;</span>';
+                        c.onclick = function() { toggleTag(this); };
+                        document.getElementById('tagChips').appendChild(c);
+                    }
+                });
+            }
+        })();
     </script>
 </body>
 </html>

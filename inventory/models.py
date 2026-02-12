@@ -34,6 +34,9 @@ class InventoryItem(models.Model):
     archived = models.BooleanField(default=False)
     archived_at = models.DateTimeField(null=True, blank=True)
 
+    # Tags (comma-separated keywords)
+    tags = models.TextField(blank=True, default='')
+
     class Meta:
         verbose_name = "Inventory Item"
         verbose_name_plural = "Inventory Items"
@@ -43,6 +46,16 @@ class InventoryItem(models.Model):
 
     def get_damaged_display(self):
         return "Yes" if self.damaged else "No"
+
+    @property
+    def tag_id(self):
+        return f"FRA-P{self.pallet_id}-B{self.box_id}"
+
+    @property
+    def tags_list(self):
+        if not self.tags:
+            return []
+        return [t.strip() for t in self.tags.split(',') if t.strip()]
 
     @property
     def is_overdue(self):

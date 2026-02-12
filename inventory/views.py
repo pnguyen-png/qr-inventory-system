@@ -54,12 +54,16 @@ def scanner_landing(request):
         status_labels = dict(item.STATUS_CHOICES)
         photos = item.photos.all()
 
+        preset_tags = ['Standard', 'Initiating', 'Target', 'RP12', 'RP48',
+                       'RP48-25kW', 'RP48-40kW', 'RP240']
+
         return render(request, 'inventory/scanner_landing.html', {
             'item': item,
             'history': history,
             'status_labels': status_labels,
             'photos': photos,
             'location_choices': LOCATION_CHOICES,
+            'preset_tags': preset_tags,
             'error': None
         })
 
@@ -614,7 +618,7 @@ def add_shipment(request):
     damaged = request.POST.get('damaged', 'no')
     description = request.POST.get('description', '').strip()
     damaged_boxes_str = request.POST.get('damaged_boxes', '').strip()
-    count_exceptions_str = request.POST.get('count_exceptions', '').strip()
+    tags = request.POST.get('tags', '').strip()
 
     form_data = {
         'manufacturer': manufacturer,
@@ -626,7 +630,7 @@ def add_shipment(request):
         'damaged': damaged,
         'description': description,
         'damaged_boxes': damaged_boxes_str,
-        'count_exceptions': count_exceptions_str,
+        'tags': tags,
     }
 
     errors = []
@@ -668,28 +672,6 @@ def add_shipment(request):
                 except ValueError:
                     errors.append(f'Invalid damaged box number: "{part}".')
 
-    # Parse count exceptions (box:count pairs)
-    count_exceptions = {}
-    if count_exceptions_str:
-        for part in count_exceptions_str.split(','):
-            part = part.strip()
-            if part:
-                if ':' not in part:
-                    errors.append(f'Invalid count exception format: "{part}". Use box:count (e.g. 5:30).')
-                else:
-                    try:
-                        box_str, count_str = part.split(':', 1)
-                        box_num = int(box_str.strip())
-                        count_val = int(count_str.strip())
-                        if num_boxes_int and (box_num < 1 or box_num > num_boxes_int):
-                            errors.append(f'Exception box #{box_num} is outside the range 1-{num_boxes_int}.')
-                        elif count_val < 0:
-                            errors.append(f'Count for box #{box_num} cannot be negative.')
-                        else:
-                            count_exceptions[box_num] = count_val
-                    except ValueError:
-                        errors.append(f'Invalid count exception: "{part}". Use box:count (e.g. 5:30).')
-
     if errors:
         return render(request, 'inventory/add_shipment.html', {
             'errors': errors,
@@ -704,7 +686,7 @@ def add_shipment(request):
     shipment_key = str(uuid.uuid4())[:8]
 
     for box_num in range(1, num_boxes_int + 1):
-        box_content = count_exceptions.get(box_num, items_per_box_int)
+        box_content = items_per_box_int
         # If specific damaged boxes were listed, only those are damaged.
         # Otherwise fall back to the global "Damage Reported?" flag.
         if damaged_box_set:
@@ -730,6 +712,7 @@ def add_shipment(request):
             existing.location = location
             existing.description = description
             existing.project_number = project_number
+            existing.tags = tags
             existing.barcode_payload = barcode_payload
             existing.qr_url = qr_url
             existing.save()
@@ -744,6 +727,7 @@ def add_shipment(request):
                 damaged=box_damaged,
                 location=location,
                 description=description,
+                tags=tags,
                 status='checked_in',
                 barcode_payload=barcode_payload,
                 qr_url=qr_url,
@@ -886,8 +870,38 @@ def edit_item(request):
                     qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(scanner_url)}"
                     item.barcode_payload = barcode_payload
                     item.qr_url = qr_url
+        if 'tags' in data:
+            item.tags = data['tags']
+
+        # Handle status change within edit (requires Save Changes to log)
+        status_changed = False
+        old_status = item.status
+        if 'status' in data:
+            new_status = data['status']
+            valid_statuses = dict(InventoryItem.STATUS_CHOICES)
+            if new_status in valid_statuses and new_status != old_status:
+                item.status = new_status
+                status_changed = True
+                # Checkout attribution
+                if new_status == 'checked_out':
+                    item.checked_out_by = data.get('changed_by', '')
+                    item.checked_out_at = timezone.now()
+                elif old_status == 'checked_out':
+                    item.checked_out_by = ''
+                    item.checked_out_at = None
 
         item.save()
+
+        # Record status history if status was changed
+        if status_changed:
+            StatusHistory.objects.create(
+                item=item,
+                old_status=old_status,
+                new_status=item.status,
+                notes=data.get('notes', ''),
+                changed_by=data.get('changed_by', ''),
+            )
+            _send_notification(item, old_status, item.status, data.get('changed_by', ''))
 
         return JsonResponse({
             'success': True,
@@ -897,6 +911,9 @@ def edit_item(request):
             'location': item.location,
             'description': item.description,
             'project_number': item.project_number,
+            'tags': item.tags,
+            'status': item.status,
+            'status_changed': status_changed,
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -1014,6 +1031,88 @@ def generate_labeled_qr(request, item_id):
     filename = f"QR_{item.manufacturer}_Pallet{item.pallet_id}_Box{item.box_id}.png"
     response = HttpResponse(buf.read(), content_type='image/png')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+def download_pallet_qr(request, manufacturer, pallet_id):
+    """Download QR codes for a specific pallet/shipment as Excel with embedded QR images."""
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.drawing.image import Image as XlImage
+
+    items = InventoryItem.objects.filter(
+        manufacturer=manufacturer,
+        pallet_id=pallet_id,
+    ).order_by('box_id')
+
+    if not items.exists():
+        return HttpResponse('No items found for this pallet.', status=404)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'QR Codes'
+
+    header_font = Font(bold=True, color='FFFFFF', size=11)
+    header_fill = PatternFill(start_color='8B1A1A', end_color='8B1A1A', fill_type='solid')
+    header_alignment = Alignment(horizontal='center', vertical='center')
+    center_alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    thin_border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin'),
+    )
+
+    headers = ['Tag ID', 'Manufacturer', 'Pallet ID', 'Box ID', 'Contents (Qty)',
+               'Status', 'Tags', 'QR Code', 'Label']
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+
+    status_labels = dict(InventoryItem.STATUS_CHOICES)
+
+    for row_num, item in enumerate(items, 2):
+        row_data = [
+            item.tag_id,
+            item.manufacturer,
+            item.pallet_id,
+            item.box_id,
+            item.content,
+            status_labels.get(item.status, item.status),
+            item.tags,
+            '',
+            f"{item.manufacturer}\nPallet {item.pallet_id}\nBox #{item.box_id}",
+        ]
+        for col_num, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col_num, value=value)
+            cell.border = thin_border
+            if col_num == 9:
+                cell.alignment = center_alignment
+
+        ws.row_dimensions[row_num].height = 95
+
+        if item.qr_url:
+            labeled_buf = _make_labeled_qr_image(item)
+            if labeled_buf:
+                img = XlImage(labeled_buf)
+                img.width = 110
+                img.height = 120
+                ws.add_image(img, f'H{row_num}')
+            else:
+                ws.cell(row=row_num, column=8, value=item.qr_url)
+
+    col_widths = {'A': 16, 'B': 18, 'C': 10, 'D': 8, 'E': 14,
+                  'F': 14, 'G': 20, 'H': 15, 'I': 22}
+    for col_letter, width in col_widths.items():
+        ws.column_dimensions[col_letter].width = width
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    safe_mfr = manufacturer.replace(' ', '_')
+    response['Content-Disposition'] = f'attachment; filename="QR_{safe_mfr}_Pallet{pallet_id}.xlsx"'
+    wb.save(response)
     return response
 
 

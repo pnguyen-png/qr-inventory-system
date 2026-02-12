@@ -232,6 +232,7 @@
             <table class="summary-table">
                 <thead>
                     <tr>
+                        <th>Tag ID</th>
                         <th>Box</th>
                         <th>Qty</th>
                         <th>Damaged</th>
@@ -242,6 +243,7 @@
                 <tbody>
                     {% for item in items %}
                     <tr>
+                        <td style="font-weight:600; font-size:0.8rem;">{{ item.tag_id }}</td>
                         <td>#{{ item.box_id }}</td>
                         <td>{{ item.content }}</td>
                         <td class="{% if item.damaged %}damage-yes{% else %}damage-no{% endif %}">

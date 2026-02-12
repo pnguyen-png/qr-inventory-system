@@ -205,6 +205,40 @@
         .desc-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .desc-cell:hover { white-space: normal; overflow: visible; }
 
+        .tag-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 999px;
+            font-size: 0.65rem; font-weight: 600; background: #e0e7ff;
+            color: #3730a3; margin: 1px 2px; white-space: nowrap;
+        }
+
+        /* Multi-scan modal */
+        .multiscan-list { margin: 16px 0; max-height: 250px; overflow-y: auto; }
+        .multiscan-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 12px; border-bottom: 1px solid #f1f5f9;
+            font-size: 0.85rem;
+        }
+        .multiscan-item .item-info { font-weight: 500; }
+        .multiscan-item .item-tag-id { color: #64748b; font-size: 0.75rem; }
+        .multiscan-item .remove-btn {
+            background: #fee2e2; color: #dc2626; border: none; border-radius: 6px;
+            padding: 4px 10px; font-size: 0.75rem; cursor: pointer;
+        }
+        .multiscan-actions {
+            border-top: 1px solid #e5e7eb; padding-top: 16px; margin-top: 8px;
+        }
+        .multiscan-actions select, .multiscan-actions input {
+            padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px;
+            font-size: 0.85rem; width: 100%; margin-bottom: 8px;
+        }
+        .multiscan-actions .btn-apply {
+            width: 100%; padding: 12px; background: #16a34a; color: #fff;
+            border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 700;
+            cursor: pointer;
+        }
+        .multiscan-actions .btn-apply:hover { opacity: 0.9; }
+        .multiscan-actions .btn-apply:disabled { opacity: 0.4; cursor: not-allowed; }
+
         .qr-thumb {
             width: 50px; height: 50px; cursor: pointer;
             border-radius: 4px; border: 1px solid #e5e7eb;
@@ -238,6 +272,12 @@
             font-size: 0.8rem;
             margin-left: 8px;
         }
+        .pallet-dl-btn {
+            margin-left: 12px; padding: 3px 10px; background: #8b1a1a; color: #fff !important;
+            border-radius: 6px; font-size: 0.7rem; font-weight: 600;
+            text-decoration: none !important; display: inline-block;
+        }
+        .pallet-dl-btn:hover { opacity: 0.85; }
 
         .view-link {
             color: #8b1a1a;
@@ -491,6 +531,7 @@
             <div class="toolbar-group">
                 <a class="btn-tool primary" href="/add-shipment/">Add Shipment</a>
                 <button class="btn-tool primary" onclick="openScanner()">Scan QR Code</button>
+                <button class="btn-tool" style="background:#7c3aed; color:#fff; border-color:#7c3aed;" onclick="openMultiScan()">Multi-Scan</button>
                 <a class="btn-tool" href="/export/qr-codes/{% if show_archived %}?archived=1{% endif %}">Download QR Codes</a>
                 <a class="btn-tool" href="/export/csv/{% if show_archived %}?archived=1{% endif %}">Export CSV</a>
                 <a class="btn-tool" href="/export/pdf/{% if show_archived %}?archived=1{% endif %}" target="_blank">Print Report</a>
@@ -567,6 +608,8 @@
                         <th>Damage</th>
                         <th>Location</th>
                         <th>Description</th>
+                        <th>Tag ID</th>
+                        <th>Tags</th>
                         <th>Status</th>
                         {% if not show_archived %}<th>Checked Out By</th>{% endif %}
                         <th>Updated</th>
@@ -579,7 +622,7 @@
                     <tr data-id="{{ item.id }}" data-status="{{ item.status }}" data-damaged="{{ item.damaged|yesno:'true,false' }}"
                         data-overdue="{{ item.is_overdue|yesno:'true,false' }}"
                         data-pallet="{{ item.manufacturer|lower }}-{{ item.pallet_id|lower }}"
-                        data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.project_number|lower }} {{ item.location|lower }} {{ item.description|lower }} {{ item.checked_out_by|lower }}"
+                        data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.project_number|lower }} {{ item.location|lower }} {{ item.description|lower }} {{ item.checked_out_by|lower }} {{ item.tag_id|lower }} {{ item.tags|lower }}"
                         class="{% if item.is_overdue %}overdue-row{% endif %} pallet-item">
                         <td class="checkbox-col"><input type="checkbox" class="row-check" value="{{ item.id }}" onchange="updateSelection()"></td>
                         <td>{{ item.manufacturer }}</td>
@@ -592,6 +635,12 @@
                         </td>
                         <td>{{ item.location }}</td>
                         <td class="desc-cell" title="{{ item.description }}">{{ item.description|truncatewords:8 }}</td>
+                        <td style="font-weight:600; font-size:0.8rem; white-space:nowrap;">{{ item.tag_id }}</td>
+                        <td>
+                            {% for tag in item.tags_list %}
+                            <span class="tag-badge">{{ tag }}</span>
+                            {% endfor %}
+                        </td>
                         <td>
                             <span class="status-badge status-{{ item.status }}">{{ item.get_status_display }}</span>
                             {% if item.is_overdue %}<span class="overdue-badge">{{ item.days_checked_out }}d overdue</span>{% endif %}
@@ -630,6 +679,40 @@
             <div class="modal-body">
                 <div id="qr-reader"></div>
                 <div class="scanner-status" id="scannerStatus">Initializing camera...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Multi-Scan Modal -->
+    <div class="modal-overlay" id="multiScanModal">
+        <div class="modal" style="max-width:520px;">
+            <div class="modal-header" style="background:#7c3aed;">
+                <h3>Multi-Scan</h3>
+                <button class="modal-close" onclick="closeMultiScan()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align:left;">
+                <p style="font-size:0.85rem; color:#64748b; margin-bottom:12px;">Scan multiple QR codes, then set their status at once.</p>
+                <div id="multi-qr-reader"></div>
+                <div class="scanner-status" id="multiScannerStatus">Click scan to start camera</div>
+                <div style="text-align:center; margin:8px 0;">
+                    <button id="multiScanStartBtn" onclick="startMultiScanner()" style="padding:8px 20px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer;">Start Scanning</button>
+                    <button id="multiScanStopBtn" onclick="stopMultiScanner()" style="padding:8px 20px; background:#64748b; color:#fff; border:none; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer; display:none;">Pause</button>
+                </div>
+                <div class="multiscan-list" id="multiScanList">
+                    <p style="color:#94a3b8; text-align:center; font-size:0.85rem;" id="multiScanEmpty">No items scanned yet.</p>
+                </div>
+                <div class="multiscan-actions" id="multiScanActions" style="display:none;">
+                    <select id="multiScanStatus">
+                        <option value="">Select Status...</option>
+                        <option value="checked_in">Checked In</option>
+                        <option value="checked_out">Checked Out</option>
+                        <option value="tested">Tested</option>
+                        <option value="will_be_reused">Will Be Reused</option>
+                        <option value="recycling">Recycling</option>
+                    </select>
+                    <input type="text" id="multiScanChangedBy" placeholder="Your name (optional)">
+                    <button class="btn-apply" id="multiScanApply" onclick="applyMultiScanStatus()">Apply Status to All</button>
+                </div>
             </div>
         </div>
     </div>
@@ -874,7 +957,7 @@
                 const groupRow = document.createElement('tr');
                 groupRow.className = 'pallet-group-row';
                 groupRow.dataset.palletGroup = key;
-                groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>${mfr} - Pallet ${palletId}<span class="group-count">(${groupRows.length} items)</span></td>`;
+                groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>${mfr} - Pallet ${palletId}<span class="group-count">(${groupRows.length} items)</span><a href="/export/pallet-qr/${encodeURIComponent(mfr)}/${encodeURIComponent(palletId)}/" class="pallet-dl-btn" onclick="event.stopPropagation();" title="Download QR codes for this pallet">Download QR</a></td>`;
 
                 // Insert before the first row of this group
                 firstRow.parentNode.insertBefore(groupRow, firstRow);
@@ -891,6 +974,182 @@
 
         // Run on page load
         document.addEventListener('DOMContentLoaded', initPalletGroups);
+
+        // ---- Multi-Scan ----
+        let multiScanner = null;
+        const scannedItems = new Map(); // id -> item info
+
+        function openMultiScan() {
+            document.getElementById('multiScanModal').classList.add('active');
+        }
+        function closeMultiScan() {
+            document.getElementById('multiScanModal').classList.remove('active');
+            stopMultiScanner();
+        }
+
+        async function startMultiScanner() {
+            const statusEl = document.getElementById('multiScannerStatus');
+            statusEl.textContent = 'Initializing camera...';
+            document.getElementById('multiScanStartBtn').style.display = 'none';
+            document.getElementById('multiScanStopBtn').style.display = 'inline-block';
+
+            try {
+                multiScanner = new Html5Qrcode("multi-qr-reader");
+                await multiScanner.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => handleMultiScanResult(decodedText),
+                    () => {}
+                );
+                statusEl.textContent = 'Scanning... Point at QR codes.';
+            } catch (err) {
+                statusEl.textContent = 'Camera access denied.';
+                document.getElementById('multiScanStartBtn').style.display = 'inline-block';
+                document.getElementById('multiScanStopBtn').style.display = 'none';
+            }
+        }
+
+        async function stopMultiScanner() {
+            if (multiScanner) {
+                try { await multiScanner.stop(); multiScanner.clear(); } catch(e) {}
+                multiScanner = null;
+            }
+            document.getElementById('multiScanStartBtn').style.display = 'inline-block';
+            document.getElementById('multiScanStopBtn').style.display = 'none';
+            document.getElementById('multiScannerStatus').textContent = 'Paused. Click scan to resume.';
+        }
+
+        function handleMultiScanResult(url) {
+            // Extract data param from scanned URL
+            let dataParam = '';
+            try {
+                const u = new URL(url);
+                dataParam = u.searchParams.get('data') || '';
+            } catch(e) {
+                dataParam = url;
+            }
+            if (!dataParam) return;
+
+            // Parse barcode payload
+            const decoded = decodeURIComponent(dataParam);
+            const parts = decoded.split(' | ');
+            const dict = {};
+            parts.forEach(p => {
+                const [k, v] = p.split('=', 2);
+                if (k && v) dict[k.trim()] = v.trim();
+            });
+
+            const mfr = dict['MFR'] || '';
+            const pallet = dict['PALLET'] || '';
+            const box = dict['BOX'] || '';
+            const key = `${mfr}-${pallet}-${box}`;
+
+            if (scannedItems.has(key)) return; // Already scanned
+
+            // Find matching row in table to get item ID
+            const rows = document.querySelectorAll('#inventoryTable tbody tr.pallet-item');
+            let itemId = null;
+            let tagId = '';
+            for (const row of rows) {
+                if (row.dataset.search && row.dataset.search.includes(mfr.toLowerCase()) &&
+                    row.dataset.pallet === `${mfr.toLowerCase()}-${pallet.toLowerCase()}`) {
+                    const boxCell = row.querySelector('td:nth-child(5)');
+                    if (boxCell && boxCell.textContent.trim() === '#' + box) {
+                        itemId = row.dataset.id;
+                        const tagIdCell = row.querySelector('td:nth-child(10)');
+                        tagId = tagIdCell ? tagIdCell.textContent.trim() : '';
+                        break;
+                    }
+                }
+            }
+
+            if (!itemId) {
+                // Try fetching from API
+                fetch(`/api/items/?mfr=${encodeURIComponent(mfr)}&pallet=${encodeURIComponent(pallet)}&box=${box}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.id) {
+                            scannedItems.set(key, { id: data.id, mfr, pallet, box, tagId: `FRA-P${pallet}-B${box}` });
+                            renderMultiScanList();
+                        }
+                    });
+            } else {
+                scannedItems.set(key, { id: itemId, mfr, pallet, box, tagId: tagId || `FRA-P${pallet}-B${box}` });
+                renderMultiScanList();
+            }
+
+            // Beep/vibrate feedback
+            if (navigator.vibrate) navigator.vibrate(100);
+        }
+
+        function renderMultiScanList() {
+            const list = document.getElementById('multiScanList');
+            const empty = document.getElementById('multiScanEmpty');
+            if (empty) empty.style.display = scannedItems.size ? 'none' : 'block';
+
+            // Remove existing items
+            list.querySelectorAll('.multiscan-item').forEach(el => el.remove());
+
+            scannedItems.forEach((info, key) => {
+                const div = document.createElement('div');
+                div.className = 'multiscan-item';
+                div.innerHTML = `
+                    <div>
+                        <span class="item-info">${escapeHtml(info.mfr)} - Box #${info.box}</span>
+                        <span class="item-tag-id">${info.tagId}</span>
+                    </div>
+                    <button class="remove-btn" onclick="removeScannedItem('${key}')">Remove</button>
+                `;
+                list.appendChild(div);
+            });
+
+            document.getElementById('multiScanActions').style.display = scannedItems.size ? 'block' : 'none';
+        }
+
+        function removeScannedItem(key) {
+            scannedItems.delete(key);
+            renderMultiScanList();
+        }
+
+        async function applyMultiScanStatus() {
+            const status = document.getElementById('multiScanStatus').value;
+            const changedBy = document.getElementById('multiScanChangedBy').value;
+            if (!status) { showToast('Select a status first', true); return; }
+            if (!scannedItems.size) { showToast('No items scanned', true); return; }
+
+            const ids = Array.from(scannedItems.values()).map(info => parseInt(info.id));
+
+            const btn = document.getElementById('multiScanApply');
+            btn.disabled = true;
+            btn.textContent = 'Applying...';
+
+            try {
+                const resp = await fetch('/api/bulk-update-status/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({item_ids: ids, status: status, changed_by: changedBy, notes: 'Multi-scan bulk update'})
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showToast(`Updated ${data.updated_count} items!`);
+                    scannedItems.clear();
+                    closeMultiScan();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('Error: ' + data.error, true);
+                }
+            } catch(err) {
+                showToast('Network error', true);
+            }
+            btn.disabled = false;
+            btn.textContent = 'Apply Status to All';
+        }
+
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
     </script>
 </body>
 </html>
