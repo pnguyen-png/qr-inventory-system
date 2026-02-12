@@ -345,7 +345,7 @@ def export_csv(request):
 
 
 def _make_labeled_qr_image(item):
-    """Helper: download QR and add text label below it, returns BytesIO PNG or None."""
+    """Helper: landscape QR label — QR on left, text on right. Returns BytesIO PNG or None."""
     from PIL import Image as PilImage, ImageDraw, ImageFont
     from io import BytesIO
     import requests as http_requests
@@ -358,31 +358,41 @@ def _make_labeled_qr_image(item):
         return None
 
     qr_size = qr_img.size[0]
-    label_height = 50
     padding = 8
-    total_w = qr_size + padding * 2
-    total_h = qr_size + label_height + padding * 2
+    text_area_width = 200
+    total_w = padding + qr_size + padding + text_area_width + padding
+    total_h = qr_size + padding * 2
 
     canvas = PilImage.new('RGB', (total_w, total_h), 'white')
     canvas.paste(qr_img, (padding, padding))
 
     draw = ImageDraw.Draw(canvas)
+
+    # Border around QR
+    draw.rectangle(
+        [padding - 1, padding - 1, padding + qr_size, padding + qr_size],
+        outline='black', width=1
+    )
+
     try:
-        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 12)
-        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 10)
+        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 11)
     except (OSError, IOError):
         font_large = ImageFont.load_default()
         font_small = font_large
 
-    text_y = qr_size + padding + 2
-    cx = total_w // 2
+    text_x = padding + qr_size + padding
+    text_y = padding + 8
 
-    mfr_bbox = draw.textbbox((0, 0), item.manufacturer, font=font_large)
-    draw.text((cx - (mfr_bbox[2] - mfr_bbox[0]) // 2, text_y), item.manufacturer, fill='black', font=font_large)
-
-    detail = f"Pallet {item.pallet_id}  |  Box #{item.box_id}"
-    det_bbox = draw.textbbox((0, 0), detail, font=font_small)
-    draw.text((cx - (det_bbox[2] - det_bbox[0]) // 2, text_y + 18), detail, fill='black', font=font_small)
+    draw.text((text_x, text_y), item.manufacturer, fill='#333', font=font_large)
+    text_y += 24
+    draw.text((text_x, text_y), f"Box #{item.box_id}", fill='#333', font=font_small)
+    text_y += 20
+    draw.text((text_x, text_y), f"Pallet {item.pallet_id}", fill='#333', font=font_small)
+    text_y += 20
+    project = getattr(item, 'project_number', '') or ''
+    if project:
+        draw.text((text_x, text_y), f"Project {project}", fill='#333', font=font_small)
 
     buf = BytesIO()
     canvas.save(buf, format='PNG')
@@ -460,8 +470,8 @@ def export_qr_codes(request):
             labeled_buf = _make_labeled_qr_image(item)
             if labeled_buf:
                 img = XlImage(labeled_buf)
-                img.width = 110
-                img.height = 120
+                img.width = 220
+                img.height = 95
                 cell_ref = f'H{row_num}'
                 ws.add_image(img, cell_ref)
             else:
@@ -469,7 +479,7 @@ def export_qr_codes(request):
 
     # Set column widths
     col_widths = {'A': 18, 'B': 10, 'C': 8, 'D': 14, 'E': 10,
-                  'F': 16, 'G': 14, 'H': 15, 'I': 22}
+                  'F': 16, 'G': 14, 'H': 30, 'I': 22}
     for col_letter, width in col_widths.items():
         ws.column_dimensions[col_letter].width = width
 
@@ -971,7 +981,14 @@ def next_pallet_api(request):
 
 
 def generate_labeled_qr(request, item_id):
-    """Generate a QR code image with manufacturer, pallet, and box labels baked in."""
+    """Generate a landscape QR label image: QR on left, text on right.
+
+    Layout mirrors the 29mm x 90mm Brother QL-820NWB label:
+    [QR CODE] | Manufacturer
+              | Box #N
+              | Pallet N
+              | Project #
+    """
     from PIL import Image, ImageDraw, ImageFont
     from io import BytesIO
     import requests as http_requests
@@ -988,40 +1005,50 @@ def generate_labeled_qr(request, item_id):
 
     qr_size = qr_img.size[0]  # Should be 200x200
 
-    # Create a new image: QR + label area below
-    label_height = 70
+    # Landscape layout: QR on left, text on right
     padding = 10
-    total_width = qr_size + padding * 2
-    total_height = qr_size + label_height + padding * 2
+    text_area_width = 260
+    total_width = padding + qr_size + padding + text_area_width + padding
+    total_height = qr_size + padding * 2
 
     canvas = Image.new('RGB', (total_width, total_height), 'white')
     canvas.paste(qr_img, (padding, padding))
 
+    # Draw border around QR code
     draw = ImageDraw.Draw(canvas)
+    draw.rectangle(
+        [padding - 1, padding - 1, padding + qr_size, padding + qr_size],
+        outline='black', width=1
+    )
 
     # Use default font at different sizes
     try:
-        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
-        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
+        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 18)
+        font_medium = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
     except (OSError, IOError):
         font_large = ImageFont.load_default()
-        font_small = font_large
+        font_medium = font_large
 
-    # Draw label text below QR code
-    text_y = qr_size + padding + 5
-    center_x = total_width // 2
+    # Draw text to the right of QR code
+    text_x = padding + qr_size + padding
+    text_y = padding + 10
 
-    # Manufacturer
-    mfr_text = item.manufacturer
-    mfr_bbox = draw.textbbox((0, 0), mfr_text, font=font_large)
-    mfr_w = mfr_bbox[2] - mfr_bbox[0]
-    draw.text((center_x - mfr_w // 2, text_y), mfr_text, fill='black', font=font_large)
+    # Manufacturer (bold, large)
+    draw.text((text_x, text_y), item.manufacturer, fill='#333', font=font_large)
+    text_y += 32
 
-    # Pallet + Box
-    detail_text = f"Pallet {item.pallet_id}  |  Box #{item.box_id}"
-    det_bbox = draw.textbbox((0, 0), detail_text, font=font_small)
-    det_w = det_bbox[2] - det_bbox[0]
-    draw.text((center_x - det_w // 2, text_y + 22), detail_text, fill='black', font=font_small)
+    # Box #
+    draw.text((text_x, text_y), f"Box #{item.box_id}", fill='#333', font=font_medium)
+    text_y += 24
+
+    # Pallet #
+    draw.text((text_x, text_y), f"Pallet {item.pallet_id}", fill='#333', font=font_medium)
+    text_y += 24
+
+    # Project #
+    project = item.project_number or ''
+    if project:
+        draw.text((text_x, text_y), f"Project {project}", fill='#333', font=font_medium)
 
     # Return as PNG
     buf = BytesIO()
@@ -1096,14 +1123,14 @@ def download_pallet_qr(request, manufacturer, pallet_id):
             labeled_buf = _make_labeled_qr_image(item)
             if labeled_buf:
                 img = XlImage(labeled_buf)
-                img.width = 110
-                img.height = 120
+                img.width = 220
+                img.height = 95
                 ws.add_image(img, f'H{row_num}')
             else:
                 ws.cell(row=row_num, column=8, value=item.qr_url)
 
     col_widths = {'A': 16, 'B': 18, 'C': 10, 'D': 8, 'E': 14,
-                  'F': 14, 'G': 20, 'H': 15, 'I': 22}
+                  'F': 14, 'G': 20, 'H': 30, 'I': 22}
     for col_letter, width in col_widths.items():
         ws.column_dimensions[col_letter].width = width
 
