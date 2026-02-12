@@ -246,12 +246,6 @@
             background: #fff; cursor: pointer;
         }
         .qr-code-img:hover { border-color: #8b1a1a; }
-        .qr-download-link {
-            display: inline-block; margin-top: 10px; padding: 8px 18px;
-            background: #8b1a1a; color: #fff; border-radius: 8px;
-            text-decoration: none; font-size: 0.8rem; font-weight: 600;
-        }
-        .qr-download-link:hover { opacity: 0.85; }
 
         /* Photos section */
         .photos-section {
@@ -457,16 +451,13 @@
             <div class="qr-section">
                 <h3>QR Code</h3>
                 <img class="qr-code-img" src="{{ item.qr_url }}" alt="QR Code for {{ item.manufacturer }} Box #{{ item.box_id }}"
-                     onclick="window.open('/qr/{{ item.id }}/labeled.png', '_blank')" title="Click to download">
+                     onclick="printSingleLabel()" title="Click to print label">
                 <div style="margin-top:8px; font-size:0.85rem; font-weight:600; color:#374151; line-height:1.5;">
                     {{ item.manufacturer }}<br>
                     Pallet {{ item.pallet_id }} &bull; Box #{{ item.box_id }}
                 </div>
-                <a class="qr-download-link" href="/qr/{{ item.id }}/labeled.png">
-                    Download QR Code
-                </a>
-                <button onclick="printSingleLabel()" style="display:inline-block; margin-top:8px; padding:8px 16px; background:#7c3aed; color:#fff; border:none; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer;">
-                    Print Label
+                <button onclick="printSingleLabel()" style="display:inline-block; margin-top:10px; padding:10px 20px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer;">
+                    Print QR Label
                 </button>
             </div>
             {% endif %}

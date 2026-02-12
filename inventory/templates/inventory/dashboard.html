@@ -273,9 +273,9 @@
             margin-left: 8px;
         }
         .pallet-dl-btn {
-            margin-left: 12px; padding: 3px 10px; background: #8b1a1a; color: #fff !important;
+            margin-left: 12px; padding: 3px 10px; background: #8b1a1a; color: #fff;
             border-radius: 6px; font-size: 0.7rem; font-weight: 600;
-            text-decoration: none !important; display: inline-block;
+            border: none; cursor: pointer; display: inline-block;
         }
         .pallet-dl-btn:hover { opacity: 0.85; }
 
@@ -469,6 +469,59 @@
             .summary-row { grid-template-columns: repeat(2, 1fr); }
             .toolbar-group { grid-template-columns: 1fr; }
         }
+
+        /* --- Print Labels Layout for Brother QL-820NWB (29mm x 90mm) --- */
+        .print-labels { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            .print-labels, .print-labels * { visibility: visible !important; }
+            .print-labels {
+                display: block !important;
+                position: absolute;
+                top: 0; left: 0;
+            }
+            .print-label {
+                width: 86mm;
+                height: 25mm;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                page-break-after: always;
+                display: flex !important;
+                align-items: center;
+                padding: 1.5mm 2mm;
+                gap: 3mm;
+                margin: 0;
+            }
+            .print-label:last-child { page-break-after: avoid; }
+            .print-label .qr-box {
+                width: 22mm; height: 22mm;
+                border: 0.5pt solid #000;
+                padding: 1mm;
+                flex-shrink: 0;
+                display: flex; align-items: center; justify-content: center;
+            }
+            .print-label .qr-box img {
+                width: 20mm !important; height: 20mm !important;
+                display: block !important;
+            }
+            .print-label-text {
+                flex: 1;
+                font-family: Arial, Helvetica, sans-serif;
+                line-height: 1.3;
+                overflow: hidden;
+            }
+            .print-label-text .mfr {
+                font-size: 10pt; font-weight: 700;
+                margin-bottom: 1mm;
+            }
+            .print-label-text .detail {
+                font-size: 8pt; color: #333;
+            }
+            @page {
+                size: 90mm 29mm;
+                margin: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -532,7 +585,7 @@
                 <a class="btn-tool primary" href="/add-shipment/">Add Shipment</a>
                 <button class="btn-tool primary" onclick="openScanner()">Scan QR Code</button>
                 <button class="btn-tool" style="background:#7c3aed; color:#fff; border-color:#7c3aed;" onclick="openMultiScan()">Multi-Scan</button>
-                <a class="btn-tool" href="/export/qr-codes/{% if show_archived %}?archived=1{% endif %}">Download QR Codes</a>
+                <button class="btn-tool" onclick="printAllQRLabels()">Print QR Labels</button>
                 <a class="btn-tool" href="/export/csv/{% if show_archived %}?archived=1{% endif %}">Export CSV</a>
                 <a class="btn-tool" href="/export/pdf/{% if show_archived %}?archived=1{% endif %}" target="_blank">Print Report</a>
             </div>
@@ -716,6 +769,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Hidden print labels container -->
+    <div class="print-labels" id="printLabels"></div>
 
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
@@ -957,7 +1013,7 @@
                 const groupRow = document.createElement('tr');
                 groupRow.className = 'pallet-group-row';
                 groupRow.dataset.palletGroup = key;
-                groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>${mfr} - Pallet ${palletId}<span class="group-count">(${groupRows.length} items)</span><a href="/export/pallet-qr/${encodeURIComponent(mfr)}/${encodeURIComponent(palletId)}/" class="pallet-dl-btn" onclick="event.stopPropagation();" title="Download QR codes for this pallet">Download QR</a></td>`;
+                groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>${mfr} - Pallet ${palletId}<span class="group-count">(${groupRows.length} items)</span><button class="pallet-dl-btn" onclick="event.stopPropagation(); printPalletQRLabels('${escapeHtml(mfr)}', '${escapeHtml(palletId)}');" title="Print QR labels for this pallet">Print QR</button></td>`;
 
                 // Insert before the first row of this group
                 firstRow.parentNode.insertBefore(groupRow, firstRow);
@@ -1149,6 +1205,59 @@
             const d = document.createElement('div');
             d.textContent = text;
             return d.innerHTML;
+        }
+
+        // ---- Print QR Labels ----
+        function buildLabelHTML(row) {
+            const mfr = row.children[1].textContent.trim();
+            const palletId = row.children[2].textContent.trim();
+            const projectNum = row.children[3].textContent.trim();
+            const boxId = row.children[4].textContent.trim();
+            const qrImg = row.querySelector('.qr-thumb');
+            const qrSrc = qrImg ? qrImg.src : '';
+
+            return `<div class="print-label">
+                <div class="qr-box"><img src="${qrSrc}" alt="QR"></div>
+                <div class="print-label-text">
+                    <div class="mfr">${escapeHtml(mfr)}</div>
+                    <div class="detail">Box ${escapeHtml(boxId)}</div>
+                    <div class="detail">Pallet ${escapeHtml(palletId)}</div>
+                    <div class="detail">${projectNum !== '-' ? escapeHtml(projectNum) : ''}</div>
+                </div>
+            </div>`;
+        }
+
+        function printLabelsFromRows(rows) {
+            const container = document.getElementById('printLabels');
+            container.innerHTML = rows.map(r => buildLabelHTML(r)).join('');
+
+            // Wait for all QR images to load before printing
+            const imgs = container.querySelectorAll('img');
+            let loaded = 0;
+            const total = imgs.length;
+            if (total === 0) { window.print(); return; }
+            imgs.forEach(img => {
+                if (img.complete) {
+                    loaded++;
+                    if (loaded === total) window.print();
+                } else {
+                    img.onload = () => { loaded++; if (loaded === total) window.print(); };
+                    img.onerror = () => { loaded++; if (loaded === total) window.print(); };
+                }
+            });
+        }
+
+        function printAllQRLabels() {
+            const rows = Array.from(document.querySelectorAll('#inventoryTable tbody tr.pallet-item')).filter(r => r.style.display !== 'none');
+            if (!rows.length) { showToast('No items to print', true); return; }
+            printLabelsFromRows(rows);
+        }
+
+        function printPalletQRLabels(mfr, palletId) {
+            const key = mfr.toLowerCase() + '-' + palletId.toLowerCase();
+            const rows = Array.from(document.querySelectorAll(`#inventoryTable tbody tr.pallet-item[data-pallet="${key}"]`));
+            if (!rows.length) { showToast('No items found for this pallet', true); return; }
+            printLabelsFromRows(rows);
         }
     </script>
 </body>
