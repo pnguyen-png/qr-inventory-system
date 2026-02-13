@@ -585,6 +585,7 @@
                 <a class="btn-tool primary" href="/add-shipment/">Add Shipment</a>
                 <button class="btn-tool primary" onclick="openScanner()">Scan QR Code</button>
                 <button class="btn-tool" style="background:#7c3aed; color:#fff; border-color:#7c3aed;" onclick="openMultiScan()">Multi-Scan</button>
+                <button class="btn-tool" onclick="toggleAllGroups()" id="btnCollapseAll">Collapse All</button>
                 <button class="btn-tool" onclick="printAllQRLabels()">Print Labels</button>
                 <a class="btn-tool" href="/export/csv/{% if show_archived %}?archived=1{% endif %}">Export CSV</a>
                 <a class="btn-tool" href="/export/pdf/{% if show_archived %}?archived=1{% endif %}" target="_blank">Print Report</a>
@@ -1025,6 +1026,27 @@
                     });
                 });
             });
+        }
+
+        // Collapse All / Expand All toggle
+        function toggleAllGroups() {
+            const groupRows = document.querySelectorAll('.pallet-group-row');
+            if (!groupRows.length) return;
+            const btn = document.getElementById('btnCollapseAll');
+            // If any group is expanded, collapse all; otherwise expand all
+            const anyExpanded = Array.from(groupRows).some(r => !r.classList.contains('collapsed'));
+            groupRows.forEach(groupRow => {
+                const key = groupRow.dataset.palletGroup;
+                const itemRows = document.querySelectorAll(`tr.pallet-item[data-pallet="${key}"]`);
+                if (anyExpanded) {
+                    groupRow.classList.add('collapsed');
+                    itemRows.forEach(r => r.style.display = 'none');
+                } else {
+                    groupRow.classList.remove('collapsed');
+                    itemRows.forEach(r => r.style.display = '');
+                }
+            });
+            btn.textContent = anyExpanded ? 'Expand All' : 'Collapse All';
         }
 
         // Run on page load
