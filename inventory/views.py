@@ -573,6 +573,14 @@ def archive_item(request):
         item.archived_at = timezone.now() if archive else None
         item.save()
 
+        ChangeLog.objects.create(
+            item=item,
+            change_type='field_edit',
+            field_name='archived',
+            old_value='No' if archive else 'Yes',
+            new_value='Yes' if archive else 'No',
+        )
+
         return JsonResponse({'success': True, 'archived': item.archived})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -588,12 +596,19 @@ def bulk_archive(request):
         archive = data.get('archive', True)
 
         now = timezone.now() if archive else None
-        updated = InventoryItem.objects.filter(id__in=item_ids).update(
-            archived=archive,
-            archived_at=now,
-        )
+        items = InventoryItem.objects.filter(id__in=item_ids)
+        items.update(archived=archive, archived_at=now)
 
-        return JsonResponse({'success': True, 'updated_count': updated})
+        for item in InventoryItem.objects.filter(id__in=item_ids):
+            ChangeLog.objects.create(
+                item=item,
+                change_type='field_edit',
+                field_name='archived',
+                old_value='No' if archive else 'Yes',
+                new_value='Yes' if archive else 'No',
+            )
+
+        return JsonResponse({'success': True, 'updated_count': len(item_ids)})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 

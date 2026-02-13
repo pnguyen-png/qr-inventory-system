@@ -119,6 +119,7 @@ class ChangeLog(models.Model):
         'manufacturer': 'Manufacturer',
         'tags': 'Tags',
         'status': 'Status',
+        'archived': 'Archived',
     }
 
     def __str__(self):
