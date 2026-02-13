@@ -59,6 +59,7 @@ def scanner_landing(request):
         history = item.status_history.all()
         status_labels = dict(item.STATUS_CHOICES)
         photos = item.photos.all()
+        _annotate_qr_urls([item])
 
         preset_tags = ['Standard', 'Initiating', 'Target', 'RP12', 'RP48',
                        'RP48-25kW', 'RP48-40kW', 'RP240']
@@ -225,6 +226,8 @@ def dashboard(request):
     all_active = InventoryItem.objects.filter(archived=False)
     overdue_items = [i for i in all_active if i.is_overdue]
 
+    _annotate_qr_urls(items)
+
     return render(request, 'inventory/dashboard.html', {
         'items': items,
         'checked_in_count': all_active.filter(status='checked_in').count(),
@@ -353,59 +356,48 @@ def export_csv(request):
     return response
 
 
-def _generate_barcode_image(data_str, bar_width=2, bar_height=80):
-    """Generate a Code128 barcode as a Pillow Image using python-barcode."""
-    from PIL import Image as PilImage
-    from io import BytesIO
-    try:
-        import barcode as barcode_lib
-        from barcode.writer import ImageWriter
-        code128 = barcode_lib.get_barcode_class('code128')
-        bc = code128(str(data_str), writer=ImageWriter())
-        buf = BytesIO()
-        bc.write(buf, options={
-            'module_height': bar_height * 0.26,  # mm (pixels to mm approx)
-            'module_width': bar_width * 0.26,
-            'quiet_zone': 2.0,
-            'write_text': False,
-            'font_size': 0,
-            'text_distance': 0,
-        })
-        buf.seek(0)
-        return PilImage.open(buf).convert('RGB')
-    except ImportError:
-        # Fallback: create a placeholder if python-barcode not installed
-        img = PilImage.new('RGB', (200, bar_height), 'white')
-        from PIL import ImageDraw
-        draw = ImageDraw.Draw(img)
-        draw.text((10, bar_height // 3), f"ID: {data_str}", fill='black')
-        return img
+def _get_short_qr_url(item_id, base_url=None):
+    """Return the QR code image URL using the short /scan/?id= format."""
+    if base_url is None:
+        base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
+    scanner_url = f"{base_url}/scan/?id={item_id}"
+    return f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={urllib.parse.quote(scanner_url)}"
 
 
-def _make_labeled_barcode_image(item):
-    """Helper: landscape barcode label — barcode on left, text on right. Returns BytesIO PNG or None."""
+def _annotate_qr_urls(items, base_url=None):
+    """Add short_qr_url attribute to each item for template use."""
+    if base_url is None:
+        base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
+    for item in items:
+        item.short_qr_url = _get_short_qr_url(item.id, base_url)
+    return items
+
+
+def _make_labeled_qr_image(item):
+    """Helper: landscape QR label — QR on left, text on right. Returns BytesIO PNG or None."""
     from PIL import Image as PilImage, ImageDraw, ImageFont
     from io import BytesIO
+    import requests as http_requests
 
     try:
-        bc_img = _generate_barcode_image(str(item.id), bar_width=2, bar_height=80)
+        qr_url = _get_short_qr_url(item.id)
+        resp = http_requests.get(qr_url, timeout=10)
+        resp.raise_for_status()
+        qr_img = PilImage.open(BytesIO(resp.content)).convert('RGB')
     except Exception:
         return None
 
-    # Scale barcode to fit label
-    bc_w, bc_h = bc_img.size
-    target_h = 140
-    scale = target_h / bc_h
-    bc_img = bc_img.resize((int(bc_w * scale), target_h), PilImage.LANCZOS)
-    bc_w, bc_h = bc_img.size
+    # Scale QR to fit label (140px square)
+    qr_size = 140
+    qr_img = qr_img.resize((qr_size, qr_size), PilImage.LANCZOS)
 
     padding = 10
     text_area_width = 220
-    total_w = padding + bc_w + padding + text_area_width + padding
-    total_h = bc_h + padding * 2
+    total_w = padding + qr_size + padding + text_area_width + padding
+    total_h = qr_size + padding * 2
 
     canvas = PilImage.new('RGB', (total_w, total_h), 'white')
-    canvas.paste(bc_img, (padding, padding))
+    canvas.paste(qr_img, (padding, padding))
 
     draw = ImageDraw.Draw(canvas)
 
@@ -416,7 +408,7 @@ def _make_labeled_barcode_image(item):
         font_large = ImageFont.load_default()
         font_small = font_large
 
-    text_x = padding + bc_w + padding
+    text_x = padding + qr_size + padding
     text_y = padding + 10
 
     draw.text((text_x, text_y), item.manufacturer, fill='#333', font=font_large)
@@ -502,7 +494,7 @@ def export_qr_codes(request):
 
         # Generate and embed labeled QR code image
         if item.qr_url:
-            labeled_buf = _make_labeled_barcode_image(item)
+            labeled_buf = _make_labeled_qr_image(item)
             if labeled_buf:
                 img = XlImage(labeled_buf)
                 img.width = 220
@@ -759,7 +751,7 @@ def add_shipment(request):
             existing.project_number = project_number
             existing.tags = tags
             existing.barcode_payload = barcode_payload
-            existing.qr_url = qr_url
+            existing.qr_url = _get_short_qr_url(existing.id, base_url)
             existing.save()
             created_items.append(existing)
         else:
@@ -775,8 +767,11 @@ def add_shipment(request):
                 tags=tags,
                 status='checked_in',
                 barcode_payload=barcode_payload,
-                qr_url=qr_url,
+                qr_url='',
             )
+            # Set short QR URL now that we have the item ID
+            item.qr_url = _get_short_qr_url(item.id, base_url)
+            item.save()
             created_items.append(item)
 
     # Handle photo uploads — attach to all created items
@@ -791,6 +786,8 @@ def add_shipment(request):
 
     # Store the shipment key in the session for downloads
     request.session[f'shipment_{shipment_key}'] = [item.id for item in created_items]
+
+    _annotate_qr_urls(created_items, base_url)
 
     return render(request, 'inventory/shipment_result.html', {
         'items': created_items,
@@ -906,15 +903,11 @@ def edit_item(request):
             if new_mfr:
                 old_mfr = item.manufacturer
                 item.manufacturer = new_mfr
-                # Update barcode payload and QR URL if manufacturer changed
+                # Update barcode payload if manufacturer changed
                 if old_mfr != new_mfr:
-                    base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
                     barcode_payload = f"MFR={new_mfr} | PALLET={item.pallet_id} | BOX={item.box_id}"
-                    encoded_payload = urllib.parse.quote(barcode_payload)
-                    scanner_url = f"{base_url}/scan/?data={encoded_payload}"
-                    qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(scanner_url)}"
                     item.barcode_payload = barcode_payload
-                    item.qr_url = qr_url
+                    item.qr_url = _get_short_qr_url(item.id)
         if 'tags' in data:
             item.tags = data['tags']
 
@@ -1016,16 +1009,16 @@ def next_pallet_api(request):
 
 
 def generate_labeled_qr(request, item_id):
-    """Generate a landscape barcode label image: barcode on left, text on right."""
+    """Generate a landscape QR label image: QR on left, text on right."""
     from io import BytesIO
 
     item = get_object_or_404(InventoryItem, id=item_id)
 
-    buf = _make_labeled_barcode_image(item)
+    buf = _make_labeled_qr_image(item)
     if not buf:
-        return HttpResponse('Failed to generate barcode image', status=500)
+        return HttpResponse('Failed to generate QR image', status=500)
 
-    filename = f"Barcode_{item.manufacturer}_Pallet{item.pallet_id}_Box{item.box_id}.png"
+    filename = f"QR_{item.manufacturer}_Pallet{item.pallet_id}_Box{item.box_id}.png"
     response = HttpResponse(buf.read(), content_type='image/png')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
@@ -1090,7 +1083,7 @@ def download_pallet_qr(request, manufacturer, pallet_id):
         ws.row_dimensions[row_num].height = 95
 
         if item.qr_url:
-            labeled_buf = _make_labeled_barcode_image(item)
+            labeled_buf = _make_labeled_qr_image(item)
             if labeled_buf:
                 img = XlImage(labeled_buf)
                 img.width = 220
