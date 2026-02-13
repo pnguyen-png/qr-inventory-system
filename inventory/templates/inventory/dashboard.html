@@ -493,16 +493,14 @@
                 margin: 0;
             }
             .print-label:last-child { page-break-after: avoid; }
-            .print-label .qr-box {
-                width: 22mm; height: 22mm;
-                border: 0.5pt solid #000;
-                padding: 1mm;
+            .print-label .barcode-box {
+                width: 30mm; height: 20mm;
                 flex-shrink: 0;
                 display: flex; align-items: center; justify-content: center;
+                overflow: hidden;
             }
-            .print-label .qr-box img {
-                width: 20mm !important; height: 20mm !important;
-                display: block !important;
+            .print-label .barcode-box svg {
+                width: 100% !important; height: 100% !important;
             }
             .print-label-text {
                 flex: 1;
@@ -774,6 +772,7 @@
     <div class="print-labels" id="printLabels"></div>
 
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <script>
         // ---- Tab switching ----
         let currentTab = 'all';
@@ -967,14 +966,17 @@
             }
         }
 
-        function handleScanResult(url) {
+        function handleScanResult(text) {
             closeScanner();
-            // If it's a full URL with /scan/, navigate to it
-            if (url.includes('/scan/')) {
-                window.location.href = url;
+            if (text.includes('/scan/')) {
+                // QR code with full URL
+                window.location.href = text;
+            } else if (/^\d+$/.test(text)) {
+                // Barcode with item ID
+                window.location.href = '/scan/?id=' + text;
             } else {
-                // Try to use raw data
-                window.location.href = '/scan/?data=' + encodeURIComponent(url);
+                // Raw barcode payload
+                window.location.href = '/scan/?data=' + encodeURIComponent(text);
             }
         }
 
@@ -1075,14 +1077,34 @@
             document.getElementById('multiScannerStatus').textContent = 'Paused. Click scan to resume.';
         }
 
-        function handleMultiScanResult(url) {
-            // Extract data param from scanned URL
+        function handleMultiScanResult(text) {
+            // Check if it's a barcode scan (numeric item ID)
+            if (/^\d+$/.test(text)) {
+                const itemId = text;
+                if (scannedItems.has('id-' + itemId)) return;
+
+                // Find matching row in table by data-id
+                const row = document.querySelector(`#inventoryTable tbody tr.pallet-item[data-id="${itemId}"]`);
+                if (row) {
+                    const mfr = row.children[1].textContent.trim();
+                    const pallet = row.children[2].textContent.trim();
+                    const box = row.children[4].textContent.trim();
+                    const tagIdCell = row.querySelector('td:nth-child(10)');
+                    const tagId = tagIdCell ? tagIdCell.textContent.trim() : '';
+                    scannedItems.set('id-' + itemId, { id: itemId, mfr, pallet, box, tagId });
+                    renderMultiScanList();
+                }
+                if (navigator.vibrate) navigator.vibrate(100);
+                return;
+            }
+
+            // QR code scan — extract data param from URL
             let dataParam = '';
             try {
-                const u = new URL(url);
+                const u = new URL(text);
                 dataParam = u.searchParams.get('data') || '';
             } catch(e) {
-                dataParam = url;
+                dataParam = text;
             }
             if (!dataParam) return;
 
@@ -1207,17 +1229,16 @@
             return d.innerHTML;
         }
 
-        // ---- Print QR Labels ----
+        // ---- Print Barcode Labels ----
         function buildLabelHTML(row) {
             const mfr = row.children[1].textContent.trim();
             const palletId = row.children[2].textContent.trim();
             const projectNum = row.children[3].textContent.trim();
             const boxId = row.children[4].textContent.trim();
-            const qrImg = row.querySelector('.qr-thumb');
-            const qrSrc = qrImg ? qrImg.src : '';
+            const itemId = row.dataset.id;
 
             return `<div class="print-label">
-                <div class="qr-box"><img src="${qrSrc}" alt="QR"></div>
+                <div class="barcode-box"><svg class="barcode-svg" data-value="${itemId}"></svg></div>
                 <div class="print-label-text">
                     <div class="mfr">${escapeHtml(mfr)}</div>
                     <div class="detail">Box ${escapeHtml(boxId)}</div>
@@ -1231,20 +1252,18 @@
             const container = document.getElementById('printLabels');
             container.innerHTML = rows.map(r => buildLabelHTML(r)).join('');
 
-            // Wait for all QR images to load before printing
-            const imgs = container.querySelectorAll('img');
-            let loaded = 0;
-            const total = imgs.length;
-            if (total === 0) { window.print(); return; }
-            imgs.forEach(img => {
-                if (img.complete) {
-                    loaded++;
-                    if (loaded === total) window.print();
-                } else {
-                    img.onload = () => { loaded++; if (loaded === total) window.print(); };
-                    img.onerror = () => { loaded++; if (loaded === total) window.print(); };
-                }
+            // Render barcodes into SVGs (synchronous)
+            container.querySelectorAll('.barcode-svg').forEach(function(svg) {
+                JsBarcode(svg, svg.dataset.value, {
+                    format: "CODE128",
+                    width: 2,
+                    height: 60,
+                    displayValue: false,
+                    margin: 2
+                });
             });
+
+            window.print();
         }
 
         function printAllQRLabels() {

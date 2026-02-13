@@ -19,36 +19,42 @@ LOCATION_CHOICES = [
 
 
 def scanner_landing(request):
-    """Main QR scanner landing page"""
+    """Main scanner landing page — supports ?data= (QR payload) and ?id= (barcode ID)"""
     barcode_data = request.GET.get('data', '')
+    item_id = request.GET.get('id', '')
 
-    if not barcode_data:
+    if not barcode_data and not item_id:
         return render(request, 'inventory/scanner_landing.html', {
-            'error': 'Invalid QR code. No data found.',
+            'error': 'Invalid scan. No data found.',
             'item': None,
             'item_json': '{}'
         })
 
     try:
-        decoded_data = urllib.parse.unquote(barcode_data)
-        parts = decoded_data.split(' | ')
-        data_dict = {}
+        if item_id:
+            # Barcode scan — lookup by database ID
+            item = get_object_or_404(InventoryItem, id=int(item_id))
+        else:
+            # QR code scan — parse payload
+            decoded_data = urllib.parse.unquote(barcode_data)
+            parts = decoded_data.split(' | ')
+            data_dict = {}
 
-        for part in parts:
-            if '=' in part:
-                key, value = part.split('=', 1)
-                data_dict[key.strip()] = value.strip()
+            for part in parts:
+                if '=' in part:
+                    key, value = part.split('=', 1)
+                    data_dict[key.strip()] = value.strip()
 
-        manufacturer = data_dict.get('MFR', '')
-        pallet_id = data_dict.get('PALLET', '')
-        box_id = data_dict.get('BOX', '')
+            manufacturer = data_dict.get('MFR', '')
+            pallet_id = data_dict.get('PALLET', '')
+            box_id = data_dict.get('BOX', '')
 
-        item = get_object_or_404(
-            InventoryItem,
-            manufacturer=manufacturer,
-            pallet_id=pallet_id,
-            box_id=int(box_id)
-        )
+            item = get_object_or_404(
+                InventoryItem,
+                manufacturer=manufacturer,
+                pallet_id=pallet_id,
+                box_id=int(box_id)
+            )
 
         history = item.status_history.all()
         status_labels = dict(item.STATUS_CHOICES)
@@ -316,9 +322,9 @@ def export_csv(request):
 
     writer = csv.writer(response)
     writer.writerow([
-        'ID', 'Manufacturer', 'Pallet ID', 'Box ID', 'Contents', 'Damaged',
-        'Location', 'Description', 'Status', 'Checked Out By', 'Checked Out At',
-        'Created', 'Updated', 'Archived'
+        'ID', 'Tag ID', 'Manufacturer', 'Pallet ID', 'Box ID', 'Contents', 'Damaged',
+        'Location', 'Description', 'Tags', 'Status', 'Checked Out By', 'Checked Out At',
+        'Created', 'Updated', 'Archived', 'Barcode Payload'
     ])
 
     status_labels = dict(InventoryItem.STATUS_CHOICES)
@@ -326,6 +332,7 @@ def export_csv(request):
     for item in items:
         writer.writerow([
             item.id,
+            item.tag_id,
             item.manufacturer,
             item.pallet_id,
             item.box_id,
@@ -333,63 +340,91 @@ def export_csv(request):
             'Yes' if item.damaged else 'No',
             item.location,
             item.description,
+            item.tags,
             status_labels.get(item.status, item.status),
             item.checked_out_by,
             item.checked_out_at.strftime('%Y-%m-%d %H:%M') if item.checked_out_at else '',
             item.created_at.strftime('%Y-%m-%d %H:%M'),
             item.updated_at.strftime('%Y-%m-%d %H:%M'),
             'Yes' if item.archived else 'No',
+            item.barcode_payload,
         ])
 
     return response
 
 
-def _make_labeled_qr_image(item):
-    """Helper: landscape QR label — QR on left, text on right. Returns BytesIO PNG or None."""
+def _generate_barcode_image(data_str, bar_width=2, bar_height=80):
+    """Generate a Code128 barcode as a Pillow Image using python-barcode."""
+    from PIL import Image as PilImage
+    from io import BytesIO
+    try:
+        import barcode as barcode_lib
+        from barcode.writer import ImageWriter
+        code128 = barcode_lib.get_barcode_class('code128')
+        bc = code128(str(data_str), writer=ImageWriter())
+        buf = BytesIO()
+        bc.write(buf, options={
+            'module_height': bar_height * 0.26,  # mm (pixels to mm approx)
+            'module_width': bar_width * 0.26,
+            'quiet_zone': 2.0,
+            'write_text': False,
+            'font_size': 0,
+            'text_distance': 0,
+        })
+        buf.seek(0)
+        return PilImage.open(buf).convert('RGB')
+    except ImportError:
+        # Fallback: create a placeholder if python-barcode not installed
+        img = PilImage.new('RGB', (200, bar_height), 'white')
+        from PIL import ImageDraw
+        draw = ImageDraw.Draw(img)
+        draw.text((10, bar_height // 3), f"ID: {data_str}", fill='black')
+        return img
+
+
+def _make_labeled_barcode_image(item):
+    """Helper: landscape barcode label — barcode on left, text on right. Returns BytesIO PNG or None."""
     from PIL import Image as PilImage, ImageDraw, ImageFont
     from io import BytesIO
-    import requests as http_requests
 
     try:
-        qr_resp = http_requests.get(item.qr_url, timeout=10)
-        qr_resp.raise_for_status()
-        qr_img = PilImage.open(BytesIO(qr_resp.content)).convert('RGB')
+        bc_img = _generate_barcode_image(str(item.id), bar_width=2, bar_height=80)
     except Exception:
         return None
 
-    qr_size = qr_img.size[0]
-    padding = 8
-    text_area_width = 200
-    total_w = padding + qr_size + padding + text_area_width + padding
-    total_h = qr_size + padding * 2
+    # Scale barcode to fit label
+    bc_w, bc_h = bc_img.size
+    target_h = 140
+    scale = target_h / bc_h
+    bc_img = bc_img.resize((int(bc_w * scale), target_h), PilImage.LANCZOS)
+    bc_w, bc_h = bc_img.size
+
+    padding = 10
+    text_area_width = 220
+    total_w = padding + bc_w + padding + text_area_width + padding
+    total_h = bc_h + padding * 2
 
     canvas = PilImage.new('RGB', (total_w, total_h), 'white')
-    canvas.paste(qr_img, (padding, padding))
+    canvas.paste(bc_img, (padding, padding))
 
     draw = ImageDraw.Draw(canvas)
 
-    # Border around QR
-    draw.rectangle(
-        [padding - 1, padding - 1, padding + qr_size, padding + qr_size],
-        outline='black', width=1
-    )
-
     try:
-        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
-        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 11)
+        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
+        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 13)
     except (OSError, IOError):
         font_large = ImageFont.load_default()
         font_small = font_large
 
-    text_x = padding + qr_size + padding
-    text_y = padding + 8
+    text_x = padding + bc_w + padding
+    text_y = padding + 10
 
     draw.text((text_x, text_y), item.manufacturer, fill='#333', font=font_large)
-    text_y += 24
+    text_y += 28
     draw.text((text_x, text_y), f"Box #{item.box_id}", fill='#333', font=font_small)
-    text_y += 20
+    text_y += 22
     draw.text((text_x, text_y), f"Pallet {item.pallet_id}", fill='#333', font=font_small)
-    text_y += 20
+    text_y += 22
     project = getattr(item, 'project_number', '') or ''
     if project:
         draw.text((text_x, text_y), f"Project {project}", fill='#333', font=font_small)
@@ -467,7 +502,7 @@ def export_qr_codes(request):
 
         # Generate and embed labeled QR code image
         if item.qr_url:
-            labeled_buf = _make_labeled_qr_image(item)
+            labeled_buf = _make_labeled_barcode_image(item)
             if labeled_buf:
                 img = XlImage(labeled_buf)
                 img.width = 220
@@ -981,81 +1016,16 @@ def next_pallet_api(request):
 
 
 def generate_labeled_qr(request, item_id):
-    """Generate a landscape QR label image: QR on left, text on right.
-
-    Layout mirrors the 29mm x 90mm Brother QL-820NWB label:
-    [QR CODE] | Manufacturer
-              | Box #N
-              | Pallet N
-              | Project #
-    """
-    from PIL import Image, ImageDraw, ImageFont
+    """Generate a landscape barcode label image: barcode on left, text on right."""
     from io import BytesIO
-    import requests as http_requests
 
     item = get_object_or_404(InventoryItem, id=item_id)
 
-    # Download the QR code image
-    try:
-        qr_resp = http_requests.get(item.qr_url, timeout=10)
-        qr_resp.raise_for_status()
-        qr_img = Image.open(BytesIO(qr_resp.content)).convert('RGB')
-    except Exception:
-        return HttpResponse('Failed to generate QR code image', status=500)
+    buf = _make_labeled_barcode_image(item)
+    if not buf:
+        return HttpResponse('Failed to generate barcode image', status=500)
 
-    qr_size = qr_img.size[0]  # Should be 200x200
-
-    # Landscape layout: QR on left, text on right
-    padding = 10
-    text_area_width = 260
-    total_width = padding + qr_size + padding + text_area_width + padding
-    total_height = qr_size + padding * 2
-
-    canvas = Image.new('RGB', (total_width, total_height), 'white')
-    canvas.paste(qr_img, (padding, padding))
-
-    # Draw border around QR code
-    draw = ImageDraw.Draw(canvas)
-    draw.rectangle(
-        [padding - 1, padding - 1, padding + qr_size, padding + qr_size],
-        outline='black', width=1
-    )
-
-    # Use default font at different sizes
-    try:
-        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 18)
-        font_medium = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
-    except (OSError, IOError):
-        font_large = ImageFont.load_default()
-        font_medium = font_large
-
-    # Draw text to the right of QR code
-    text_x = padding + qr_size + padding
-    text_y = padding + 10
-
-    # Manufacturer (bold, large)
-    draw.text((text_x, text_y), item.manufacturer, fill='#333', font=font_large)
-    text_y += 32
-
-    # Box #
-    draw.text((text_x, text_y), f"Box #{item.box_id}", fill='#333', font=font_medium)
-    text_y += 24
-
-    # Pallet #
-    draw.text((text_x, text_y), f"Pallet {item.pallet_id}", fill='#333', font=font_medium)
-    text_y += 24
-
-    # Project #
-    project = item.project_number or ''
-    if project:
-        draw.text((text_x, text_y), f"Project {project}", fill='#333', font=font_medium)
-
-    # Return as PNG
-    buf = BytesIO()
-    canvas.save(buf, format='PNG')
-    buf.seek(0)
-
-    filename = f"QR_{item.manufacturer}_Pallet{item.pallet_id}_Box{item.box_id}.png"
+    filename = f"Barcode_{item.manufacturer}_Pallet{item.pallet_id}_Box{item.box_id}.png"
     response = HttpResponse(buf.read(), content_type='image/png')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
@@ -1120,7 +1090,7 @@ def download_pallet_qr(request, manufacturer, pallet_id):
         ws.row_dimensions[row_num].height = 95
 
         if item.qr_url:
-            labeled_buf = _make_labeled_qr_image(item)
+            labeled_buf = _make_labeled_barcode_image(item)
             if labeled_buf:
                 img = XlImage(labeled_buf)
                 img.width = 220

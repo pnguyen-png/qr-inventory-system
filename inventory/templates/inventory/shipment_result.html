@@ -131,16 +131,14 @@
                 margin: 0;
             }
             .print-label:last-child { page-break-after: avoid; }
-            .print-label .qr-box {
-                width: 22mm; height: 22mm;
-                border: 0.5pt solid #000;
-                padding: 1mm;
+            .print-label .barcode-box {
+                width: 30mm; height: 20mm;
                 flex-shrink: 0;
                 display: flex; align-items: center; justify-content: center;
+                overflow: hidden;
             }
-            .print-label .qr-box img {
-                width: 20mm !important; height: 20mm !important;
-                display: block !important;
+            .print-label .barcode-box svg {
+                width: 100% !important; height: 100% !important;
             }
             .print-label-text {
                 flex: 1;
@@ -184,12 +182,12 @@
         <div class="download-cards" style="grid-template-columns: 1fr 1fr 1fr;">
             <div class="download-card">
                 <h3>Print Labels</h3>
-                <p>Print QR labels to your Brother QL-820NWB</p>
+                <p>Print barcode labels to your Brother QL-820NWB</p>
                 <button onclick="printLabels()" class="btn-print">Print Labels</button>
             </div>
             <div class="download-card">
                 <h3>Excel File (.xlsx)</h3>
-                <p>Download with embedded QR codes</p>
+                <p>Download with embedded barcodes</p>
                 <a href="/shipment/{{ shipment_key }}/download/excel/" class="btn-download btn-excel">Download Excel</a>
             </div>
             <div class="download-card">
@@ -203,8 +201,8 @@
         <div class="print-labels" id="printLabels">
             {% for item in items %}
             <div class="print-label">
-                <div class="qr-box">
-                    <img src="{{ item.qr_url }}" alt="QR" crossorigin="anonymous">
+                <div class="barcode-box">
+                    <svg class="barcode-svg" data-value="{{ item.id }}"></svg>
                 </div>
                 <div class="print-label-text">
                     <div class="mfr">{{ item.manufacturer }}</div>
@@ -216,22 +214,21 @@
             {% endfor %}
         </div>
 
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
         <script>
-        function printLabels() {
-            // Pre-load all label images before opening print dialog
-            const imgs = document.querySelectorAll('#printLabels img');
-            let loaded = 0;
-            const total = imgs.length;
-            if (total === 0) { window.print(); return; }
-            imgs.forEach(img => {
-                if (img.complete) {
-                    loaded++;
-                    if (loaded === total) window.print();
-                } else {
-                    img.onload = () => { loaded++; if (loaded === total) window.print(); };
-                    img.onerror = () => { loaded++; if (loaded === total) window.print(); };
-                }
+        // Render all barcodes on page load
+        document.querySelectorAll('.barcode-svg').forEach(function(svg) {
+            JsBarcode(svg, svg.dataset.value, {
+                format: "CODE128",
+                width: 2,
+                height: 60,
+                displayValue: false,
+                margin: 2
             });
+        });
+
+        function printLabels() {
+            window.print();
         }
         </script>
 
