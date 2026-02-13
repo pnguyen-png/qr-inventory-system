@@ -93,6 +93,41 @@ class StatusHistory(models.Model):
         return self.STATUS_LABELS.get(self.new_status, self.new_status)
 
 
+class ChangeLog(models.Model):
+    CHANGE_TYPES = [
+        ('created', 'Item Created'),
+        ('field_edit', 'Field Edited'),
+    ]
+
+    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='change_logs')
+    change_type = models.CharField(max_length=20, choices=CHANGE_TYPES, default='field_edit')
+    field_name = models.CharField(max_length=100)
+    old_value = models.TextField(blank=True, default='')
+    new_value = models.TextField(blank=True, default='')
+    changed_at = models.DateTimeField(auto_now_add=True)
+    changed_by = models.CharField(max_length=255, blank=True, default='')
+
+    class Meta:
+        ordering = ['-changed_at']
+
+    FIELD_LABELS = {
+        'content': 'Contents (Qty)',
+        'damaged': 'Damaged',
+        'location': 'Location',
+        'description': 'Description',
+        'project_number': 'Project Number',
+        'manufacturer': 'Manufacturer',
+        'tags': 'Tags',
+        'status': 'Status',
+    }
+
+    def __str__(self):
+        return f"{self.item} - {self.field_name}: {self.old_value} -> {self.new_value}"
+
+    def field_label(self):
+        return self.FIELD_LABELS.get(self.field_name, self.field_name)
+
+
 class ItemPhoto(models.Model):
     item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='photos')
     image = models.ImageField(upload_to='item_photos/%Y/%m/')

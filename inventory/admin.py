@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import InventoryItem, StatusHistory, ItemPhoto, NotificationLog
+from .models import InventoryItem, StatusHistory, ItemPhoto, NotificationLog, ChangeLog
 
 @admin.register(InventoryItem)
 class InventoryItemAdmin(admin.ModelAdmin):
@@ -21,3 +21,9 @@ class ItemPhotoAdmin(admin.ModelAdmin):
 class NotificationLogAdmin(admin.ModelAdmin):
     list_display = ['item', 'notification_type', 'sent_at', 'sent_to']
     list_filter = ['notification_type']
+
+@admin.register(ChangeLog)
+class ChangeLogAdmin(admin.ModelAdmin):
+    list_display = ['item', 'change_type', 'field_name', 'old_value', 'new_value', 'changed_by', 'changed_at']
+    list_filter = ['change_type', 'field_name']
+    search_fields = ['changed_by', 'old_value', 'new_value']

@@ -10,7 +10,8 @@ import csv
 import urllib.parse
 import os
 import uuid
-from .models import InventoryItem, StatusHistory, NotificationLog, ItemPhoto
+from itertools import chain
+from .models import InventoryItem, StatusHistory, NotificationLog, ItemPhoto, ChangeLog
 
 LOCATION_CHOICES = [
     'York, PA',
@@ -62,12 +63,26 @@ def scanner_landing(request):
         photos = item.photos.all()
         _annotate_qr_urls([item])
 
+        # Build unified audit trail from status history + change logs
+        status_entries = list(item.status_history.all())
+        change_entries = list(item.change_logs.all())
+        for e in status_entries:
+            e.entry_type = 'status'
+        for e in change_entries:
+            e.entry_type = 'change'
+        audit_trail = sorted(
+            chain(status_entries, change_entries),
+            key=lambda e: e.changed_at,
+            reverse=True,
+        )
+
         preset_tags = ['Standard', 'Initiating', 'Target', 'RP12', 'RP48',
                        'RP48-25kW', 'RP48-40kW', 'RP240']
 
         return render(request, 'inventory/scanner_landing.html', {
             'item': item,
             'history': history,
+            'audit_trail': audit_trail,
             'status_labels': status_labels,
             'photos': photos,
             'location_choices': LOCATION_CHOICES,
@@ -781,6 +796,23 @@ def add_shipment(request):
             # Set short QR URL now that we have the item ID
             item.qr_url = _get_short_qr_url(item.id, base_url)
             item.save()
+
+            # Create initial audit trail entries
+            StatusHistory.objects.create(
+                item=item,
+                old_status='',
+                new_status='checked_in',
+                notes=f'Item created via shipment (Pallet {pallet_id})',
+                changed_by='',
+            )
+            ChangeLog.objects.create(
+                item=item,
+                change_type='created',
+                field_name='status',
+                old_value='',
+                new_value='Checked In',
+            )
+
             created_items.append(item)
 
     # Handle photo uploads — attach to all created items
@@ -896,6 +928,18 @@ def edit_item(request):
         data = json.loads(request.body)
         item_id = data.get('item_id')
         item = get_object_or_404(InventoryItem, id=item_id)
+        changed_by = data.get('changed_by', '')
+
+        # Capture old values before any changes
+        old_vals = {
+            'content': str(item.content),
+            'damaged': 'Yes' if item.damaged else 'No',
+            'location': item.location,
+            'description': item.description,
+            'project_number': item.project_number,
+            'manufacturer': item.manufacturer,
+            'tags': item.tags,
+        }
 
         if 'content' in data:
             item.content = int(data['content'])
@@ -910,10 +954,9 @@ def edit_item(request):
         if 'manufacturer' in data:
             new_mfr = data['manufacturer'].strip()
             if new_mfr:
-                old_mfr = item.manufacturer
                 item.manufacturer = new_mfr
                 # Update barcode payload if manufacturer changed
-                if old_mfr != new_mfr:
+                if old_vals['manufacturer'] != new_mfr:
                     barcode_payload = f"MFR={new_mfr} | PALLET={item.pallet_id} | BOX={item.box_id}"
                     item.barcode_payload = barcode_payload
                     item.qr_url = _get_short_qr_url(item.id)
@@ -931,7 +974,7 @@ def edit_item(request):
                 status_changed = True
                 # Checkout attribution
                 if new_status == 'checked_out':
-                    item.checked_out_by = data.get('changed_by', '')
+                    item.checked_out_by = changed_by
                     item.checked_out_at = timezone.now()
                 elif old_status == 'checked_out':
                     item.checked_out_by = ''
@@ -946,9 +989,31 @@ def edit_item(request):
                 old_status=old_status,
                 new_status=item.status,
                 notes=data.get('notes', ''),
-                changed_by=data.get('changed_by', ''),
+                changed_by=changed_by,
             )
-            _send_notification(item, old_status, item.status, data.get('changed_by', ''))
+            _send_notification(item, old_status, item.status, changed_by)
+
+        # Log all field changes to ChangeLog
+        new_vals = {
+            'content': str(item.content),
+            'damaged': 'Yes' if item.damaged else 'No',
+            'location': item.location,
+            'description': item.description,
+            'project_number': item.project_number,
+            'manufacturer': item.manufacturer,
+            'tags': item.tags,
+        }
+        for field_name, old_val in old_vals.items():
+            new_val = new_vals[field_name]
+            if old_val != new_val:
+                ChangeLog.objects.create(
+                    item=item,
+                    change_type='field_edit',
+                    field_name=field_name,
+                    old_value=old_val,
+                    new_value=new_val,
+                    changed_by=changed_by,
+                )
 
         return JsonResponse({
             'success': True,

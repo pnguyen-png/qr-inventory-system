@@ -234,6 +234,29 @@
             padding: 30px 20px; text-align: center; color: #94a3b8; font-size: 0.875rem;
         }
 
+        /* Field change log entries */
+        .log-field-change {
+            display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+        }
+        .log-field-name {
+            font-size: 0.75rem; font-weight: 600; color: #374151;
+            text-transform: uppercase; letter-spacing: 0.03em;
+            background: #f1f5f9; padding: 2px 8px; border-radius: 4px;
+        }
+        .log-old-value {
+            font-size: 0.8rem; color: #94a3b8; text-decoration: line-through;
+        }
+        .log-new-value {
+            font-size: 0.8rem; color: #166534; font-weight: 500;
+        }
+        .log-type-badge {
+            font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.05em; padding: 2px 8px; border-radius: 4px;
+        }
+        .log-type-status { background: #dbeafe; color: #1e40af; }
+        .log-type-field { background: #fef3c7; color: #92400e; }
+        .log-type-created { background: #dcfce7; color: #166534; }
+
         /* QR Code section */
         .qr-section {
             padding: 20px; border-top: 1px solid #e5e7eb; text-align: center;
@@ -588,39 +611,52 @@
             </div>
         </div>
 
-        <!-- Status History Log -->
+        <!-- Audit Trail -->
         <div class="log-section">
-            <div class="log-section-header">Status History Log (Audit Trail)</div>
+            <div class="log-section-header">Audit Trail</div>
             <div id="historyLog">
-                {% for entry in history %}
-                <div class="log-entry" id="log-{{ entry.id }}">
+                {% for entry in audit_trail %}
+                <div class="log-entry">
+                    {% if entry.entry_type == 'status' %}
+                    {# Status change entry #}
                     <div class="log-entry-top">
+                        <span class="log-type-badge log-type-status">Status</span>
+                        {% if entry.old_status %}
                         <span class="status-badge status-{{ entry.old_status }}">{{ entry.old_status_label }}</span>
                         <span class="log-arrow">&rarr;</span>
+                        {% endif %}
                         <span class="status-badge status-{{ entry.new_status }}">{{ entry.new_status_label }}</span>
                         {% if entry.changed_by %}<span class="log-changed-by">by {{ entry.changed_by }}</span>{% endif %}
                         <span class="log-date">{{ entry.changed_at|date:"M d, Y H:i:s" }}</span>
                     </div>
-                    <div id="notes-display-{{ entry.id }}">
-                        {% if entry.notes %}
-                        <div class="log-notes">
-                            {{ entry.notes }}
-                            <button class="btn-edit-note" onclick="showEditNotes({{ entry.id }})">Edit</button>
-                        </div>
+                    {% if entry.notes %}
+                    <div class="log-notes">{{ entry.notes }}</div>
+                    {% endif %}
+
+                    {% elif entry.entry_type == 'change' %}
+                    {# Field change or creation entry #}
+                    <div class="log-entry-top">
+                        {% if entry.change_type == 'created' %}
+                        <span class="log-type-badge log-type-created">Created</span>
+                        <span style="font-size:0.85rem; color:#374151;">Item checked in</span>
                         {% else %}
-                        <div class="log-notes-empty">
-                            No notes
-                            <button class="btn-edit-note" onclick="showEditNotes({{ entry.id }})">Add</button>
+                        <span class="log-type-badge log-type-field">Edit</span>
+                        <div class="log-field-change">
+                            <span class="log-field-name">{{ entry.field_label }}</span>
+                            {% if entry.old_value %}
+                            <span class="log-old-value">{{ entry.old_value }}</span>
+                            <span class="log-arrow">&rarr;</span>
+                            {% endif %}
+                            <span class="log-new-value">{{ entry.new_value }}</span>
                         </div>
                         {% endif %}
+                        {% if entry.changed_by %}<span class="log-changed-by">by {{ entry.changed_by }}</span>{% endif %}
+                        <span class="log-date">{{ entry.changed_at|date:"M d, Y H:i:s" }}</span>
                     </div>
-                    <div id="notes-edit-{{ entry.id }}" style="display:none;" class="log-notes-edit">
-                        <textarea class="log-notes-input" id="notes-input-{{ entry.id }}">{{ entry.notes }}</textarea>
-                        <button class="btn-save-note" onclick="saveNotes({{ entry.id }})">Save</button>
-                    </div>
+                    {% endif %}
                 </div>
                 {% empty %}
-                <div class="log-empty">No status changes recorded yet.</div>
+                <div class="log-empty">No changes recorded yet.</div>
                 {% endfor %}
             </div>
         </div>
