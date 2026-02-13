@@ -890,36 +890,9 @@
                 });
                 const data = await resp.json();
                 if (data.success) {
-                    let msg = 'Details saved successfully.';
-                    if (data.status_changed) {
-                        msg = 'Details and status saved successfully.';
-                        // Update status badge
-                        const badge = document.getElementById('statusBadge');
-                        const statusLabels = {
-                            'checked_in': 'Checked In', 'checked_out': 'Checked Out',
-                            'tested': 'Tested', 'will_be_reused': 'Will Be Reused',
-                            'recycling': 'Recycling'
-                        };
-                        badge.className = 'status-badge status-' + data.status;
-                        badge.textContent = statusLabels[data.status] || data.status;
-
-                        // Add log entry
-                        const notesVal = document.getElementById('statusNotes').value;
-                        const changedByVal = document.getElementById('changedByInput').value;
-                        addLogEntry({status: statusLabels[data.status] || data.status}, notesVal, changedByVal);
-                        const emptyMsg = document.querySelector('.log-empty');
-                        if (emptyMsg) emptyMsg.remove();
-
-                        // Clear notes after successful status change
-                        document.getElementById('statusNotes').value = '';
-                    }
-                    document.getElementById('lastUpdated').textContent = 'Last updated: just now';
-                    msgEl.textContent = msg;
-                    msgEl.className = 'edit-message success';
-                    setTimeout(() => {
-                        msgEl.style.display = 'none';
-                        msgEl.className = 'edit-message';
-                    }, 3000);
+                    // Reload the page to show the saved data from the database
+                    location.reload();
+                    return;
                 } else {
                     msgEl.textContent = 'Error: ' + (data.error || 'Unknown');
                     msgEl.className = 'edit-message error';
