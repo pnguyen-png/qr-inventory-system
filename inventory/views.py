@@ -3,7 +3,8 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
-from django.db.models import Max
+from django.db.models import Max, IntegerField
+from django.db.models.functions import Cast
 import json
 import csv
 import urllib.parse
@@ -219,9 +220,13 @@ def dashboard(request):
     show_archived = request.GET.get('archived', '') == '1'
 
     if show_archived:
-        items = InventoryItem.objects.filter(archived=True).order_by('manufacturer', 'pallet_id', 'box_id')
+        items = InventoryItem.objects.filter(archived=True).annotate(
+            pallet_num=Cast('pallet_id', IntegerField())
+        ).order_by('pallet_num', 'manufacturer', 'box_id')
     else:
-        items = InventoryItem.objects.filter(archived=False).order_by('manufacturer', 'pallet_id', 'box_id')
+        items = InventoryItem.objects.filter(archived=False).annotate(
+            pallet_num=Cast('pallet_id', IntegerField())
+        ).order_by('pallet_num', 'manufacturer', 'box_id')
 
     all_active = InventoryItem.objects.filter(archived=False)
     overdue_items = [i for i in all_active if i.is_overdue]
@@ -438,9 +443,13 @@ def export_qr_codes(request):
     show_archived = request.GET.get('archived', '') == '1'
 
     if show_archived:
-        items = InventoryItem.objects.filter(archived=True).order_by('manufacturer', 'pallet_id', 'box_id')
+        items = InventoryItem.objects.filter(archived=True).annotate(
+            pallet_num=Cast('pallet_id', IntegerField())
+        ).order_by('pallet_num', 'manufacturer', 'box_id')
     else:
-        items = InventoryItem.objects.filter(archived=False).order_by('manufacturer', 'pallet_id', 'box_id')
+        items = InventoryItem.objects.filter(archived=False).annotate(
+            pallet_num=Cast('pallet_id', IntegerField())
+        ).order_by('pallet_num', 'manufacturer', 'box_id')
 
     wb = openpyxl.Workbook()
     ws = wb.active
