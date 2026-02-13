@@ -78,8 +78,8 @@
         }
         .damage-yes { color: #dc2626; font-weight: 700; }
         .damage-no { color: #16a34a; }
-        .qr-thumb { width: 60px; height: 60px; border-radius: 4px; cursor: pointer; }
-        .qr-thumb:hover { opacity: 0.8; }
+        .barcode-thumb { width: 120px; height: 40px; }
+        .barcode-thumb-label { font-size: 0.65rem; color: #374151; font-weight: 600; line-height: 1.3; margin-top: 4px; }
 
         .nav-links { text-align: center; margin-top: 20px; }
         .nav-links a {
@@ -216,12 +216,23 @@
 
         <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
         <script>
-        // Render all barcodes on page load
+        // Render all barcodes on page load (print labels)
         document.querySelectorAll('.barcode-svg').forEach(function(svg) {
             JsBarcode(svg, svg.dataset.value, {
                 format: "CODE128",
                 width: 2,
                 height: 60,
+                displayValue: false,
+                margin: 2
+            });
+        });
+
+        // Render barcodes in summary table
+        document.querySelectorAll('.barcode-table-svg').forEach(function(svg) {
+            JsBarcode(svg, svg.dataset.value, {
+                format: "CODE128",
+                width: 1.5,
+                height: 35,
                 displayValue: false,
                 margin: 2
             });
@@ -241,7 +252,7 @@
                         <th>Box</th>
                         <th>Qty</th>
                         <th>Damaged</th>
-                        <th>QR Code</th>
+                        <th>Barcode</th>
                         <th>View</th>
                     </tr>
                 </thead>
@@ -255,9 +266,8 @@
                             {{ item.get_damaged_display }}
                         </td>
                         <td style="text-align:center;">
-                            <img class="qr-thumb" src="{{ item.qr_url }}" alt="QR #{{ item.box_id }}" style="cursor:pointer;"
-                                 onclick="window.open(this.src.replace('200x200','500x500'), '_blank')" title="Click to enlarge">
-                            <div style="font-size:0.65rem; color:#374151; font-weight:600; line-height:1.3; margin-top:4px;">
+                            <svg class="barcode-thumb barcode-table-svg" data-value="{{ item.id }}"></svg>
+                            <div class="barcode-thumb-label">
                                 {{ item.manufacturer }}<br>Pallet {{ item.pallet_id }} &bull; Box #{{ item.box_id }}
                             </div>
                         </td>

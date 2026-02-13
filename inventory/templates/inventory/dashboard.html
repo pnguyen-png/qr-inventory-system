@@ -239,11 +239,10 @@
         .multiscan-actions .btn-apply:hover { opacity: 0.9; }
         .multiscan-actions .btn-apply:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        .qr-thumb {
-            width: 50px; height: 50px; cursor: pointer;
-            border-radius: 4px; border: 1px solid #e5e7eb;
+        .barcode-thumb {
+            width: 100px; height: 35px;
         }
-        .qr-thumb:hover { border-color: #8b1a1a; }
+        .barcode-thumb-cell { text-align: center; }
 
         /* Pallet group toggle */
         .pallet-group-row td {
@@ -452,7 +451,7 @@
             table { font-size: 0.75rem; }
             th { padding: 8px 6px; font-size: 0.65rem; }
             td { padding: 8px 6px; }
-            .qr-thumb { width: 36px; height: 36px; }
+            .barcode-thumb { width: 70px; height: 25px; }
             .desc-cell { max-width: 100px; }
             .checkbox-col { width: 30px; }
             .checkbox-col input { width: 14px; height: 14px; }
@@ -581,9 +580,9 @@
         <div class="toolbar">
             <div class="toolbar-group">
                 <a class="btn-tool primary" href="/add-shipment/">Add Shipment</a>
-                <button class="btn-tool primary" onclick="openScanner()">Scan QR Code</button>
+                <button class="btn-tool primary" onclick="openScanner()">Scan Barcode</button>
                 <button class="btn-tool" style="background:#7c3aed; color:#fff; border-color:#7c3aed;" onclick="openMultiScan()">Multi-Scan</button>
-                <button class="btn-tool" onclick="printAllQRLabels()">Print QR Labels</button>
+                <button class="btn-tool" onclick="printAllQRLabels()">Print Labels</button>
                 <a class="btn-tool" href="/export/csv/{% if show_archived %}?archived=1{% endif %}">Export CSV</a>
                 <a class="btn-tool" href="/export/pdf/{% if show_archived %}?archived=1{% endif %}" target="_blank">Print Report</a>
             </div>
@@ -664,7 +663,7 @@
                         <th>Status</th>
                         {% if not show_archived %}<th>Checked Out By</th>{% endif %}
                         <th>Updated</th>
-                        <th>QR Code</th>
+                        <th>Barcode</th>
                         <th class="view-col"></th>
                     </tr>
                 </thead>
@@ -700,11 +699,8 @@
                         <td>{{ item.checked_out_by|default:"-" }}</td>
                         {% endif %}
                         <td>{{ item.updated_at|date:"M d, H:i" }}</td>
-                        <td>
-                            {% if item.qr_url %}
-                            <img class="qr-thumb" src="{{ item.qr_url }}" alt="QR #{{ item.box_id }}"
-                                 onclick="window.open(this.src.replace('200x200','500x500'), '_blank')" title="Click to enlarge">
-                            {% else %}-{% endif %}
+                        <td class="barcode-thumb-cell">
+                            <svg class="barcode-thumb barcode-table-svg" data-value="{{ item.id }}"></svg>
                         </td>
                         <td class="view-col"><a class="view-link" href="/scan/?data={{ item.barcode_payload|urlencode }}">View</a></td>
                     </tr>
@@ -715,7 +711,7 @@
         {% else %}
         <div class="empty-state">
             <h3>{% if show_archived %}No archived items{% else %}No inventory items yet{% endif %}</h3>
-            <p>{% if show_archived %}Archive items from the main inventory view.{% else %}<a href="/add-shipment/" style="color:#2563eb;">Add a shipment</a> to create inventory items and generate QR codes.{% endif %}</p>
+            <p>{% if show_archived %}Archive items from the main inventory view.{% else %}<a href="/add-shipment/" style="color:#2563eb;">Add a shipment</a> to create inventory items and generate barcodes.{% endif %}</p>
         </div>
         {% endif %}
     </div>
@@ -724,7 +720,7 @@
     <div class="modal-overlay" id="scannerModal">
         <div class="modal">
             <div class="modal-header">
-                <h3>Scan QR Code</h3>
+                <h3>Scan Barcode</h3>
                 <button class="modal-close" onclick="closeScanner()">&times;</button>
             </div>
             <div class="modal-body">
@@ -742,7 +738,7 @@
                 <button class="modal-close" onclick="closeMultiScan()">&times;</button>
             </div>
             <div class="modal-body" style="text-align:left;">
-                <p style="font-size:0.85rem; color:#64748b; margin-bottom:12px;">Scan multiple QR codes, then set their status at once.</p>
+                <p style="font-size:0.85rem; color:#64748b; margin-bottom:12px;">Scan multiple barcodes, then set their status at once.</p>
                 <div id="multi-qr-reader"></div>
                 <div class="scanner-status" id="multiScannerStatus">Click scan to start camera</div>
                 <div style="text-align:center; margin:8px 0;">
@@ -949,7 +945,7 @@
                         // Scan error (just means no QR found yet, ignore)
                     }
                 );
-                statusEl.textContent = 'Point your camera at a QR code...';
+                statusEl.textContent = 'Point your camera at a barcode...';
             } catch (err) {
                 statusEl.textContent = 'Camera access denied or not available. Please allow camera permissions and try again.';
                 console.error('Scanner error:', err);
@@ -1015,7 +1011,7 @@
                 const groupRow = document.createElement('tr');
                 groupRow.className = 'pallet-group-row';
                 groupRow.dataset.palletGroup = key;
-                groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>${mfr} - Pallet ${palletId}<span class="group-count">(${groupRows.length} items)</span><button class="pallet-dl-btn" onclick="event.stopPropagation(); printPalletQRLabels('${escapeHtml(mfr)}', '${escapeHtml(palletId)}');" title="Print QR labels for this pallet">Print QR</button></td>`;
+                groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>${mfr} - Pallet ${palletId}<span class="group-count">(${groupRows.length} items)</span><button class="pallet-dl-btn" onclick="event.stopPropagation(); printPalletQRLabels('${escapeHtml(mfr)}', '${escapeHtml(palletId)}');" title="Print labels for this pallet">Print</button></td>`;
 
                 // Insert before the first row of this group
                 firstRow.parentNode.insertBefore(groupRow, firstRow);
@@ -1031,7 +1027,20 @@
         }
 
         // Run on page load
-        document.addEventListener('DOMContentLoaded', initPalletGroups);
+        document.addEventListener('DOMContentLoaded', function() {
+            initPalletGroups();
+
+            // Render barcodes in inventory table
+            document.querySelectorAll('.barcode-table-svg').forEach(function(svg) {
+                JsBarcode(svg, svg.dataset.value, {
+                    format: "CODE128",
+                    width: 1.5,
+                    height: 30,
+                    displayValue: false,
+                    margin: 2
+                });
+            });
+        });
 
         // ---- Multi-Scan ----
         let multiScanner = null;
@@ -1059,7 +1068,7 @@
                     (decodedText) => handleMultiScanResult(decodedText),
                     () => {}
                 );
-                statusEl.textContent = 'Scanning... Point at QR codes.';
+                statusEl.textContent = 'Scanning... Point at barcodes.';
             } catch (err) {
                 statusEl.textContent = 'Camera access denied.';
                 document.getElementById('multiScanStartBtn').style.display = 'inline-block';

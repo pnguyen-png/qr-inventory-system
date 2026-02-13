@@ -446,20 +446,17 @@
             </div>
             {% endif %}
 
-            {% if item.qr_url %}
             <div class="qr-section">
-                <h3>QR Code</h3>
-                <img class="qr-code-img" src="{{ item.qr_url }}" alt="QR Code for {{ item.manufacturer }} Box #{{ item.box_id }}"
-                     onclick="printSingleLabel()" title="Click to print label">
+                <h3>Barcode</h3>
+                <svg id="itemBarcode" style="width:200px; height:60px;"></svg>
                 <div style="margin-top:8px; font-size:0.85rem; font-weight:600; color:#374151; line-height:1.5;">
                     {{ item.manufacturer }}<br>
                     Pallet {{ item.pallet_id }} &bull; Box #{{ item.box_id }}
                 </div>
                 <button onclick="printSingleLabel()" style="display:inline-block; margin-top:10px; padding:10px 20px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer;">
-                    Print QR Label
+                    Print Label
                 </button>
             </div>
-            {% endif %}
 
             <!-- Photos -->
             <div class="photos-section">
@@ -976,13 +973,22 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
     <script>
-    // Render barcode on page load
+    // Render barcodes on page load
     JsBarcode("#printBarcode", "{{ item.id }}", {
         format: "CODE128",
         width: 2,
         height: 60,
         displayValue: false,
         margin: 2
+    });
+
+    // Render barcode in item detail view
+    JsBarcode("#itemBarcode", "{{ item.id }}", {
+        format: "CODE128",
+        width: 2,
+        height: 50,
+        displayValue: false,
+        margin: 4
     });
 
     function printSingleLabel() {
