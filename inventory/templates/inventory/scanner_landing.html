@@ -321,20 +321,22 @@
             .header, .container { display: none !important; }
             .print-single-label {
                 display: flex !important;
-                width: 86mm; height: 25mm;
-                align-items: center; padding: 1.5mm 2mm; gap: 3mm;
+                flex-direction: column;
+                align-items: center;
+                width: 25mm; height: 86mm;
+                padding: 2mm 1.5mm; gap: 1mm;
             }
             .print-single-label .qr-box {
-                width: 23mm; height: 23mm;
+                width: 24mm; height: 24mm;
                 flex-shrink: 0;
                 display: flex; align-items: center; justify-content: center;
                 overflow: hidden;
             }
             .print-single-label .qr-box img { width: 100% !important; height: 100% !important; object-fit: contain; }
-            .print-single-label .lbl-text { flex: 1; font-family: Arial, sans-serif; line-height: 1.3; overflow: hidden; }
-            .print-single-label .lbl-mfr { font-size: 10pt; font-weight: 700; margin-bottom: 1mm; }
-            .print-single-label .lbl-detail { font-size: 8pt; color: #333; }
-            @page { size: 90mm 29mm; margin: 0; }
+            .print-single-label .lbl-text { text-align: center; font-family: Arial, sans-serif; line-height: 1.3; overflow: hidden; width: 100%; }
+            .print-single-label .lbl-mfr { font-size: 8pt; font-weight: 700; margin-bottom: 0.5mm; }
+            .print-single-label .lbl-detail { font-size: 7pt; color: #333; }
+            @page { size: 29mm 90mm; margin: 0; }
         }
     </style>
 </head>

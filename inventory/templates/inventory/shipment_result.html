@@ -117,22 +117,23 @@
                 display: block !important;
             }
 
-            /* Each label: 29mm tall x 90mm wide (landscape) for Brother QL-820NWB */
+            /* Each label: 29mm wide x 90mm tall (portrait) for Brother QL-820NWB */
             .print-label {
-                width: 86mm;
-                height: 25mm;
+                width: 25mm;
+                height: 86mm;
                 page-break-inside: avoid;
                 break-inside: avoid;
                 page-break-after: always;
                 display: flex !important;
+                flex-direction: column;
                 align-items: center;
-                padding: 1.5mm 2mm;
-                gap: 3mm;
+                padding: 2mm 1.5mm;
+                gap: 1mm;
                 margin: 0;
             }
             .print-label:last-child { page-break-after: avoid; }
             .print-label .qr-box {
-                width: 23mm; height: 23mm;
+                width: 24mm; height: 24mm;
                 flex-shrink: 0;
                 display: flex; align-items: center; justify-content: center;
                 overflow: hidden;
@@ -142,21 +143,22 @@
                 object-fit: contain;
             }
             .print-label-text {
-                flex: 1;
+                text-align: center;
                 font-family: Arial, Helvetica, sans-serif;
                 line-height: 1.3;
                 overflow: hidden;
+                width: 100%;
             }
             .print-label-text .mfr {
-                font-size: 10pt; font-weight: 700;
-                margin-bottom: 1mm;
+                font-size: 8pt; font-weight: 700;
+                margin-bottom: 0.5mm;
             }
             .print-label-text .detail {
-                font-size: 8pt; color: #333;
+                font-size: 7pt; color: #333;
             }
 
             @page {
-                size: 90mm 29mm;
+                size: 29mm 90mm;
                 margin: 0;
             }
         }
