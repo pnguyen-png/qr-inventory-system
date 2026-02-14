@@ -215,12 +215,12 @@
                     {% for shipment in shipments %}
                     <tr>
                         <td>
-                            <a class="shipment-link" href="/dashboard/?pallet={{ shipment.pallet_id }}">
+                            <a class="shipment-link" href="/shipment/{{ shipment.manufacturer }}/{{ shipment.pallet_id }}/">
                                 {{ shipment.manufacturer }}
                             </a>
                         </td>
                         <td>
-                            <a class="shipment-link" href="/dashboard/?pallet={{ shipment.pallet_id }}">
+                            <a class="shipment-link" href="/shipment/{{ shipment.manufacturer }}/{{ shipment.pallet_id }}/">
                                 {{ shipment.pallet_id }}
                             </a>
                         </td>

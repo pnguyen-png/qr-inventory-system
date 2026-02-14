@@ -279,6 +279,22 @@
             font-weight: 600;
         }
 
+        .btn-create-tag {
+            padding: 10px 18px;
+            background: var(--accent-gold);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+        .btn-create-tag:hover {
+            opacity: 0.9;
+        }
+
         .tag-actions {
             display: flex;
             gap: 6px;
@@ -510,19 +526,18 @@
             <p class="page-subtitle">Manage all tags used across your inventory. Changes apply to every tagged item.</p>
         </div>
 
-        {% if tags %}
-        <!-- Controls -->
+        <!-- Controls (always shown) -->
         <div class="controls-bar">
             <div class="search-box">
                 <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <input type="text" id="tagSearch" placeholder="Search tags..." oninput="filterTags()">
             </div>
+            <button class="btn-create-tag" onclick="openCreateModal()">+ New Tag</button>
             <select class="sort-select" id="tagSort" onchange="sortTags()">
                 <option value="count-desc">Most used</option>
                 <option value="count-asc">Least used</option>
                 <option value="name-asc">A &rarr; Z</option>
                 <option value="name-desc">Z &rarr; A</option>
-                <option value="recent">Recently updated</option>
             </select>
             <div class="layout-toggle">
                 <button class="layout-btn active" id="btnGrid" onclick="setLayout('grid')" title="Grid view">
@@ -534,6 +549,7 @@
             </div>
         </div>
 
+        {% if tags %}
         <!-- Top Tags Section -->
         {% if top_tags %}
         <div class="section-header" id="sectionTop">
@@ -590,22 +606,14 @@
         </div>
         {% endif %}
 
-        <!-- Shown when only top tags exist (no other tags) and top_tags is empty too -->
-        {% if not top_tags and not other_tags %}
+        {% else %}
         <div class="empty-state">
-            <h3>No tags found</h3>
-            <p>Tags will appear here once you add them to inventory items.</p>
+            <h3>No tags yet</h3>
+            <p>Create your first tag using the "+ New Tag" button above.</p>
         </div>
         {% endif %}
 
         <div class="no-results" id="noResults">No tags match your search.</div>
-
-        {% else %}
-        <div class="empty-state">
-            <h3>No tags found</h3>
-            <p>Tags will appear here once you add them to inventory items.</p>
-        </div>
-        {% endif %}
     </div>
 
     <!-- Rename modal -->
@@ -641,6 +649,21 @@
             <div class="modal-actions">
                 <button class="modal-btn cancel" onclick="closeModal('deleteModal')">Cancel</button>
                 <button class="modal-btn confirm-delete" onclick="confirmDelete()">Delete Tag</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create tag modal -->
+    <div class="modal-overlay" id="createModal">
+        <div class="modal-box">
+            <div class="modal-title">Create New Tag</div>
+            <div class="modal-body">
+                Enter a name for the new tag.
+            </div>
+            <input type="text" class="modal-input" id="createInput" placeholder="Tag name">
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="closeModal('createModal')">Cancel</button>
+                <button class="modal-btn confirm" onclick="confirmCreate()">Create Tag</button>
             </div>
         </div>
     </div>
@@ -833,6 +856,51 @@
                 showToast('Network error. Please try again.', true);
             });
         }
+
+        // Create tag
+        function openCreateModal() {
+            document.getElementById('createInput').value = '';
+            document.getElementById('createModal').classList.add('active');
+            setTimeout(function() {
+                document.getElementById('createInput').focus();
+            }, 100);
+        }
+
+        function confirmCreate() {
+            var tagName = document.getElementById('createInput').value.trim();
+            if (!tagName) {
+                closeModal('createModal');
+                return;
+            }
+            fetch('/api/create-tag/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({ tag_name: tagName })
+            })
+            .then(function(resp) { return resp.json(); })
+            .then(function(data) {
+                closeModal('createModal');
+                if (data.success) {
+                    showToast('Tag "' + tagName + '" created');
+                    setTimeout(function() { location.reload(); }, 600);
+                } else {
+                    showToast('Error: ' + (data.error || 'Failed to create tag'), true);
+                }
+            })
+            .catch(function() {
+                closeModal('createModal');
+                showToast('Network error. Please try again.', true);
+            });
+        }
+
+        // Enter key in create input
+        document.getElementById('createInput') && document.getElementById('createInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') confirmCreate();
+            if (e.key === 'Escape') closeModal('createModal');
+        });
 
         // Enter key in rename input
         document.getElementById('renameInput') && document.getElementById('renameInput').addEventListener('keydown', function(e) {

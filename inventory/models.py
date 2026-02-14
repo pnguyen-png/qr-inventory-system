@@ -155,6 +155,18 @@ class ScanLog(models.Model):
         return f"Scan of {self.item} at {self.scanned_at}"
 
 
+class Tag(models.Model):
+    """Standalone tag that can exist before being assigned to items."""
+    name = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class NotificationLog(models.Model):
     NOTIFICATION_TYPES = [
         ('checkout', 'Item Checked Out'),

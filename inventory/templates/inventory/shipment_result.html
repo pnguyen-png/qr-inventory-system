@@ -176,9 +176,9 @@
     </div>
 
     <div class="container">
-        <div class="success-banner">
-            <h2>Shipment Created Successfully!</h2>
-            <p>{{ items|length }} items created for {{ manufacturer }} - Pallet {{ pallet_id }}</p>
+        <div class="success-banner" {% if is_history %}style="background:#dbeafe;border-color:#93c5fd;"{% endif %}>
+            <h2 {% if is_history %}style="color:#1e40af;"{% endif %}>{% if is_history %}Shipment Details{% else %}Shipment Created Successfully!{% endif %}</h2>
+            <p {% if is_history %}style="color:#1d4ed8;"{% endif %}>{{ items|length }} item{{ items|length|pluralize }} for {{ manufacturer }} - Pallet {{ pallet_id }}</p>
         </div>
 
         <div class="download-cards" style="grid-template-columns: 1fr 1fr 1fr;">
@@ -258,7 +258,11 @@
         </div>
 
         <div class="nav-links">
+            {% if is_history %}
+            <a href="/shipments/" class="btn-add-another">Back to Shipment History</a>
+            {% else %}
             <a href="/add-shipment/" class="btn-add-another">Add Another Shipment</a>
+            {% endif %}
             <a href="/dashboard/">View Dashboard</a>
         </div>
     </div>

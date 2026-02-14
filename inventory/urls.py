@@ -13,6 +13,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('item/<int:item_id>/history/', views.item_history, name='item_history'),
     path('shipments/', views.shipment_history, name='shipment_history'),
+    path('shipment/<str:manufacturer>/<str:pallet_id>/', views.shipment_detail, name='shipment_detail'),
     path('tags/', views.tag_management, name='tag_management'),
 
     # Shipment form (replaces Microsoft Form + Excel script)
@@ -40,6 +41,7 @@ urlpatterns = [
     # Tags
     path('api/rename-tag/', views.rename_tag, name='rename_tag'),
     path('api/delete-tag/', views.delete_tag, name='delete_tag'),
+    path('api/create-tag/', views.create_tag, name='create_tag'),
 
     # Next pallet ID
     path('api/next-pallet/', views.next_pallet_api, name='next_pallet'),

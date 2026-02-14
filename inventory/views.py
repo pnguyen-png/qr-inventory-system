@@ -12,7 +12,7 @@ import os
 import uuid
 from datetime import timedelta
 from itertools import chain
-from .models import InventoryItem, StatusHistory, NotificationLog, ItemPhoto, ChangeLog, ScanLog
+from .models import InventoryItem, StatusHistory, NotificationLog, ItemPhoto, ChangeLog, ScanLog, Tag
 
 LOCATION_CHOICES = [
     'York, PA',
@@ -1384,6 +1384,29 @@ def shipment_history(request):
     })
 
 
+def shipment_detail(request, manufacturer, pallet_id):
+    """Show a past shipment's detail page (same layout as after creation)."""
+    items = list(
+        InventoryItem.objects.filter(manufacturer=manufacturer, pallet_id=pallet_id)
+        .order_by('box_id')
+    )
+    if not items:
+        return redirect('inventory:shipment_history')
+
+    shipment_key = str(uuid.uuid4())[:8]
+    request.session[f'shipment_{shipment_key}'] = [item.id for item in items]
+
+    _annotate_qr_urls(items)
+
+    return render(request, 'inventory/shipment_result.html', {
+        'items': items,
+        'manufacturer': manufacturer,
+        'pallet_id': pallet_id,
+        'shipment_key': shipment_key,
+        'is_history': True,
+    })
+
+
 # ---- Tag Management (#20) ----
 
 def tag_management(request):
@@ -1399,13 +1422,16 @@ def tag_management(request):
                     tag_counts[tag] = tag_counts.get(tag, 0) + 1
                     if tag not in tag_last_updated or (updated_at and updated_at > tag_last_updated[tag]):
                         tag_last_updated[tag] = updated_at
-    # Build list of dicts with name, count, last_updated
+    # Include standalone tags from Tag model (0 items if not used yet)
+    for standalone in Tag.objects.all():
+        if standalone.name not in tag_counts:
+            tag_counts[standalone.name] = 0
+    # Build list of dicts with name, count
     tag_list = []
     for name, count in tag_counts.items():
         tag_list.append({
             'name': name,
             'count': count,
-            'last_updated': tag_last_updated.get(name),
         })
     tag_list.sort(key=lambda x: (-x['count'], x['name']))
     # Split into top tags (top 5) and other tags
@@ -1462,6 +1488,29 @@ def delete_tag(request):
                 item.tags = ','.join(new_tags)
                 item.save()
                 updated += 1
+        # Also remove from Tag model if it exists
+        Tag.objects.filter(name=tag_name).delete()
         return JsonResponse({'success': True, 'updated_count': updated})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_tag(request):
+    """Create a new standalone tag."""
+    try:
+        data = json.loads(request.body)
+        tag_name = data.get('tag_name', '').strip()
+        if not tag_name:
+            return JsonResponse({'success': False, 'error': 'Tag name is required.'}, status=400)
+
+        # Check if tag already exists on any item or in the Tag model
+        existing_on_items = InventoryItem.objects.filter(tags__contains=tag_name).exists()
+        if existing_on_items or Tag.objects.filter(name=tag_name).exists():
+            return JsonResponse({'success': False, 'error': 'A tag with this name already exists.'}, status=400)
+
+        Tag.objects.create(name=tag_name)
+        return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
