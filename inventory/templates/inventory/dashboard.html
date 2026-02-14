@@ -585,7 +585,6 @@
                 <a class="btn-tool primary" href="/add-shipment/">Add Shipment</a>
                 <button class="btn-tool primary" onclick="openScanner()">Scan QR Code</button>
                 <button class="btn-tool" style="background:#7c3aed; color:#fff; border-color:#7c3aed;" onclick="openMultiScan()">Multi-Scan</button>
-                <button class="btn-tool" onclick="toggleAllGroups()" id="btnCollapseAll">Collapse All</button>
                 <button class="btn-tool" onclick="printAllQRLabels()">Print Labels</button>
                 <a class="btn-tool" href="/export/csv/{% if show_archived %}?archived=1{% endif %}">Export CSV</a>
                 <a class="btn-tool" href="/export/pdf/{% if show_archived %}?archived=1{% endif %}" target="_blank">Print Report</a>
@@ -653,7 +652,10 @@
             <table id="inventoryTable">
                 <thead>
                     <tr>
-                        <th class="checkbox-col"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                        <th class="checkbox-col">
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                            <button id="btnCollapseAll" onclick="toggleAllGroups()" style="font-size:0.65rem; padding:2px 6px; background:#f1f5f9; border:1px solid #d1d5db; border-radius:4px; cursor:pointer; margin-left:4px;">Collapse All</button>
+                        </th>
                         <th>Manufacturer</th>
                         <th>Pallet ID</th>
                         <th>Project #</th>
