@@ -466,6 +466,13 @@
             pointer-events: none;
         }
 
+        .dark-toggle {
+            background: none; border: 1px solid #b8860b; color: #b8860b;
+            padding: 4px 10px; border-radius: 6px; font-size: 0.75rem;
+            cursor: pointer; font-weight: 600;
+        }
+        .dark-toggle:hover { background: rgba(184,134,11,0.2); }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -516,6 +523,7 @@
             </div>
         </a>
         <div class="header-right">
+            <button class="dark-toggle" onclick="toggleDarkMode()" id="darkToggle">Dark Mode</button>
             <a href="/dashboard/">Back to Dashboard</a>
         </div>
     </div>
@@ -923,6 +931,17 @@
                 });
             }
         });
+
+        // Dark mode
+        function toggleDarkMode() {
+            var isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDark ? '1' : '0');
+            document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        }
+        if (localStorage.getItem('darkMode') === '1') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkToggle').textContent = 'Light Mode';
+        }
     </script>
 </body>
 </html>

@@ -107,6 +107,26 @@
         }
         .btn-print:hover { opacity: 0.9; }
 
+        /* Dark mode */
+        .dark-toggle {
+            background: none; border: 1px solid #b8860b; color: #b8860b;
+            padding: 4px 10px; border-radius: 6px; font-size: 0.75rem;
+            cursor: pointer; font-weight: 600;
+        }
+        .dark-toggle:hover { background: rgba(184,134,11,0.2); }
+
+        body.dark-mode { background: #111827; color: #f3f4f6; }
+        body.dark-mode .success-banner { background: #064e3b; border-color: #16a34a; }
+        body.dark-mode .success-banner h2 { color: #6ee7b7; }
+        body.dark-mode .success-banner p { color: #34d399; }
+        body.dark-mode .download-card { background: #1f2937; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        body.dark-mode .download-card h3 { color: #f3f4f6; }
+        body.dark-mode .download-card p { color: #9ca3af; }
+        body.dark-mode .summary-card { background: #1f2937; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        body.dark-mode .summary-table th { color: #9ca3af; border-bottom-color: #374151; background: #2d3748; }
+        body.dark-mode .summary-table td { border-bottom-color: #374151; color: #d1d5db; }
+        body.dark-mode .nav-links a { color: #60a5fa; }
+
         @media print {
             /* Hide screen UI */
             .header, .success-banner, .download-cards,
@@ -172,7 +192,10 @@
                 <div class="subtitle">Inventory Management System</div>
             </div>
         </a>
-        <a href="/dashboard/">Back to Dashboard</a>
+        <div style="display:flex; align-items:center; gap:12px;">
+            <button class="dark-toggle" onclick="toggleDarkMode()" id="darkToggle">Dark Mode</button>
+            <a href="/dashboard/">Back to Dashboard</a>
+        </div>
     </div>
 
     <div class="container">
@@ -219,6 +242,15 @@
         <script>
         function printLabels() {
             window.print();
+        }
+        function toggleDarkMode() {
+            var isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDark ? '1' : '0');
+            document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        }
+        if (localStorage.getItem('darkMode') === '1') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkToggle').textContent = 'Light Mode';
         }
         </script>
 

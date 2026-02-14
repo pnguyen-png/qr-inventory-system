@@ -27,10 +27,26 @@
         a { color: #8b1a1a; text-decoration: none; }
         a:hover { text-decoration: underline; }
         .back { margin-top: 16px; display: block; text-align: center; }
+
+        /* Dark mode */
+        .dark-toggle {
+            background: none; border: 1px solid #b8860b; color: #b8860b;
+            padding: 4px 10px; border-radius: 6px; font-size: 0.75rem;
+            cursor: pointer; font-weight: 600;
+        }
+        .dark-toggle:hover { background: rgba(184,134,11,0.2); }
+
+        body.dark-mode { background: #111827; color: #f3f4f6; }
+        body.dark-mode .card { background: #1f2937; box-shadow: 0 1px 3px rgba(0,0,0,0.3); color: #f3f4f6; }
+        body.dark-mode .card h2 { color: #f3f4f6; }
+        body.dark-mode .history-item { border-bottom-color: #374151; color: #d1d5db; }
+        body.dark-mode .history-date { color: #9ca3af; }
+        body.dark-mode .history-notes { color: #9ca3af; }
+        body.dark-mode a { color: #f87171; }
     </style>
 </head>
 <body>
-    <div class="header">
+    <div class="header" style="justify-content:space-between;">
         <a href="/dashboard/" style="display:flex; align-items:center; gap:12px; text-decoration:none; color:#fff;">
             <img src="{% static 'inventory/img/logo.png' %}" alt="Fire &amp; Risk Alliance">
             <div class="header-text">
@@ -38,6 +54,7 @@
                 <div class="subtitle">Inventory Management System</div>
             </div>
         </a>
+        <button class="dark-toggle" onclick="toggleDarkMode()" id="darkToggle">Dark Mode</button>
     </div>
     <div class="container">
         <div class="card">
@@ -54,5 +71,16 @@
         </div>
         <a class="back" href="/dashboard/">Back to Dashboard</a>
     </div>
+    <script>
+        function toggleDarkMode() {
+            var isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDark ? '1' : '0');
+            document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        }
+        if (localStorage.getItem('darkMode') === '1') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkToggle').textContent = 'Light Mode';
+        }
+    </script>
 </body>
 </html>
