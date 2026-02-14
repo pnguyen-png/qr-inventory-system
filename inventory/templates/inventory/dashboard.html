@@ -1271,14 +1271,13 @@
 
                 // Extract display info from first row
                 const firstRow = groupRows[0];
-                const mfr = firstRow.children[1].textContent.trim();
                 const palletId = firstRow.children[2].textContent.trim();
 
                 // Create group header row
                 const groupRow = document.createElement('tr');
                 groupRow.className = 'pallet-group-row';
                 groupRow.dataset.palletGroup = key;
-                groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>${escapeHtml(mfr)} - Pallet ${escapeHtml(palletId)}<span class="group-count">(${groupRows.length} item${groupRows.length === 1 ? '' : 's'})</span></td>`;
+                groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>Pallet ${escapeHtml(palletId)}<span class="group-count">(${groupRows.length} item${groupRows.length === 1 ? '' : 's'})</span></td>`;
 
                 // Insert before the first row of this group
                 firstRow.parentNode.insertBefore(groupRow, firstRow);
