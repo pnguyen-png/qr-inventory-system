@@ -50,19 +50,19 @@
         }
         .header-right p { color: #94a3b8; font-size: 0.8rem; }
 
-        .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+        .container { max-width: 1800px; margin: 0 auto; padding: 24px 32px; }
 
         /* Summary cards */
         .summary-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 16px;
+            margin-bottom: 28px;
         }
         .summary-card {
             background: #fff;
             border-radius: 10px;
-            padding: 16px;
+            padding: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             text-align: center;
         }
@@ -79,13 +79,13 @@
         .toolbar {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 20px;
             align-items: center;
         }
         .toolbar-group {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             align-items: center;
         }
         .toolbar .btn-tool {
@@ -111,7 +111,7 @@
             display: flex;
             gap: 0;
             border-bottom: 2px solid #e5e7eb;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
         }
         .tab {
@@ -132,8 +132,8 @@
         .filters {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 16px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
         .filters input, .filters select {
             padding: 8px 12px;
@@ -154,7 +154,7 @@
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         thead { background: #f8fafc; }
         th {
-            padding: 12px 14px;
+            padding: 14px 18px;
             text-align: left;
             font-weight: 600;
             color: #475569;
@@ -165,7 +165,7 @@
             white-space: nowrap;
         }
         td {
-            padding: 12px 14px;
+            padding: 14px 18px;
             border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
         }
@@ -202,7 +202,7 @@
         .damage-yes { color: #dc2626; font-weight: 700; }
         .damage-no { color: #16a34a; }
 
-        .desc-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .desc-cell { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .desc-cell:hover { white-space: normal; overflow: visible; }
 
         .tag-badge {
@@ -413,7 +413,7 @@
             .header { flex-direction: column; gap: 8px; text-align: center; padding: 10px 12px; }
             .header-brand img { height: 36px; }
             .header-brand-text h1 { font-size: 0.95rem; }
-            .container { padding: 12px 8px; }
+            .container { padding: 12px 8px; max-width: 100%; }
             .summary-row { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
             .summary-card { padding: 10px 6px; }
             .summary-card .number { font-size: 1.4rem; }
@@ -453,7 +453,7 @@
             th { padding: 8px 6px; font-size: 0.65rem; }
             td { padding: 8px 6px; }
             .qr-thumb { width: 36px; height: 36px; }
-            .desc-cell { max-width: 100px; }
+            .desc-cell { max-width: 120px; }
             .checkbox-col { width: 30px; }
             .checkbox-col input { width: 14px; height: 14px; }
 
@@ -519,7 +519,7 @@
         /* Activity Feed */
         .activity-feed {
             background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            padding: 20px; margin-top: 24px;
+            padding: 24px; margin-top: 28px;
         }
         .activity-feed h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 16px; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; }
         .activity-item {
@@ -805,7 +805,6 @@
             <p>{% if show_archived %}Archive items from the main inventory view.{% else %}<a href="/add-shipment/" style="color:#2563eb;">Add a shipment</a> to create inventory items and generate QR codes.{% endif %}</p>
         </div>
         {% endif %}
-    </div>
 
     <!-- Activity Feed (#19) -->
         {% if recent_activity %}
@@ -838,6 +837,7 @@
             {% endfor %}
         </div>
         {% endif %}
+    </div>
 
     <!-- QR Scanner Modal -->
     <div class="modal-overlay" id="scannerModal">
