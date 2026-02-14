@@ -227,16 +227,17 @@
             margin-bottom: 28px;
         }
 
-        /* Tag card (grid mode) */
+        /* Tag card */
         .tag-card {
             background: var(--bg-card);
             border-radius: 12px;
-            padding: 18px 20px;
+            padding: 16px 18px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             gap: 12px;
+            overflow: hidden;
             transition: box-shadow 0.2s, transform 0.15s;
         }
         .tag-card:hover {
@@ -247,15 +248,12 @@
         /* Tag card (list mode) */
         .tag-list .tag-card {
             border-radius: 10px;
-            padding: 14px 20px;
+            padding: 12px 18px;
         }
 
         .tag-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            min-width: 0;
             flex: 1;
+            min-width: 0;
         }
         .tag-name {
             font-size: 0.95rem;
@@ -264,11 +262,12 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            margin-bottom: 3px;
         }
         .tag-meta {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
         .tag-count {
             font-size: 0.72rem;
@@ -283,16 +282,6 @@
             font-size: 0.68rem;
             color: var(--text-secondary);
             white-space: nowrap;
-        }
-
-        /* List mode: row layout for info */
-        .tag-list .tag-info {
-            flex-direction: row;
-            align-items: center;
-            gap: 12px;
-        }
-        .tag-list .tag-name {
-            flex-shrink: 0;
         }
 
         .tag-actions {
@@ -560,13 +549,13 @@
             {% for tag in top_tags %}
             <div class="tag-card" data-tag="{{ tag.name }}" data-count="{{ tag.count }}" data-updated="{{ tag.last_updated|date:'U' }}">
                 <div class="tag-info">
-                    <span class="tag-name">{{ tag.name }}</span>
-                </div>
-                <div class="tag-meta">
-                    <span class="tag-count">{{ tag.count }} item{{ tag.count|pluralize }}</span>
-                    {% if tag.last_updated %}
-                    <span class="tag-last-updated">Updated {{ tag.last_updated|timesince }} ago</span>
-                    {% endif %}
+                    <div class="tag-name">{{ tag.name }}</div>
+                    <div class="tag-meta">
+                        <span class="tag-count">{{ tag.count }} item{{ tag.count|pluralize }}</span>
+                        {% if tag.last_updated %}
+                        <span class="tag-last-updated">Updated {{ tag.last_updated|timesince }} ago</span>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="tag-actions">
                     <button class="btn-icon edit" onclick="openRenameModal('{{ tag.name|escapejs }}', {{ tag.count }})" title="Rename tag">
@@ -591,13 +580,13 @@
             {% for tag in other_tags %}
             <div class="tag-card" data-tag="{{ tag.name }}" data-count="{{ tag.count }}" data-updated="{{ tag.last_updated|date:'U' }}">
                 <div class="tag-info">
-                    <span class="tag-name">{{ tag.name }}</span>
-                </div>
-                <div class="tag-meta">
-                    <span class="tag-count">{{ tag.count }} item{{ tag.count|pluralize }}</span>
-                    {% if tag.last_updated %}
-                    <span class="tag-last-updated">Updated {{ tag.last_updated|timesince }} ago</span>
-                    {% endif %}
+                    <div class="tag-name">{{ tag.name }}</div>
+                    <div class="tag-meta">
+                        <span class="tag-count">{{ tag.count }} item{{ tag.count|pluralize }}</span>
+                        {% if tag.last_updated %}
+                        <span class="tag-last-updated">Updated {{ tag.last_updated|timesince }} ago</span>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="tag-actions">
                     <button class="btn-icon edit" onclick="openRenameModal('{{ tag.name|escapejs }}', {{ tag.count }})" title="Rename tag">
