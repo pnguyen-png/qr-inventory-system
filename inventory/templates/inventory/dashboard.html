@@ -239,12 +239,6 @@
         .multiscan-actions .btn-apply:hover { opacity: 0.9; }
         .multiscan-actions .btn-apply:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        .qr-thumb {
-            width: 50px; height: 50px; cursor: pointer;
-            border-radius: 4px; border: 1px solid #e5e7eb;
-        }
-        .qr-thumb:hover { border-color: #8b1a1a; }
-
         /* Pallet group toggle */
         .pallet-group-row td {
             background: #f1f5f9 !important;
@@ -452,7 +446,6 @@
             table { font-size: 0.75rem; }
             th { padding: 8px 6px; font-size: 0.65rem; }
             td { padding: 8px 6px; }
-            .qr-thumb { width: 36px; height: 36px; }
             .desc-cell { max-width: 120px; }
             .checkbox-col { width: 30px; }
             .checkbox-col input { width: 14px; height: 14px; }
@@ -509,7 +502,6 @@
         body.dark-mode .view-link { color: #f87171; }
         body.dark-mode .empty-state { color: #6b7280; }
         body.dark-mode .empty-state h3 { color: #9ca3af; }
-        body.dark-mode .qr-thumb { border-color: #4b5563; }
         body.dark-mode .overdue-banner { background: linear-gradient(135deg, #78350f, #451a03); border-color: #b45309; }
         body.dark-mode .overdue-banner .text { color: #fde68a; }
         body.dark-mode .activity-feed { background: #1f2937; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
@@ -754,7 +746,6 @@
                         <th>Status</th>
                         {% if not show_archived %}<th>Checked Out By</th>{% endif %}
                         <th>Updated</th>
-                        <th>QR Code</th>
                         <th class="view-col"></th>
                     </tr>
                 </thead>
@@ -790,9 +781,6 @@
                         <td>{{ item.checked_out_by|default:"-" }}</td>
                         {% endif %}
                         <td>{{ item.updated_at|date:"M d, H:i" }}</td>
-                        <td>
-                            <img class="qr-thumb" src="{{ item.short_qr_url }}" alt="QR #{{ item.box_id }}">
-                        </td>
                         <td class="view-col"><a class="view-link" href="/scan/?id={{ item.id }}">View</a></td>
                     </tr>
                     {% endfor %}
