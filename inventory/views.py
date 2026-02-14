@@ -3,15 +3,16 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
-from django.db.models import Max, IntegerField
+from django.db.models import Max, IntegerField, Count, Min
 from django.db.models.functions import Cast
 import json
 import csv
 import urllib.parse
 import os
 import uuid
+from datetime import timedelta
 from itertools import chain
-from .models import InventoryItem, StatusHistory, NotificationLog, ItemPhoto, ChangeLog
+from .models import InventoryItem, StatusHistory, NotificationLog, ItemPhoto, ChangeLog, ScanLog
 
 LOCATION_CHOICES = [
     'York, PA',
@@ -58,9 +59,13 @@ def scanner_landing(request):
                 box_id=int(box_id)
             )
 
+        # Log this scan
+        ScanLog.objects.create(item=item)
+
         history = item.status_history.all()
         status_labels = dict(item.STATUS_CHOICES)
         photos = item.photos.all()
+        scan_count = item.scan_logs.count()
         _annotate_qr_urls([item])
 
         # Build unified audit trail from status history + change logs
@@ -85,6 +90,7 @@ def scanner_landing(request):
             'audit_trail': audit_trail,
             'status_labels': status_labels,
             'photos': photos,
+            'scan_count': scan_count,
             'location_choices': LOCATION_CHOICES,
             'preset_tags': preset_tags,
             'error': None
@@ -244,9 +250,28 @@ def dashboard(request):
         ).order_by('pallet_num', 'manufacturer', 'box_id')
 
     all_active = InventoryItem.objects.filter(archived=False)
-    overdue_items = [i for i in all_active if i.is_overdue]
+    cutoff = timezone.now() - timedelta(days=7)
+    overdue_qs = all_active.filter(
+        status='checked_out',
+        checked_out_at__isnull=False,
+        checked_out_at__lt=cutoff,
+    )
+    overdue_count = overdue_qs.count()
 
     _annotate_qr_urls(items)
+
+    # #19: Activity feed — recent changes across all items
+    recent_status = list(StatusHistory.objects.select_related('item').order_by('-changed_at')[:15])
+    recent_changes = list(ChangeLog.objects.select_related('item').order_by('-changed_at')[:15])
+    for e in recent_status:
+        e.entry_type = 'status'
+    for e in recent_changes:
+        e.entry_type = 'change'
+    recent_activity = sorted(
+        chain(recent_status, recent_changes),
+        key=lambda e: e.changed_at,
+        reverse=True,
+    )[:20]
 
     return render(request, 'inventory/dashboard.html', {
         'items': items,
@@ -254,9 +279,11 @@ def dashboard(request):
         'checked_out_count': all_active.filter(status='checked_out').count(),
         'damaged_count': all_active.filter(damaged=True).count(),
         'archived_count': InventoryItem.objects.filter(archived=True).count(),
-        'overdue_count': len(overdue_items),
-        'overdue_items': overdue_items,
+        'overdue_count': overdue_count,
+        'overdue_items': overdue_qs,
         'show_archived': show_archived,
+        'recent_activity': recent_activity,
+        'location_choices': LOCATION_CHOICES,
     })
 
 
@@ -376,34 +403,58 @@ def export_csv(request):
     return response
 
 
-def _get_short_qr_url(item_id, base_url=None):
-    """Return the QR code image URL using the short /scan/?id= format."""
+def _get_scan_url(item_id, base_url=None):
+    """Return the scan URL that the QR code should encode."""
     if base_url is None:
         base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
-    scanner_url = f"{base_url}/scan/?id={item_id}"
-    return f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={urllib.parse.quote(scanner_url)}"
+    return f"{base_url}/scan/?id={item_id}"
+
+
+def _get_short_qr_url(item_id, base_url=None):
+    """Return the QR code image URL — now served locally instead of external API."""
+    return f"/qr/{item_id}/code.png"
 
 
 def _annotate_qr_urls(items, base_url=None):
     """Add short_qr_url attribute to each item for template use."""
-    if base_url is None:
-        base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
     for item in items:
-        item.short_qr_url = _get_short_qr_url(item.id, base_url)
+        item.short_qr_url = _get_short_qr_url(item.id)
     return items
+
+
+def _generate_qr_bytes(item_id, size=300):
+    """Generate QR code image bytes locally using qrcode library."""
+    import qrcode
+    from io import BytesIO
+
+    scan_url = _get_scan_url(item_id)
+    qr = qrcode.QRCode(version=1, box_size=10, border=2)
+    qr.add_data(scan_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buf = BytesIO()
+    img.save(buf, format='PNG')
+    buf.seek(0)
+    return buf
+
+
+def generate_qr_image(request, item_id):
+    """Serve a locally-generated QR code image for an item."""
+    get_object_or_404(InventoryItem, id=item_id)
+    buf = _generate_qr_bytes(item_id)
+    response = HttpResponse(buf.read(), content_type='image/png')
+    response['Cache-Control'] = 'public, max-age=86400'
+    return response
 
 
 def _make_labeled_qr_image(item):
     """Helper: landscape QR label — QR on left, text on right. Returns BytesIO PNG or None."""
     from PIL import Image as PilImage, ImageDraw, ImageFont
     from io import BytesIO
-    import requests as http_requests
 
     try:
-        qr_url = _get_short_qr_url(item.id)
-        resp = http_requests.get(qr_url, timeout=10)
-        resp.raise_for_status()
-        qr_img = PilImage.open(BytesIO(resp.content)).convert('RGB')
+        qr_buf = _generate_qr_bytes(item.id)
+        qr_img = PilImage.open(qr_buf).convert('RGB')
     except Exception:
         return None
 
@@ -621,24 +672,25 @@ def bulk_archive(request):
 
 def overdue_items_api(request):
     """API endpoint returning overdue checked-out items"""
+    cutoff = timezone.now() - timedelta(days=7)
     items = InventoryItem.objects.filter(
         status='checked_out',
         checked_out_at__isnull=False,
+        checked_out_at__lt=cutoff,
         archived=False,
     )
 
     overdue = []
     for item in items:
-        if item.is_overdue:
-            overdue.append({
-                'id': item.id,
-                'manufacturer': item.manufacturer,
-                'pallet_id': item.pallet_id,
-                'box_id': item.box_id,
-                'checked_out_by': item.checked_out_by,
-                'checked_out_at': item.checked_out_at.isoformat(),
-                'days_out': item.days_checked_out,
-            })
+        overdue.append({
+            'id': item.id,
+            'manufacturer': item.manufacturer,
+            'pallet_id': item.pallet_id,
+            'box_id': item.box_id,
+            'checked_out_by': item.checked_out_by,
+            'checked_out_at': item.checked_out_at.isoformat(),
+            'days_out': item.days_checked_out,
+        })
 
     return JsonResponse({'overdue_items': overdue, 'count': len(overdue)})
 
@@ -651,13 +703,18 @@ def inventory_report_api(request):
     for key, label in InventoryItem.STATUS_CHOICES:
         status_counts[label] = active.filter(status=key).count()
 
-    overdue = [i for i in active if i.is_overdue]
+    cutoff = timezone.now() - timedelta(days=7)
+    overdue_count = active.filter(
+        status='checked_out',
+        checked_out_at__isnull=False,
+        checked_out_at__lt=cutoff,
+    ).count()
 
     return JsonResponse({
         'total_items': active.count(),
         'status_breakdown': status_counts,
         'damaged_count': active.filter(damaged=True).count(),
-        'overdue_count': len(overdue),
+        'overdue_count': overdue_count,
         'archived_count': InventoryItem.objects.filter(archived=True).count(),
         'generated_at': timezone.now().isoformat(),
     })
@@ -779,7 +836,7 @@ def add_shipment(request):
         barcode_payload = f"MFR={manufacturer} | PALLET={pallet_id} | BOX={box_num}"
         encoded_payload = urllib.parse.quote(barcode_payload)
         scanner_url = f"{base_url}/scan/?data={encoded_payload}"
-        qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(scanner_url)}"
+        qr_url = ""  # Will be set after item creation with local endpoint
 
         # Check if item already exists (update it if so)
         existing = InventoryItem.objects.filter(
@@ -1068,6 +1125,15 @@ def upload_photo(request):
         if not photo_file:
             return JsonResponse({'success': False, 'error': 'No photo file provided'}, status=400)
 
+        # Validate file size (max 10MB)
+        if photo_file.size > 10 * 1024 * 1024:
+            return JsonResponse({'success': False, 'error': 'Photo must be under 10MB.'}, status=400)
+
+        # Validate image type
+        allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+        if photo_file.content_type not in allowed_types:
+            return JsonResponse({'success': False, 'error': 'Only JPEG, PNG, GIF, and WebP images are allowed.'}, status=400)
+
         photo = ItemPhoto.objects.create(
             item=item,
             image=photo_file,
@@ -1245,3 +1311,139 @@ def download_shipment_csv(request, shipment_key):
         ])
 
     return response
+
+
+# ---- Bulk Edit (#7) ----
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def bulk_edit(request):
+    """Bulk edit location, damage, or tags for multiple items."""
+    try:
+        data = json.loads(request.body)
+        item_ids = data.get('item_ids', [])
+        fields = data.get('fields', {})
+        changed_by = data.get('changed_by', '')
+
+        if not item_ids or not fields:
+            return JsonResponse({'success': False, 'error': 'Missing item_ids or fields'}, status=400)
+
+        updated = 0
+        for item in InventoryItem.objects.filter(id__in=item_ids):
+            if 'location' in fields and fields['location']:
+                old_val = item.location
+                item.location = fields['location']
+                if old_val != item.location:
+                    ChangeLog.objects.create(
+                        item=item, change_type='field_edit', field_name='location',
+                        old_value=old_val, new_value=item.location, changed_by=changed_by,
+                    )
+
+            if 'damaged' in fields:
+                old_val = 'Yes' if item.damaged else 'No'
+                item.damaged = fields['damaged']
+                new_val = 'Yes' if item.damaged else 'No'
+                if old_val != new_val:
+                    ChangeLog.objects.create(
+                        item=item, change_type='field_edit', field_name='damaged',
+                        old_value=old_val, new_value=new_val, changed_by=changed_by,
+                    )
+
+            if 'tags' in fields and fields['tags']:
+                old_val = item.tags
+                item.tags = fields['tags']
+                if old_val != item.tags:
+                    ChangeLog.objects.create(
+                        item=item, change_type='field_edit', field_name='tags',
+                        old_value=old_val, new_value=item.tags, changed_by=changed_by,
+                    )
+
+            item.save()
+            updated += 1
+
+        return JsonResponse({'success': True, 'updated_count': updated})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ---- Shipment History (#10) ----
+
+def shipment_history(request):
+    """Show all past shipments grouped by pallet."""
+    shipments = (
+        InventoryItem.objects
+        .values('manufacturer', 'pallet_id', 'project_number')
+        .annotate(
+            item_count=Count('id'),
+            created=Min('created_at'),
+        )
+        .order_by('-created')
+    )
+    return render(request, 'inventory/shipment_history.html', {
+        'shipments': shipments,
+    })
+
+
+# ---- Tag Management (#20) ----
+
+def tag_management(request):
+    """View and manage all tags across inventory."""
+    items = InventoryItem.objects.filter(archived=False).values_list('tags', flat=True)
+    tag_counts = {}
+    for tags_str in items:
+        if tags_str:
+            for tag in tags_str.split(','):
+                tag = tag.strip()
+                if tag:
+                    tag_counts[tag] = tag_counts.get(tag, 0) + 1
+    sorted_tags = sorted(tag_counts.items(), key=lambda x: (-x[1], x[0]))
+    return render(request, 'inventory/tag_management.html', {'tags': sorted_tags})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def rename_tag(request):
+    """Rename a tag across all items."""
+    try:
+        data = json.loads(request.body)
+        old_name = data.get('old_name', '').strip()
+        new_name = data.get('new_name', '').strip()
+        if not old_name or not new_name:
+            return JsonResponse({'success': False, 'error': 'Both old and new tag names are required.'}, status=400)
+
+        items = InventoryItem.objects.filter(tags__contains=old_name)
+        updated = 0
+        for item in items:
+            tags = [t.strip() for t in item.tags.split(',') if t.strip()]
+            if old_name in tags:
+                new_tags = [new_name if t == old_name else t for t in tags]
+                item.tags = ','.join(new_tags)
+                item.save()
+                updated += 1
+        return JsonResponse({'success': True, 'updated_count': updated})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def delete_tag(request):
+    """Remove a tag from all items."""
+    try:
+        data = json.loads(request.body)
+        tag_name = data.get('tag_name', '').strip()
+        if not tag_name:
+            return JsonResponse({'success': False, 'error': 'Tag name is required.'}, status=400)
+
+        items = InventoryItem.objects.filter(tags__contains=tag_name)
+        updated = 0
+        for item in items:
+            tags = [t.strip() for t in item.tags.split(',') if t.strip()]
+            if tag_name in tags:
+                new_tags = [t for t in tags if t != tag_name]
+                item.tags = ','.join(new_tags)
+                item.save()
+                updated += 1
+        return JsonResponse({'success': True, 'updated_count': updated})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

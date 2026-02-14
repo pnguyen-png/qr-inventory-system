@@ -143,6 +143,18 @@ class ItemPhoto(models.Model):
         return f"Photo for {self.item} - {self.uploaded_at}"
 
 
+class ScanLog(models.Model):
+    """Tracks each time an item's QR code is scanned."""
+    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='scan_logs')
+    scanned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-scanned_at']
+
+    def __str__(self):
+        return f"Scan of {self.item} at {self.scanned_at}"
+
+
 class NotificationLog(models.Model):
     NOTIFICATION_TYPES = [
         ('checkout', 'Item Checked Out'),

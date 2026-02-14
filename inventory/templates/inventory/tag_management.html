@@ -1,0 +1,386 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire &amp; Risk Alliance - Tag Management</title>
+    <style>
+        :root {
+            --bg-primary: #f5f0eb;
+            --bg-card: #fff;
+            --text-primary: #1a1a2e;
+            --text-secondary: #64748b;
+            --border-color: #e5e7eb;
+            --bg-input: #fff;
+            --bg-hover: #f9fafb;
+        }
+        body.dark-mode {
+            --bg-primary: #111827;
+            --bg-card: #1f2937;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --border-color: #374151;
+            --bg-input: #374151;
+            --bg-hover: #374151;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d1518 100%);
+            color: #fff;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #b8860b;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #fff;
+        }
+        .header-brand img {
+            height: 44px;
+            width: auto;
+        }
+        .header-brand-text h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+        }
+        .header-brand-text .subtitle {
+            font-size: 0.7rem;
+            color: #b8860b;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-right a {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            text-decoration: none;
+        }
+        .header-right a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .page-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .tag-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .tag-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: box-shadow 0.2s;
+        }
+        .tag-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .tag-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .tag-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: #e0e7ff;
+            color: #3730a3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 160px;
+        }
+        body.dark-mode .tag-badge {
+            background: #312e81;
+            color: #c7d2fe;
+        }
+        .tag-count {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .tag-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .btn-rename {
+            padding: 6px 12px;
+            border: 1px solid #b8860b;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: #fff;
+            color: #b8860b;
+            white-space: nowrap;
+        }
+        .btn-rename:hover {
+            background: #b8860b;
+            color: #fff;
+        }
+        body.dark-mode .btn-rename {
+            background: var(--bg-card);
+        }
+        body.dark-mode .btn-rename:hover {
+            background: #b8860b;
+            color: #fff;
+        }
+        .btn-delete {
+            padding: 6px 12px;
+            border: 1px solid #dc2626;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: #fff;
+            color: #dc2626;
+            white-space: nowrap;
+        }
+        .btn-delete:hover {
+            background: #dc2626;
+            color: #fff;
+        }
+        body.dark-mode .btn-delete {
+            background: var(--bg-card);
+        }
+        body.dark-mode .btn-delete:hover {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        .empty-state {
+            padding: 60px 24px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #fff;
+            z-index: 9999;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+                padding: 10px 12px;
+            }
+            .header-brand img { height: 36px; }
+            .header-brand-text h1 { font-size: 0.95rem; }
+            .container { padding: 12px 8px; }
+            .tag-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .tag-card {
+                padding: 14px 16px;
+            }
+            .page-title { font-size: 1.2rem; }
+        }
+
+        @media (max-width: 480px) {
+            .tag-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .tag-actions {
+                width: 100%;
+            }
+            .btn-rename, .btn-delete {
+                flex: 1;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hidden form for CSRF token -->
+    <form id="csrfForm" style="display:none;">{% csrf_token %}</form>
+
+    <div class="header">
+        <a href="/dashboard/" class="header-brand">
+            <img src="{% static 'inventory/img/logo.png' %}" alt="Fire &amp; Risk Alliance">
+            <div class="header-brand-text">
+                <h1>Fire &amp; Risk Alliance</h1>
+                <div class="subtitle">Inventory Management System</div>
+            </div>
+        </a>
+        <div class="header-right">
+            <a href="/dashboard/">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2 class="page-title">Tag Management</h2>
+        <p class="page-subtitle">Manage all tags used across your inventory items. Rename or delete tags in bulk.</p>
+
+        {% if tags %}
+        <div class="tag-grid">
+            {% for tag_name, count in tags %}
+            <div class="tag-card" data-tag="{{ tag_name }}">
+                <div class="tag-info">
+                    <span class="tag-badge" title="{{ tag_name }}">{{ tag_name }}</span>
+                    <span class="tag-count">{{ count }} item{{ count|pluralize }}</span>
+                </div>
+                <div class="tag-actions">
+                    <button class="btn-rename" onclick="renameTag('{{ tag_name|escapejs }}')">Rename</button>
+                    <button class="btn-delete" onclick="deleteTag('{{ tag_name|escapejs }}')">Delete</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h3>No tags found</h3>
+            <p>Tags will appear here once you add them to inventory items.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        function getCSRFToken() {
+            const input = document.querySelector('#csrfForm input[name="csrfmiddlewaretoken"]');
+            return input ? input.value : '';
+        }
+
+        function showToast(message, isError) {
+            const toast = document.getElementById('toast');
+            toast.style.background = isError ? '#dc2626' : '#16a34a';
+            toast.textContent = message;
+            toast.style.opacity = '1';
+            toast.style.pointerEvents = 'auto';
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.pointerEvents = 'none';
+            }, 3000);
+        }
+
+        function renameTag(oldName) {
+            const newName = prompt('Enter a new name for the tag "' + oldName + '":', oldName);
+            if (!newName || newName.trim() === '' || newName.trim() === oldName) return;
+
+            fetch('/api/rename-tag/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    old_name: oldName,
+                    new_name: newName.trim()
+                })
+            })
+            .then(function(resp) { return resp.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    showToast('Tag renamed successfully');
+                    setTimeout(function() { location.reload(); }, 500);
+                } else {
+                    showToast('Error: ' + (data.error || 'Failed to rename tag'), true);
+                }
+            })
+            .catch(function() {
+                showToast('Network error. Please try again.', true);
+            });
+        }
+
+        function deleteTag(tagName) {
+            if (!confirm('Are you sure you want to delete the tag "' + tagName + '" from all items? This cannot be undone.')) return;
+
+            fetch('/api/delete-tag/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    tag_name: tagName
+                })
+            })
+            .then(function(resp) { return resp.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    showToast('Tag deleted successfully');
+                    setTimeout(function() { location.reload(); }, 500);
+                } else {
+                    showToast('Error: ' + (data.error || 'Failed to delete tag'), true);
+                }
+            })
+            .catch(function() {
+                showToast('Network error. Please try again.', true);
+            });
+        }
+    </script>
+</body>
+</html>

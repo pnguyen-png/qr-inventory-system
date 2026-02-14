@@ -1,0 +1,245 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire &amp; Risk Alliance - Shipment History</title>
+    <style>
+        :root {
+            --bg-primary: #f5f0eb;
+            --bg-card: #fff;
+            --text-primary: #1a1a2e;
+            --text-secondary: #64748b;
+            --border-color: #e5e7eb;
+            --bg-input: #fff;
+            --bg-hover: #f9fafb;
+        }
+        body.dark-mode {
+            --bg-primary: #111827;
+            --bg-card: #1f2937;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --border-color: #374151;
+            --bg-input: #374151;
+            --bg-hover: #374151;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d1518 100%);
+            color: #fff;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #b8860b;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #fff;
+        }
+        .header-brand img {
+            height: 44px;
+            width: auto;
+        }
+        .header-brand-text h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+        }
+        .header-brand-text .subtitle {
+            font-size: 0.7rem;
+            color: #b8860b;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header-right a {
+            color: #b8860b;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .header-right a:hover {
+            text-decoration: underline;
+            color: #d4a017;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .page-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+        .table-wrap {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        thead {
+            background: #8b1a1a;
+        }
+        th {
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #fff;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            color: var(--text-primary);
+        }
+        tr:hover td {
+            background: var(--bg-hover);
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .shipment-link {
+            color: #8b1a1a;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .shipment-link:hover {
+            text-decoration: underline;
+        }
+        body.dark-mode .shipment-link {
+            color: #e2a04a;
+        }
+        .item-count-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #dcfce7;
+            color: #166534;
+        }
+        body.dark-mode .item-count-badge {
+            background: #064e3b;
+            color: #6ee7b7;
+        }
+        .empty-state {
+            padding: 60px 24px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+                padding: 10px 12px;
+            }
+            .header-brand img { height: 36px; }
+            .header-brand-text h1 { font-size: 0.95rem; }
+            .container { padding: 12px 8px; }
+            .page-title { font-size: 1.2rem; }
+            .table-wrap { border-radius: 8px; }
+            table { font-size: 0.75rem; }
+            th { padding: 8px 6px; font-size: 0.65rem; }
+            td { padding: 8px 6px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/dashboard/" class="header-brand">
+            <img src="{% static 'inventory/img/logo.png' %}" alt="Fire &amp; Risk Alliance">
+            <div class="header-brand-text">
+                <h1>Fire &amp; Risk Alliance</h1>
+                <div class="subtitle">Inventory Management System</div>
+            </div>
+        </a>
+        <div class="header-right">
+            <a href="/dashboard/">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2 class="page-title">Shipment History</h2>
+        <p class="page-subtitle">All past shipments grouped by pallet</p>
+
+        {% if shipments %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Manufacturer</th>
+                        <th>Pallet ID</th>
+                        <th>Project #</th>
+                        <th>Items</th>
+                        <th>Date Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for shipment in shipments %}
+                    <tr>
+                        <td>
+                            <a class="shipment-link" href="/dashboard/?pallet={{ shipment.pallet_id }}">
+                                {{ shipment.manufacturer }}
+                            </a>
+                        </td>
+                        <td>
+                            <a class="shipment-link" href="/dashboard/?pallet={{ shipment.pallet_id }}">
+                                {{ shipment.pallet_id }}
+                            </a>
+                        </td>
+                        <td>{{ shipment.project_number|default:"-" }}</td>
+                        <td>
+                            <span class="item-count-badge">{{ shipment.item_count }}</span>
+                        </td>
+                        <td>{{ shipment.created|date:"M d, Y H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h3>No shipments recorded yet</h3>
+            <p><a href="/add-shipment/" style="color:#8b1a1a;">Add a shipment</a> to start tracking inventory.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

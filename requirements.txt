@@ -8,3 +8,4 @@ pillow
 requests
 openpyxl
 python-barcode
+qrcode

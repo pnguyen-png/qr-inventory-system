@@ -12,6 +12,8 @@ urlpatterns = [
     path('scan/', views.scanner_landing, name='scanner_landing'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('item/<int:item_id>/history/', views.item_history, name='item_history'),
+    path('shipments/', views.shipment_history, name='shipment_history'),
+    path('tags/', views.tag_management, name='tag_management'),
 
     # Shipment form (replaces Microsoft Form + Excel script)
     path('add-shipment/', views.add_shipment, name='add_shipment'),
@@ -26,6 +28,7 @@ urlpatterns = [
     # Bulk operations
     path('api/bulk-update-status/', views.bulk_update_status, name='bulk_update_status'),
     path('api/bulk-archive/', views.bulk_archive, name='bulk_archive'),
+    path('api/bulk-edit/', views.bulk_edit, name='bulk_edit'),
 
     # Edit item
     path('api/edit-item/', views.edit_item, name='edit_item'),
@@ -34,13 +37,18 @@ urlpatterns = [
     path('api/upload-photo/', views.upload_photo, name='upload_photo'),
     path('api/delete-photo/', views.delete_photo, name='delete_photo'),
 
+    # Tags
+    path('api/rename-tag/', views.rename_tag, name='rename_tag'),
+    path('api/delete-tag/', views.delete_tag, name='delete_tag'),
+
     # Next pallet ID
     path('api/next-pallet/', views.next_pallet_api, name='next_pallet'),
 
     # Archive
     path('api/archive-item/', views.archive_item, name='archive_item'),
 
-    # Labeled QR code image download
+    # QR code images (local generation)
+    path('qr/<int:item_id>/code.png', views.generate_qr_image, name='generate_qr_image'),
     path('qr/<int:item_id>/labeled.png', views.generate_labeled_qr, name='generate_labeled_qr'),
 
     # Pallet-specific QR download

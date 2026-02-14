@@ -470,6 +470,74 @@
             .toolbar-group { grid-template-columns: 1fr; }
         }
 
+        /* Dark mode toggle button */
+        .dark-toggle {
+            background: none; border: 1px solid #b8860b; color: #b8860b;
+            padding: 4px 10px; border-radius: 6px; font-size: 0.75rem;
+            cursor: pointer; font-weight: 600;
+        }
+        .dark-toggle:hover { background: rgba(184,134,11,0.2); }
+
+        /* Dark mode overrides */
+        body.dark-mode { background: #111827; color: #f3f4f6; }
+        body.dark-mode .summary-card { background: #1f2937; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        body.dark-mode .summary-card .label { color: #9ca3af; }
+        body.dark-mode .table-wrap { background: #1f2937; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        body.dark-mode thead { background: #374151; }
+        body.dark-mode th { color: #9ca3af; border-bottom-color: #4b5563; }
+        body.dark-mode td { border-bottom-color: #374151; color: #d1d5db; }
+        body.dark-mode tr:hover td { background: #374151; }
+        body.dark-mode tr.selected td { background: #1e3a5f; }
+        body.dark-mode .toolbar .btn-tool { background: #374151; color: #f3f4f6; border-color: #4b5563; }
+        body.dark-mode .toolbar .btn-tool:hover { background: #4b5563; }
+        body.dark-mode .toolbar .btn-tool.primary { background: #8b1a1a; color: #fff; }
+        body.dark-mode .filters input, body.dark-mode .filters select { background: #374151; color: #f3f4f6; border-color: #4b5563; }
+        body.dark-mode .pallet-group-row td { background: #374151 !important; color: #f3f4f6; border-bottom-color: #4b5563; }
+        body.dark-mode .pallet-group-row:hover td { background: #4b5563 !important; }
+        body.dark-mode .view-col { background: #1f2937; }
+        body.dark-mode thead .view-col { background: #374151; }
+        body.dark-mode tr:hover .view-col { background: #374151; }
+        body.dark-mode tr.selected .view-col { background: #1e3a5f; }
+        body.dark-mode .tab { color: #9ca3af; }
+        body.dark-mode .tab.active { color: #f3f4f6; }
+        body.dark-mode .tabs { border-bottom-color: #374151; }
+        body.dark-mode .bulk-bar select, body.dark-mode .bulk-bar input { background: #374151; color: #f3f4f6; border-color: #4b5563; }
+        body.dark-mode .modal { background: #1f2937; }
+        body.dark-mode .modal-body { color: #f3f4f6; }
+        body.dark-mode .desc-cell { color: #d1d5db; }
+        body.dark-mode .damage-no { color: #4ade80; }
+        body.dark-mode .view-link { color: #f87171; }
+        body.dark-mode .empty-state { color: #6b7280; }
+        body.dark-mode .empty-state h3 { color: #9ca3af; }
+        body.dark-mode .qr-thumb { border-color: #4b5563; }
+        body.dark-mode .overdue-banner { background: linear-gradient(135deg, #78350f, #451a03); border-color: #b45309; }
+        body.dark-mode .overdue-banner .text { color: #fde68a; }
+        body.dark-mode .activity-feed { background: #1f2937; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        body.dark-mode .activity-item { border-bottom-color: #374151; }
+        body.dark-mode .activity-item .activity-time { color: #6b7280; }
+
+        /* Activity Feed */
+        .activity-feed {
+            background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px; margin-top: 24px;
+        }
+        .activity-feed h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 16px; color: #374151; text-transform: uppercase; letter-spacing: 0.05em; }
+        .activity-item {
+            display: flex; align-items: flex-start; gap: 12px;
+            padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.8rem;
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 4px;
+            font-size: 0.65rem; font-weight: 700; text-transform: uppercase; white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .activity-badge.status { background: #dbeafe; color: #1e40af; }
+        .activity-badge.edit { background: #fef3c7; color: #92400e; }
+        .activity-badge.created { background: #dcfce7; color: #166534; }
+        .activity-text { flex: 1; color: #374151; }
+        .activity-time { color: #94a3b8; font-size: 0.7rem; white-space: nowrap; flex-shrink: 0; }
+
         /* --- Print Labels Layout for Brother QL-820NWB (62mm x 62mm, 2.4" roll) --- */
         .print-labels { display: none; }
         @media print {
@@ -534,6 +602,7 @@
             </div>
         </a>
         <div class="header-right">
+            <button class="dark-toggle" onclick="toggleDarkMode()" id="darkToggle">Dark Mode</button>
             <p>{{ items|length }} item{{ items|length|pluralize }} {% if show_archived %}in archive{% else %}in inventory{% endif %}</p>
         </div>
     </div>
@@ -588,6 +657,8 @@
                 <button class="btn-tool" onclick="printAllQRLabels()">Print Labels</button>
                 <a class="btn-tool" href="/export/csv/{% if show_archived %}?archived=1{% endif %}">Export CSV</a>
                 <a class="btn-tool" href="/export/pdf/{% if show_archived %}?archived=1{% endif %}" target="_blank">Print Report</a>
+                <a class="btn-tool" href="/shipments/">Shipments</a>
+                <a class="btn-tool" href="/tags/">Manage Tags</a>
             </div>
             <div class="toolbar-group" style="margin-left:auto;">
                 {% if show_archived %}
@@ -614,7 +685,7 @@
 
         <!-- Filters -->
         <div class="filters">
-            <input type="text" id="searchInput" placeholder="Search by manufacturer, pallet, location..." oninput="filterTable()">
+            <input type="text" id="searchInput" placeholder="Search by manufacturer, pallet, location..." oninput="debouncedFilter()">
             <select id="statusFilter" onchange="filterTable()">
                 <option value="">All Statuses</option>
                 <option value="checked_in">Checked In</option>
@@ -638,6 +709,20 @@
             </select>
             <input type="text" id="bulkChangedBy" placeholder="Your name" style="width:150px;">
             <button class="btn-bulk apply" onclick="applyBulkStatus()">Apply Status</button>
+            <span style="border-left:1px solid #4b5563; height:24px;"></span>
+            <select id="bulkLocation" style="width:140px;">
+                <option value="">Set Location...</option>
+                {% for loc in location_choices %}
+                <option value="{{ loc }}">{{ loc }}</option>
+                {% endfor %}
+            </select>
+            <select id="bulkDamaged" style="width:120px;">
+                <option value="">Set Damage...</option>
+                <option value="true">Damaged: Yes</option>
+                <option value="false">Damaged: No</option>
+            </select>
+            <button class="btn-bulk apply" onclick="applyBulkEdit()">Apply Edit</button>
+            <span style="border-left:1px solid #4b5563; height:24px;"></span>
             {% if show_archived %}
             <button class="btn-bulk archive" onclick="applyBulkArchive(false)">Unarchive Selected</button>
             {% else %}
@@ -721,6 +806,38 @@
         </div>
         {% endif %}
     </div>
+
+    <!-- Activity Feed (#19) -->
+        {% if recent_activity %}
+        <div class="activity-feed">
+            <h3>Recent Activity</h3>
+            {% for entry in recent_activity %}
+            <div class="activity-item">
+                {% if entry.entry_type == 'status' %}
+                <span class="activity-badge status">Status</span>
+                <span class="activity-text">
+                    <strong>{{ entry.item.manufacturer }}</strong> Box #{{ entry.item.box_id }}:
+                    {{ entry.old_status_label }} &rarr; {{ entry.new_status_label }}
+                    {% if entry.changed_by %}<em style="color:#7c3aed;"> by {{ entry.changed_by }}</em>{% endif %}
+                </span>
+                {% elif entry.change_type == 'created' %}
+                <span class="activity-badge created">Created</span>
+                <span class="activity-text">
+                    <strong>{{ entry.item.manufacturer }}</strong> Box #{{ entry.item.box_id }} checked in
+                </span>
+                {% else %}
+                <span class="activity-badge edit">Edit</span>
+                <span class="activity-text">
+                    <strong>{{ entry.item.manufacturer }}</strong> Box #{{ entry.item.box_id }}:
+                    {{ entry.field_label }} changed
+                    {% if entry.changed_by %}<em style="color:#7c3aed;"> by {{ entry.changed_by }}</em>{% endif %}
+                </span>
+                {% endif %}
+                <span class="activity-time">{{ entry.changed_at|timesince }} ago</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
 
     <!-- QR Scanner Modal -->
     <div class="modal-overlay" id="scannerModal">
@@ -864,6 +981,9 @@
 
             if (!ids.length) return showToast('No items selected', true);
             if (!status) return showToast('Select a status', true);
+
+            const statusLabels = {checked_in:'Checked In',checked_out:'Checked Out',tested:'Tested',will_be_reused:'Will Be Reused',recycling:'Recycling'};
+            if (!confirm(`Change status of ${ids.length} item(s) to "${statusLabels[status] || status}"?`)) return;
 
             try {
                 const resp = await fetch('/api/bulk-update-status/', {
@@ -1286,8 +1406,7 @@
             const projectNum = row.children[3].textContent.trim();
             const boxId = row.children[4].textContent.trim();
             const itemId = row.dataset.id;
-            const siteUrl = window.location.origin;
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(siteUrl + '/scan/?id=' + itemId)}`;
+            const qrUrl = `/qr/${itemId}/code.png`;
 
             return `<div class="print-label">
                 <div class="qr-box"><img src="${qrUrl}" alt="QR"></div>
@@ -1344,6 +1463,62 @@
             const rows = Array.from(document.querySelectorAll(`#inventoryTable tbody tr.pallet-item[data-pallet="${key}"]`));
             if (!rows.length) { showToast('No items found for this pallet', true); return; }
             printLabelsFromRows(rows);
+        }
+
+        // ---- #4: Debounced search ----
+        let debounceTimer = null;
+        function debouncedFilter() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(filterTable, 200);
+        }
+
+        // ---- #7: Bulk edit (location, damage) ----
+        async function applyBulkEdit() {
+            const ids = getSelectedIds();
+            if (!ids.length) return showToast('No items selected', true);
+
+            const bulkLoc = document.getElementById('bulkLocation').value;
+            const damaged = document.getElementById('bulkDamaged').value;
+            const changedBy = document.getElementById('bulkChangedBy').value;
+
+            const fields = {};
+            if (bulkLoc) fields.location = bulkLoc;
+            if (damaged !== '') fields.damaged = damaged === 'true';
+
+            if (!Object.keys(fields).length) return showToast('Select a field to change', true);
+
+            const changes = [];
+            if (fields.location) changes.push('location to ' + bulkLoc);
+            if ('damaged' in fields) changes.push('damage to ' + (fields.damaged ? 'Yes' : 'No'));
+            if (!confirm(`Update ${ids.length} item(s): ${changes.join(', ')}?`)) return;
+
+            try {
+                const resp = await fetch('/api/bulk-edit/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({item_ids: ids, fields: fields, changed_by: changedBy})
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    showToast('Error: ' + data.error, true);
+                }
+            } catch (err) {
+                showToast('Network error', true);
+            }
+        }
+
+        // ---- #15: Dark mode ----
+        function toggleDarkMode() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDark ? '1' : '0');
+            document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        }
+        // Apply on load
+        if (localStorage.getItem('darkMode') === '1') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkToggle').textContent = 'Light Mode';
         }
     </script>
 </body>
