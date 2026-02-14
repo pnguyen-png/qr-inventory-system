@@ -853,7 +853,12 @@
             const chip = document.createElement('span');
             chip.className = 'tag-chip active';
             chip.dataset.tag = val;
-            chip.innerHTML = val + '<span class="remove-tag" onclick="event.stopPropagation(); this.parentElement.remove(); updateTagsHidden();">&times;</span>';
+            chip.textContent = val;
+            const removeBtn = document.createElement('span');
+            removeBtn.className = 'remove-tag';
+            removeBtn.textContent = '\u00D7';
+            removeBtn.onclick = function(e) { e.stopPropagation(); chip.remove(); updateTagsHidden(); };
+            chip.appendChild(removeBtn);
             chip.onclick = function() { toggleTag(this); };
             document.getElementById('tagChips').appendChild(chip);
             updateTagsHidden();
@@ -878,7 +883,12 @@
                         const c = document.createElement('span');
                         c.className = 'tag-chip active';
                         c.dataset.tag = t;
-                        c.innerHTML = t + '<span class="remove-tag" onclick="event.stopPropagation(); this.parentElement.remove(); updateTagsHidden();">&times;</span>';
+                        c.textContent = t;
+                        const rb = document.createElement('span');
+                        rb.className = 'remove-tag';
+                        rb.textContent = '\u00D7';
+                        rb.onclick = function(e) { e.stopPropagation(); c.remove(); updateTagsHidden(); };
+                        c.appendChild(rb);
                         c.onclick = function() { toggleTag(this); };
                         document.getElementById('tagChips').appendChild(c);
                     }
@@ -928,12 +938,12 @@
                     body: JSON.stringify(payload)
                 });
                 const data = await resp.json();
-                if (data.success) {
+                if (resp.ok && data.success) {
                     // Reload the page to show the saved data from the database
                     location.reload();
                     return;
                 } else {
-                    msgEl.textContent = 'Error: ' + (data.error || 'Unknown');
+                    msgEl.textContent = 'Error: ' + (data.error || 'Save failed. Please check your input.');
                     msgEl.className = 'edit-message error';
                 }
             } catch (err) {

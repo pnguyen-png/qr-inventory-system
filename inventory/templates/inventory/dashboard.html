@@ -1023,7 +1023,7 @@
                 const groupRow = document.createElement('tr');
                 groupRow.className = 'pallet-group-row';
                 groupRow.dataset.palletGroup = key;
-                groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>${mfr} - Pallet ${palletId}<span class="group-count">(${groupRows.length} item${groupRows.length === 1 ? '' : 's'})</span><button class="pallet-dl-btn" onclick="event.stopPropagation(); printPalletQRLabels('${escapeHtml(mfr)}', '${escapeHtml(palletId)}');" title="Print labels for this pallet">Print</button></td>`;
+                groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>${escapeHtml(mfr)} - Pallet ${escapeHtml(palletId)}<span class="group-count">(${groupRows.length} item${groupRows.length === 1 ? '' : 's'})</span><button class="pallet-dl-btn" onclick="event.stopPropagation(); printPalletQRLabels('${escapeHtml(mfr)}', '${escapeHtml(palletId)}');" title="Print labels for this pallet">Print</button></td>`;
 
                 // Insert before the first row of this group
                 firstRow.parentNode.insertBefore(groupRow, firstRow);
@@ -1304,19 +1304,30 @@
             const container = document.getElementById('printLabels');
             container.innerHTML = rows.map(r => buildLabelHTML(r)).join('');
 
-            // Wait briefly for QR images to load before printing
+            // Wait for QR images to load before printing, with a timeout safety net
             const images = container.querySelectorAll('img');
             let loaded = 0;
+            let printed = false;
             const total = images.length;
             if (total === 0) { window.print(); return; }
+
+            function triggerPrint() {
+                if (printed) return;
+                printed = true;
+                window.print();
+            }
+
+            // Safety timeout — print after 10 seconds even if images haven't loaded
+            setTimeout(triggerPrint, 10000);
+
             images.forEach(function(img) {
                 if (img.complete) {
                     loaded++;
-                    if (loaded === total) window.print();
+                    if (loaded === total) triggerPrint();
                 } else {
                     img.onload = img.onerror = function() {
                         loaded++;
-                        if (loaded === total) window.print();
+                        if (loaded === total) triggerPrint();
                     };
                 }
             });

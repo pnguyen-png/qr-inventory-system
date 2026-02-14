@@ -569,6 +569,10 @@ def archive_item(request):
         archive = data.get('archive', True)
 
         item = get_object_or_404(InventoryItem, id=item_id)
+        was_archived = item.archived
+        if was_archived == archive:
+            return JsonResponse({'success': True, 'archived': item.archived})
+
         item.archived = archive
         item.archived_at = timezone.now() if archive else None
         item.save()
@@ -577,7 +581,7 @@ def archive_item(request):
             item=item,
             change_type='field_edit',
             field_name='archived',
-            old_value='No' if archive else 'Yes',
+            old_value='Yes' if was_archived else 'No',
             new_value='Yes' if archive else 'No',
         )
 
@@ -596,10 +600,12 @@ def bulk_archive(request):
         archive = data.get('archive', True)
 
         now = timezone.now() if archive else None
-        items = InventoryItem.objects.filter(id__in=item_ids)
+        # Only update items that actually need changing
+        items = InventoryItem.objects.filter(id__in=item_ids).exclude(archived=archive)
+        changed_ids = list(items.values_list('id', flat=True))
         items.update(archived=archive, archived_at=now)
 
-        for item in InventoryItem.objects.filter(id__in=item_ids):
+        for item in InventoryItem.objects.filter(id__in=changed_ids):
             ChangeLog.objects.create(
                 item=item,
                 change_type='field_edit',
@@ -608,7 +614,7 @@ def bulk_archive(request):
                 new_value='Yes' if archive else 'No',
             )
 
-        return JsonResponse({'success': True, 'updated_count': len(item_ids)})
+        return JsonResponse({'success': True, 'updated_count': len(changed_ids)})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
@@ -957,7 +963,10 @@ def edit_item(request):
         }
 
         if 'content' in data:
-            item.content = int(data['content'])
+            try:
+                item.content = int(data['content'])
+            except (ValueError, TypeError):
+                return JsonResponse({'success': False, 'error': 'Contents must be a whole number.'}, status=400)
         if 'damaged' in data:
             item.damaged = data['damaged']
         if 'location' in data:
