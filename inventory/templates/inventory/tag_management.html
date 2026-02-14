@@ -14,6 +14,14 @@
             --border-color: #e5e7eb;
             --bg-input: #fff;
             --bg-hover: #f9fafb;
+            --accent-gold: #b8860b;
+            --accent-gold-light: #f5ecd5;
+            --accent-red: #dc2626;
+            --accent-red-light: #fee2e2;
+            --accent-green: #16a34a;
+            --accent-blue: #3b82f6;
+            --accent-blue-light: #dbeafe;
+            --modal-overlay: rgba(0,0,0,0.5);
         }
         body.dark-mode {
             --bg-primary: #111827;
@@ -23,6 +31,10 @@
             --border-color: #374151;
             --bg-input: #374151;
             --bg-hover: #374151;
+            --accent-gold-light: #3d3520;
+            --accent-red-light: #3b1c1c;
+            --accent-blue-light: #1e2a4a;
+            --modal-overlay: rgba(0,0,0,0.7);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -86,37 +98,157 @@
             padding: 24px 16px;
         }
 
+        .page-header {
+            margin-bottom: 24px;
+        }
         .page-title {
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--text-primary);
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         .page-subtitle {
-            font-size: 0.875rem;
+            font-size: 0.85rem;
             color: var(--text-secondary);
-            margin-bottom: 24px;
         }
 
+        /* Controls bar */
+        .controls-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 180px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-box input:focus {
+            border-color: var(--accent-gold);
+        }
+        .search-box input::placeholder {
+            color: var(--text-secondary);
+        }
+        .search-icon {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+        .sort-select {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            cursor: pointer;
+            outline: none;
+        }
+        .sort-select:focus {
+            border-color: var(--accent-gold);
+        }
+
+        /* Layout toggle */
+        .layout-toggle {
+            display: flex;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .layout-btn {
+            padding: 8px 12px;
+            border: none;
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s, color 0.2s;
+        }
+        .layout-btn:first-child {
+            border-right: 1px solid var(--border-color);
+        }
+        .layout-btn.active {
+            background: var(--accent-gold);
+            color: #fff;
+        }
+        .layout-btn:hover:not(.active) {
+            background: var(--bg-hover);
+        }
+
+        /* Section headers */
+        .section-header {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 12px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-header .section-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        /* Grid layout */
         .tag-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
+            gap: 14px;
+            margin-bottom: 28px;
         }
 
+        /* List layout */
+        .tag-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+
+        /* Tag card (grid mode) */
         .tag-card {
             background: var(--bg-card);
             border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 18px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: box-shadow 0.2s;
+            gap: 12px;
+            transition: box-shadow 0.2s, transform 0.15s;
         }
         .tag-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+
+        /* Tag card (list mode) */
+        .tag-list .tag-card {
+            border-radius: 10px;
+            padding: 14px 20px;
         }
 
         .tag-info {
@@ -124,78 +256,66 @@
             align-items: center;
             gap: 12px;
             min-width: 0;
+            flex: 1;
         }
-        .tag-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 999px;
-            font-size: 0.8rem;
+        .tag-name {
+            font-size: 0.95rem;
             font-weight: 600;
-            background: #e0e7ff;
-            color: #3730a3;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 160px;
+            color: var(--text-primary);
+            word-break: break-word;
         }
-        body.dark-mode .tag-badge {
-            background: #312e81;
-            color: #c7d2fe;
+        .tag-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
         }
         .tag-count {
             font-size: 0.75rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            background: var(--bg-primary);
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+        .tag-last-updated {
+            font-size: 0.7rem;
             color: var(--text-secondary);
             white-space: nowrap;
         }
 
         .tag-actions {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-shrink: 0;
         }
-        .btn-rename {
-            padding: 6px 12px;
-            border: 1px solid #b8860b;
+        .btn-icon {
+            width: 34px;
+            height: 34px;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            background: #fff;
-            color: #b8860b;
-            white-space: nowrap;
-        }
-        .btn-rename:hover {
-            background: #b8860b;
-            color: #fff;
-        }
-        body.dark-mode .btn-rename {
             background: var(--bg-card);
-        }
-        body.dark-mode .btn-rename:hover {
-            background: #b8860b;
-            color: #fff;
-        }
-        .btn-delete {
-            padding: 6px 12px;
-            border: 1px solid #dc2626;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            color: var(--text-secondary);
             cursor: pointer;
-            background: #fff;
-            color: #dc2626;
-            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
-        .btn-delete:hover {
-            background: #dc2626;
-            color: #fff;
+        .btn-icon:hover {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+            background: var(--accent-gold-light);
         }
-        body.dark-mode .btn-delete {
-            background: var(--bg-card);
+        .btn-icon.delete:hover {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+            background: var(--accent-red-light);
         }
-        body.dark-mode .btn-delete:hover {
-            background: #dc2626;
-            color: #fff;
+        .btn-icon svg {
+            width: 16px;
+            height: 16px;
         }
 
         .empty-state {
@@ -206,6 +326,116 @@
         .empty-state h3 {
             margin-bottom: 8px;
             color: var(--text-secondary);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 16px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        /* Confirmation modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--modal-overlay);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 28px 24px;
+            max-width: 440px;
+            width: 90%;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+        }
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        .modal-body {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .modal-warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 0.82rem;
+            color: #92400e;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        body.dark-mode .modal-warning {
+            background: #3d3520;
+            border-color: #b8860b;
+            color: #fbbf24;
+        }
+        .modal-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.88rem;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            margin-bottom: 18px;
+            outline: none;
+        }
+        .modal-input:focus {
+            border-color: var(--accent-gold);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .modal-btn.cancel {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+        .modal-btn.cancel:hover {
+            background: var(--bg-hover);
+        }
+        .modal-btn.confirm {
+            background: var(--accent-gold);
+            color: #fff;
+            border-color: var(--accent-gold);
+        }
+        .modal-btn.confirm:hover {
+            opacity: 0.9;
+        }
+        .modal-btn.confirm-delete {
+            background: var(--accent-red);
+            color: #fff;
+            border-color: var(--accent-red);
+        }
+        .modal-btn.confirm-delete:hover {
+            opacity: 0.9;
         }
 
         /* Toast notification */
@@ -221,7 +451,7 @@
             color: #fff;
             z-index: 9999;
             transition: opacity 0.3s;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             opacity: 0;
             pointer-events: none;
         }
@@ -238,26 +468,27 @@
             .container { padding: 12px 8px; }
             .tag-grid {
                 grid-template-columns: 1fr;
-                gap: 12px;
+                gap: 10px;
             }
-            .tag-card {
-                padding: 14px 16px;
+            .controls-bar {
+                gap: 8px;
             }
             .page-title { font-size: 1.2rem; }
         }
 
         @media (max-width: 480px) {
             .tag-card {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
+                flex-wrap: wrap;
+                padding: 14px 16px;
+            }
+            .tag-meta {
+                order: 3;
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 4px;
             }
             .tag-actions {
-                width: 100%;
-            }
-            .btn-rename, .btn-delete {
-                flex: 1;
-                text-align: center;
+                margin-left: auto;
             }
         }
     </style>
@@ -280,24 +511,107 @@
     </div>
 
     <div class="container">
-        <h2 class="page-title">Tag Management</h2>
-        <p class="page-subtitle">Manage all tags used across your inventory items. Rename or delete tags in bulk.</p>
+        <div class="page-header">
+            <h2 class="page-title">Tag Management</h2>
+            <p class="page-subtitle">Manage all tags used across your inventory. Changes apply to every tagged item.</p>
+        </div>
 
         {% if tags %}
-        <div class="tag-grid">
-            {% for tag_name, count in tags %}
-            <div class="tag-card" data-tag="{{ tag_name }}">
+        <!-- Controls -->
+        <div class="controls-bar">
+            <div class="search-box">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="tagSearch" placeholder="Search tags..." oninput="filterTags()">
+            </div>
+            <select class="sort-select" id="tagSort" onchange="sortTags()">
+                <option value="count-desc">Most used</option>
+                <option value="count-asc">Least used</option>
+                <option value="name-asc">A &rarr; Z</option>
+                <option value="name-desc">Z &rarr; A</option>
+                <option value="recent">Recently updated</option>
+            </select>
+            <div class="layout-toggle">
+                <button class="layout-btn active" id="btnGrid" onclick="setLayout('grid')" title="Grid view">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                </button>
+                <button class="layout-btn" id="btnList" onclick="setLayout('list')" title="List view">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Top Tags Section -->
+        {% if top_tags %}
+        <div class="section-header" id="sectionTop">
+            <span>Top Tags</span>
+            <span class="section-line"></span>
+        </div>
+        <div class="tag-grid" id="topTagsContainer">
+            {% for tag in top_tags %}
+            <div class="tag-card" data-tag="{{ tag.name }}" data-count="{{ tag.count }}" data-updated="{{ tag.last_updated|date:'U' }}">
                 <div class="tag-info">
-                    <span class="tag-badge" title="{{ tag_name }}">{{ tag_name }}</span>
-                    <span class="tag-count">{{ count }} item{{ count|pluralize }}</span>
+                    <span class="tag-name">{{ tag.name }}</span>
+                </div>
+                <div class="tag-meta">
+                    <span class="tag-count">{{ tag.count }} item{{ tag.count|pluralize }}</span>
+                    {% if tag.last_updated %}
+                    <span class="tag-last-updated">Updated {{ tag.last_updated|timesince }} ago</span>
+                    {% endif %}
                 </div>
                 <div class="tag-actions">
-                    <button class="btn-rename" onclick="renameTag('{{ tag_name|escapejs }}')">Rename</button>
-                    <button class="btn-delete" onclick="deleteTag('{{ tag_name|escapejs }}')">Delete</button>
+                    <button class="btn-icon edit" onclick="openRenameModal('{{ tag.name|escapejs }}', {{ tag.count }})" title="Rename tag">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn-icon delete" onclick="openDeleteModal('{{ tag.name|escapejs }}', {{ tag.count }})" title="Delete tag">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    </button>
                 </div>
             </div>
             {% endfor %}
         </div>
+        {% endif %}
+
+        <!-- Other Tags Section -->
+        {% if other_tags %}
+        <div class="section-header" id="sectionOther">
+            <span>Other Tags</span>
+            <span class="section-line"></span>
+        </div>
+        <div class="tag-grid" id="otherTagsContainer">
+            {% for tag in other_tags %}
+            <div class="tag-card" data-tag="{{ tag.name }}" data-count="{{ tag.count }}" data-updated="{{ tag.last_updated|date:'U' }}">
+                <div class="tag-info">
+                    <span class="tag-name">{{ tag.name }}</span>
+                </div>
+                <div class="tag-meta">
+                    <span class="tag-count">{{ tag.count }} item{{ tag.count|pluralize }}</span>
+                    {% if tag.last_updated %}
+                    <span class="tag-last-updated">Updated {{ tag.last_updated|timesince }} ago</span>
+                    {% endif %}
+                </div>
+                <div class="tag-actions">
+                    <button class="btn-icon edit" onclick="openRenameModal('{{ tag.name|escapejs }}', {{ tag.count }})" title="Rename tag">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="btn-icon delete" onclick="openDeleteModal('{{ tag.name|escapejs }}', {{ tag.count }})" title="Delete tag">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Shown when only top tags exist (no other tags) and top_tags is empty too -->
+        {% if not top_tags and not other_tags %}
+        <div class="empty-state">
+            <h3>No tags found</h3>
+            <p>Tags will appear here once you add them to inventory items.</p>
+        </div>
+        {% endif %}
+
+        <div class="no-results" id="noResults">No tags match your search.</div>
+
         {% else %}
         <div class="empty-state">
             <h3>No tags found</h3>
@@ -306,16 +620,60 @@
         {% endif %}
     </div>
 
+    <!-- Rename modal -->
+    <div class="modal-overlay" id="renameModal">
+        <div class="modal-box">
+            <div class="modal-title">Rename Tag</div>
+            <div class="modal-body">
+                Enter a new name for <strong id="renameOldLabel"></strong>.
+            </div>
+            <div class="modal-warning">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>This will rename the tag on <strong id="renameItemCount"></strong> item(s). The change applies to all tagged items across your inventory.</span>
+            </div>
+            <input type="text" class="modal-input" id="renameInput" placeholder="New tag name">
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="closeModal('renameModal')">Cancel</button>
+                <button class="modal-btn confirm" onclick="confirmRename()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box">
+            <div class="modal-title">Delete Tag</div>
+            <div class="modal-body">
+                Are you sure you want to delete <strong id="deleteTagLabel"></strong>?
+            </div>
+            <div class="modal-warning">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>This will remove the tag from <strong id="deleteItemCount"></strong> item(s). This change cannot be undone and applies to all tagged items.</span>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" onclick="closeModal('deleteModal')">Cancel</button>
+                <button class="modal-btn confirm-delete" onclick="confirmDelete()">Delete Tag</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script>
+        // State
+        var currentRenameTag = '';
+        var currentDeleteTag = '';
+        var currentLayout = 'grid';
+
+        // CSRF
         function getCSRFToken() {
-            const input = document.querySelector('#csrfForm input[name="csrfmiddlewaretoken"]');
+            var input = document.querySelector('#csrfForm input[name="csrfmiddlewaretoken"]');
             return input ? input.value : '';
         }
 
+        // Toast
         function showToast(message, isError) {
-            const toast = document.getElementById('toast');
+            var toast = document.getElementById('toast');
             toast.style.background = isError ? '#dc2626' : '#16a34a';
             toast.textContent = message;
             toast.style.opacity = '1';
@@ -326,61 +684,189 @@
             }, 3000);
         }
 
-        function renameTag(oldName) {
-            const newName = prompt('Enter a new name for the tag "' + oldName + '":', oldName);
-            if (!newName || newName.trim() === '' || newName.trim() === oldName) return;
+        // Layout toggle
+        function setLayout(mode) {
+            currentLayout = mode;
+            var containers = document.querySelectorAll('#topTagsContainer, #otherTagsContainer');
+            var btnGrid = document.getElementById('btnGrid');
+            var btnList = document.getElementById('btnList');
+            if (mode === 'list') {
+                containers.forEach(function(c) {
+                    c.classList.remove('tag-grid');
+                    c.classList.add('tag-list');
+                });
+                btnList.classList.add('active');
+                btnGrid.classList.remove('active');
+            } else {
+                containers.forEach(function(c) {
+                    c.classList.remove('tag-list');
+                    c.classList.add('tag-grid');
+                });
+                btnGrid.classList.add('active');
+                btnList.classList.remove('active');
+            }
+        }
 
+        // Search / filter
+        function filterTags() {
+            var query = document.getElementById('tagSearch').value.toLowerCase().trim();
+            var cards = document.querySelectorAll('.tag-card');
+            var anyVisible = false;
+            cards.forEach(function(card) {
+                var name = card.getAttribute('data-tag').toLowerCase();
+                if (name.indexOf(query) !== -1) {
+                    card.style.display = '';
+                    anyVisible = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            document.getElementById('noResults').style.display = anyVisible ? 'none' : 'block';
+
+            // Hide section headers if all cards in that section are hidden
+            var sections = [
+                { header: 'sectionTop', container: 'topTagsContainer' },
+                { header: 'sectionOther', container: 'otherTagsContainer' }
+            ];
+            sections.forEach(function(sec) {
+                var header = document.getElementById(sec.header);
+                var container = document.getElementById(sec.container);
+                if (!header || !container) return;
+                var visibleCards = container.querySelectorAll('.tag-card:not([style*="display: none"])');
+                header.style.display = visibleCards.length > 0 ? '' : 'none';
+            });
+        }
+
+        // Sort
+        function sortTags() {
+            var sortVal = document.getElementById('tagSort').value;
+            var containers = ['topTagsContainer', 'otherTagsContainer'];
+            containers.forEach(function(cid) {
+                var container = document.getElementById(cid);
+                if (!container) return;
+                var cards = Array.from(container.querySelectorAll('.tag-card'));
+                cards.sort(function(a, b) {
+                    var nameA = a.getAttribute('data-tag').toLowerCase();
+                    var nameB = b.getAttribute('data-tag').toLowerCase();
+                    var countA = parseInt(a.getAttribute('data-count')) || 0;
+                    var countB = parseInt(b.getAttribute('data-count')) || 0;
+                    var updA = parseInt(a.getAttribute('data-updated')) || 0;
+                    var updB = parseInt(b.getAttribute('data-updated')) || 0;
+                    switch(sortVal) {
+                        case 'count-desc': return countB - countA || nameA.localeCompare(nameB);
+                        case 'count-asc': return countA - countB || nameA.localeCompare(nameB);
+                        case 'name-asc': return nameA.localeCompare(nameB);
+                        case 'name-desc': return nameB.localeCompare(nameA);
+                        case 'recent': return updB - updA || nameA.localeCompare(nameB);
+                        default: return 0;
+                    }
+                });
+                cards.forEach(function(card) { container.appendChild(card); });
+            });
+        }
+
+        // Modal helpers
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function openRenameModal(tagName, count) {
+            currentRenameTag = tagName;
+            document.getElementById('renameOldLabel').textContent = '"' + tagName + '"';
+            document.getElementById('renameItemCount').textContent = count;
+            document.getElementById('renameInput').value = tagName;
+            document.getElementById('renameModal').classList.add('active');
+            setTimeout(function() {
+                document.getElementById('renameInput').focus();
+                document.getElementById('renameInput').select();
+            }, 100);
+        }
+
+        function openDeleteModal(tagName, count) {
+            currentDeleteTag = tagName;
+            document.getElementById('deleteTagLabel').textContent = '"' + tagName + '"';
+            document.getElementById('deleteItemCount').textContent = count;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        // Rename confirm
+        function confirmRename() {
+            var newName = document.getElementById('renameInput').value.trim();
+            if (!newName || newName === currentRenameTag) {
+                closeModal('renameModal');
+                return;
+            }
             fetch('/api/rename-tag/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCSRFToken()
                 },
-                body: JSON.stringify({
-                    old_name: oldName,
-                    new_name: newName.trim()
-                })
+                body: JSON.stringify({ old_name: currentRenameTag, new_name: newName })
             })
             .then(function(resp) { return resp.json(); })
             .then(function(data) {
+                closeModal('renameModal');
                 if (data.success) {
-                    showToast('Tag renamed successfully');
-                    setTimeout(function() { location.reload(); }, 500);
+                    showToast('Tag renamed to "' + newName + '" across ' + data.updated_count + ' item(s)');
+                    setTimeout(function() { location.reload(); }, 600);
                 } else {
                     showToast('Error: ' + (data.error || 'Failed to rename tag'), true);
                 }
             })
             .catch(function() {
+                closeModal('renameModal');
                 showToast('Network error. Please try again.', true);
             });
         }
 
-        function deleteTag(tagName) {
-            if (!confirm('Are you sure you want to delete the tag "' + tagName + '" from all items? This cannot be undone.')) return;
-
+        // Delete confirm
+        function confirmDelete() {
             fetch('/api/delete-tag/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCSRFToken()
                 },
-                body: JSON.stringify({
-                    tag_name: tagName
-                })
+                body: JSON.stringify({ tag_name: currentDeleteTag })
             })
             .then(function(resp) { return resp.json(); })
             .then(function(data) {
+                closeModal('deleteModal');
                 if (data.success) {
-                    showToast('Tag deleted successfully');
-                    setTimeout(function() { location.reload(); }, 500);
+                    showToast('Tag deleted from ' + data.updated_count + ' item(s)');
+                    setTimeout(function() { location.reload(); }, 600);
                 } else {
                     showToast('Error: ' + (data.error || 'Failed to delete tag'), true);
                 }
             })
             .catch(function() {
+                closeModal('deleteModal');
                 showToast('Network error. Please try again.', true);
             });
         }
+
+        // Enter key in rename input
+        document.getElementById('renameInput') && document.getElementById('renameInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') confirmRename();
+            if (e.key === 'Escape') closeModal('renameModal');
+        });
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) overlay.classList.remove('active');
+            });
+        });
+
+        // Escape key closes modals
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.active').forEach(function(m) {
+                    m.classList.remove('active');
+                });
+            }
+        });
     </script>
 </body>
 </html>

@@ -1388,16 +1388,34 @@ def shipment_history(request):
 
 def tag_management(request):
     """View and manage all tags across inventory."""
-    items = InventoryItem.objects.filter(archived=False).values_list('tags', flat=True)
+    items = InventoryItem.objects.filter(archived=False).values_list('tags', 'updated_at')
     tag_counts = {}
-    for tags_str in items:
+    tag_last_updated = {}
+    for tags_str, updated_at in items:
         if tags_str:
             for tag in tags_str.split(','):
                 tag = tag.strip()
                 if tag:
                     tag_counts[tag] = tag_counts.get(tag, 0) + 1
-    sorted_tags = sorted(tag_counts.items(), key=lambda x: (-x[1], x[0]))
-    return render(request, 'inventory/tag_management.html', {'tags': sorted_tags})
+                    if tag not in tag_last_updated or (updated_at and updated_at > tag_last_updated[tag]):
+                        tag_last_updated[tag] = updated_at
+    # Build list of dicts with name, count, last_updated
+    tag_list = []
+    for name, count in tag_counts.items():
+        tag_list.append({
+            'name': name,
+            'count': count,
+            'last_updated': tag_last_updated.get(name),
+        })
+    tag_list.sort(key=lambda x: (-x['count'], x['name']))
+    # Split into top tags (top 5) and other tags
+    top_tags = tag_list[:5]
+    other_tags = tag_list[5:]
+    return render(request, 'inventory/tag_management.html', {
+        'tags': tag_list,
+        'top_tags': top_tags,
+        'other_tags': other_tags,
+    })
 
 
 @csrf_exempt
