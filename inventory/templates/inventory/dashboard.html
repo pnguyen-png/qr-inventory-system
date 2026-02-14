@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fire &amp; Risk Alliance - Inventory Dashboard</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -74,18 +75,25 @@
         }
         .summary-card .number { font-size: 2.2rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
         .summary-card .label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; font-weight: 500; }
+        .summary-card .card-icon { font-size: 1.6rem; margin-bottom: 6px; opacity: 0.7; }
         .c-total { border-left-color: #1a1a2e; }
         .c-total .number { color: #1a1a2e; }
+        .c-total .card-icon { color: #1a1a2e; }
         .c-in { border-left-color: #16a34a; }
         .c-in .number { color: #16a34a; }
+        .c-in .card-icon { color: #16a34a; }
         .c-out { border-left-color: #f59e0b; }
         .c-out .number { color: #f59e0b; }
+        .c-out .card-icon { color: #f59e0b; }
         .c-damaged { border-left-color: #dc2626; }
         .c-damaged .number { color: #dc2626; }
+        .c-damaged .card-icon { color: #dc2626; }
         .c-overdue { border-left-color: #9333ea; }
         .c-overdue .number { color: #9333ea; }
+        .c-overdue .card-icon { color: #9333ea; }
         .c-archived { border-left-color: #64748b; }
         .c-archived .number { color: #64748b; }
+        .c-archived .card-icon { color: #64748b; }
 
         /* Toolbar */
         .toolbar {
@@ -323,6 +331,22 @@
         .checkbox-col { width: 40px; text-align: center; }
         .checkbox-col input { width: 16px; height: 16px; cursor: pointer; }
 
+        /* Collapse All toggle button */
+        .collapse-all-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px;
+            margin-left: 4px;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            transition: transform 0.2s;
+            vertical-align: middle;
+        }
+        .collapse-all-btn:hover { color: #374151; }
+        .collapse-all-btn.collapsed { transform: rotate(-90deg); }
+
         /* Bulk action bar */
         .bulk-bar {
             display: none;
@@ -441,6 +465,7 @@
             .summary-card:hover { transform: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06); }
             .summary-card .number { font-size: 1.4rem; }
             .summary-card .label { font-size: 0.6rem; }
+            .summary-card .card-icon { font-size: 1.2rem; margin-bottom: 4px; }
 
             .toolbar {
                 flex-direction: column;
@@ -505,6 +530,9 @@
         body.dark-mode .summary-card { background: #1f2937; box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2); }
         body.dark-mode .summary-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3); }
         body.dark-mode .summary-card .label { color: #9ca3af; }
+        body.dark-mode .summary-card .card-icon { opacity: 0.8; }
+        body.dark-mode .collapse-all-btn { color: #9ca3af; }
+        body.dark-mode .collapse-all-btn:hover { color: #f3f4f6; }
         body.dark-mode .table-wrap { background: #1f2937; box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2); }
         body.dark-mode thead { background: #2d3748; }
         body.dark-mode th { color: #9ca3af; border-bottom-color: #4b5563; border-bottom-width: 2px; }
@@ -654,26 +682,32 @@
         <!-- Summary -->
         <div class="summary-row">
             <div class="summary-card c-total">
+                <span class="material-icons card-icon">inventory_2</span>
                 <div class="number">{{ items|length }}</div>
                 <div class="label">{% if show_archived %}Archived{% else %}Total Items{% endif %}</div>
             </div>
             <div class="summary-card c-in">
+                <span class="material-icons card-icon">check_circle</span>
                 <div class="number">{{ checked_in_count }}</div>
                 <div class="label">Checked In</div>
             </div>
             <div class="summary-card c-out">
+                <span class="material-icons card-icon">local_shipping</span>
                 <div class="number">{{ checked_out_count }}</div>
                 <div class="label">Checked Out</div>
             </div>
             <div class="summary-card c-damaged">
+                <span class="material-icons card-icon">warning</span>
                 <div class="number">{{ damaged_count }}</div>
                 <div class="label">Damaged</div>
             </div>
             <div class="summary-card c-overdue">
+                <span class="material-icons card-icon">schedule</span>
                 <div class="number">{{ overdue_count }}</div>
                 <div class="label">Overdue</div>
             </div>
             <div class="summary-card c-archived">
+                <span class="material-icons card-icon">archive</span>
                 <div class="number">{{ archived_count }}</div>
                 <div class="label">Archived</div>
             </div>
@@ -770,7 +804,7 @@
                     <tr>
                         <th class="checkbox-col">
                             <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                            <button id="btnCollapseAll" onclick="toggleAllGroups()" style="font-size:0.65rem; padding:2px 6px; background:#f1f5f9; border:1px solid #d1d5db; border-radius:4px; cursor:pointer; margin-left:4px;">Collapse All</button>
+                            <button id="btnCollapseAll" class="collapse-all-btn" onclick="toggleAllGroups()" title="Collapse All"><span class="material-icons" style="font-size:18px;">expand_more</span></button>
                         </th>
                         <th>Manufacturer</th>
                         <th>Pallet ID</th>
@@ -1203,7 +1237,13 @@
                     itemRows.forEach(r => r.style.display = '');
                 }
             });
-            btn.textContent = anyExpanded ? 'Expand All' : 'Collapse All';
+            if (anyExpanded) {
+                btn.classList.add('collapsed');
+                btn.title = 'Expand All';
+            } else {
+                btn.classList.remove('collapsed');
+                btn.title = 'Collapse All';
+            }
         }
 
         // Run on page load
