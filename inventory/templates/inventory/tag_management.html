@@ -236,7 +236,6 @@
             border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
-            justify-content: space-between;
             gap: 12px;
             transition: box-shadow 0.2s, transform 0.15s;
         }
@@ -253,8 +252,8 @@
 
         .tag-info {
             display: flex;
-            align-items: center;
-            gap: 12px;
+            flex-direction: column;
+            gap: 4px;
             min-width: 0;
             flex: 1;
         }
@@ -262,27 +261,38 @@
             font-size: 0.95rem;
             font-weight: 600;
             color: var(--text-primary);
-            word-break: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .tag-meta {
             display: flex;
             align-items: center;
-            gap: 12px;
-            flex-shrink: 0;
+            gap: 10px;
         }
         .tag-count {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: var(--text-secondary);
             white-space: nowrap;
             background: var(--bg-primary);
-            padding: 3px 10px;
+            padding: 2px 8px;
             border-radius: 999px;
             font-weight: 600;
         }
         .tag-last-updated {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: var(--text-secondary);
             white-space: nowrap;
+        }
+
+        /* List mode: row layout for info */
+        .tag-list .tag-info {
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+        }
+        .tag-list .tag-name {
+            flex-shrink: 0;
         }
 
         .tag-actions {
