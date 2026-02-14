@@ -278,11 +278,6 @@
             border-radius: 999px;
             font-weight: 600;
         }
-        .tag-last-updated {
-            font-size: 0.68rem;
-            color: var(--text-secondary);
-            white-space: nowrap;
-        }
 
         .tag-actions {
             display: flex;
@@ -552,9 +547,6 @@
                     <div class="tag-name">{{ tag.name }}</div>
                     <div class="tag-meta">
                         <span class="tag-count">{{ tag.count }} item{{ tag.count|pluralize }}</span>
-                        {% if tag.last_updated %}
-                        <span class="tag-last-updated">Updated {{ tag.last_updated|timesince }} ago</span>
-                        {% endif %}
                     </div>
                 </div>
                 <div class="tag-actions">
@@ -583,9 +575,6 @@
                     <div class="tag-name">{{ tag.name }}</div>
                     <div class="tag-meta">
                         <span class="tag-count">{{ tag.count }} item{{ tag.count|pluralize }}</span>
-                        {% if tag.last_updated %}
-                        <span class="tag-last-updated">Updated {{ tag.last_updated|timesince }} ago</span>
-                        {% endif %}
                     </div>
                 </div>
                 <div class="tag-actions">
