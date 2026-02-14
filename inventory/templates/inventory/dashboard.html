@@ -796,10 +796,10 @@
         function filterTable() {
             const search = document.getElementById('searchInput').value.toLowerCase();
             const status = document.getElementById('statusFilter').value;
-            const rows = document.querySelectorAll('#inventoryTable tbody tr');
+            const rows = document.querySelectorAll('#inventoryTable tbody tr.pallet-item');
 
             rows.forEach(row => {
-                const matchSearch = !search || row.dataset.search.includes(search);
+                const matchSearch = !search || (row.dataset.search && row.dataset.search.includes(search));
                 let matchStatus = !status || row.dataset.status === status;
                 let matchTab = true;
 
@@ -807,6 +807,14 @@
                 if (currentTab === 'overdue') matchTab = row.dataset.overdue === 'true';
 
                 row.style.display = (matchSearch && matchStatus && matchTab) ? '' : 'none';
+            });
+
+            // Show/hide group headers based on whether any child items are visible
+            document.querySelectorAll('.pallet-group-row').forEach(groupRow => {
+                const key = groupRow.dataset.palletGroup;
+                const childRows = document.querySelectorAll(`tr.pallet-item[data-pallet="${key}"]`);
+                const anyVisible = Array.from(childRows).some(r => r.style.display !== 'none');
+                groupRow.style.display = anyVisible ? '' : 'none';
             });
         }
 
