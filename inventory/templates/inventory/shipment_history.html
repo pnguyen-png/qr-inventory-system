@@ -7,28 +7,78 @@
     <title>Fire &amp; Risk Alliance - Shipment History</title>
     <style>
         :root {
-            --bg-primary: #f5f0eb;
-            --bg-card: #fff;
-            --text-primary: #1a1a2e;
-            --text-secondary: #64748b;
-            --border-color: #e5e7eb;
-            --bg-input: #fff;
-            --bg-hover: #f9fafb;
+            --md-sys-color-primary: #8b1a1a;
+            --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-primary-container: #ffdad5;
+            --md-sys-color-on-primary-container: #410001;
+            --md-sys-color-secondary: #775652;
+            --md-sys-color-on-secondary: #ffffff;
+            --md-sys-color-secondary-container: #ffdad5;
+            --md-sys-color-on-secondary-container: #2c1512;
+            --md-sys-color-tertiary: #705c2e;
+            --md-sys-color-on-tertiary: #ffffff;
+            --md-sys-color-tertiary-container: #fcdfa6;
+            --md-sys-color-on-tertiary-container: #261a00;
+            --md-sys-color-error: #ba1a1a;
+            --md-sys-color-on-error: #ffffff;
+            --md-sys-color-error-container: #ffdad6;
+            --md-sys-color-on-error-container: #410002;
+            --md-sys-color-background: #fff8f6;
+            --md-sys-color-on-background: #201a19;
+            --md-sys-color-surface: #fff8f6;
+            --md-sys-color-on-surface: #201a19;
+            --md-sys-color-on-surface-variant: #534341;
+            --md-sys-color-surface-container-lowest: #ffffff;
+            --md-sys-color-surface-container-low: #fef1ef;
+            --md-sys-color-surface-container: #f8ebe9;
+            --md-sys-color-surface-container-high: #f3e5e2;
+            --md-sys-color-surface-container-highest: #ede0dd;
+            --md-sys-color-surface-dim: #e6d9d6;
+            --md-sys-color-outline: #857371;
+            --md-sys-color-outline-variant: #d8c2bf;
+            --md-sys-color-inverse-surface: #362f2e;
+            --md-sys-color-inverse-on-surface: #fbeeeb;
+            --md-sys-color-inverse-primary: #ffb4ab;
         }
         body.dark-mode {
-            --bg-primary: #111827;
-            --bg-card: #1f2937;
-            --text-primary: #f3f4f6;
-            --text-secondary: #9ca3af;
-            --border-color: #374151;
-            --bg-input: #374151;
-            --bg-hover: #374151;
+            --md-sys-color-primary: #ffb4ab;
+            --md-sys-color-on-primary: #690005;
+            --md-sys-color-primary-container: #930006;
+            --md-sys-color-on-primary-container: #ffdad5;
+            --md-sys-color-secondary: #e7bdb7;
+            --md-sys-color-on-secondary: #442926;
+            --md-sys-color-secondary-container: #5d3f3b;
+            --md-sys-color-on-secondary-container: #ffdad5;
+            --md-sys-color-tertiary: #dfc38c;
+            --md-sys-color-on-tertiary: #3e2e04;
+            --md-sys-color-tertiary-container: #574419;
+            --md-sys-color-on-tertiary-container: #fcdfa6;
+            --md-sys-color-error: #ffb4ab;
+            --md-sys-color-on-error: #690005;
+            --md-sys-color-error-container: #93000a;
+            --md-sys-color-on-error-container: #ffdad6;
+            --md-sys-color-background: #1a1110;
+            --md-sys-color-on-background: #ede0dd;
+            --md-sys-color-surface: #1a1110;
+            --md-sys-color-on-surface: #ede0dd;
+            --md-sys-color-on-surface-variant: #d8c2bf;
+            --md-sys-color-surface-container-lowest: #120d0c;
+            --md-sys-color-surface-container-low: #201a19;
+            --md-sys-color-surface-container: #251e1d;
+            --md-sys-color-surface-container-high: #2f2827;
+            --md-sys-color-surface-container-highest: #3b3332;
+            --md-sys-color-surface-dim: #1a1110;
+            --md-sys-color-outline: #a08c8a;
+            --md-sys-color-outline-variant: #534341;
+            --md-sys-color-inverse-surface: #ede0dd;
+            --md-sys-color-inverse-on-surface: #362f2e;
+            --md-sys-color-inverse-primary: #8b1a1a;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            background: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-surface);
             min-height: 100vh;
         }
         .header {
@@ -86,16 +136,16 @@
         .page-title {
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--text-primary);
+            color: var(--md-sys-color-on-surface);
             margin-bottom: 8px;
         }
         .page-subtitle {
             font-size: 0.875rem;
-            color: var(--text-secondary);
+            color: var(--md-sys-color-on-surface-variant);
             margin-bottom: 24px;
         }
         .table-wrap {
-            background: var(--bg-card);
+            background: var(--md-sys-color-surface-container-low);
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             overflow-x: auto;
@@ -106,13 +156,13 @@
             font-size: 0.85rem;
         }
         thead {
-            background: #8b1a1a;
+            background: var(--md-sys-color-primary);
         }
         th {
             padding: 12px 14px;
             text-align: left;
             font-weight: 600;
-            color: #fff;
+            color: var(--md-sys-color-on-primary);
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -120,26 +170,23 @@
         }
         td {
             padding: 12px 14px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
             vertical-align: middle;
-            color: var(--text-primary);
+            color: var(--md-sys-color-on-surface);
         }
         tr:hover td {
-            background: var(--bg-hover);
+            background: var(--md-sys-color-surface-container);
         }
         tr:last-child td {
             border-bottom: none;
         }
         .shipment-link {
-            color: #8b1a1a;
+            color: var(--md-sys-color-primary);
             text-decoration: none;
             font-weight: 500;
         }
         .shipment-link:hover {
             text-decoration: underline;
-        }
-        body.dark-mode .shipment-link {
-            color: #e2a04a;
         }
         .item-count-badge {
             display: inline-block;
@@ -147,21 +194,17 @@
             border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 600;
-            background: #dcfce7;
-            color: #166534;
-        }
-        body.dark-mode .item-count-badge {
-            background: #064e3b;
-            color: #6ee7b7;
+            background: var(--md-sys-color-tertiary-container);
+            color: var(--md-sys-color-on-tertiary-container);
         }
         .empty-state {
             padding: 60px 24px;
             text-align: center;
-            color: var(--text-secondary);
+            color: var(--md-sys-color-on-surface-variant);
         }
         .empty-state h3 {
             margin-bottom: 8px;
-            color: var(--text-secondary);
+            color: var(--md-sys-color-on-surface-variant);
         }
         .dark-toggle {
             background: none; border: 1px solid #b8860b; color: #b8860b;
@@ -245,7 +288,7 @@
         {% else %}
         <div class="empty-state">
             <h3>No shipments recorded yet</h3>
-            <p><a href="/add-shipment/" style="color:#8b1a1a;">Add a shipment</a> to start tracking inventory.</p>
+            <p><a href="/add-shipment/" style="color:var(--md-sys-color-primary);">Add a shipment</a> to start tracking inventory.</p>
         </div>
         {% endif %}
     </div>

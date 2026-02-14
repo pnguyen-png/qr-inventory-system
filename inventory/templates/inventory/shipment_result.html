@@ -7,10 +7,78 @@
     <title>Fire &amp; Risk Alliance - Shipment Created</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --md-sys-color-primary: #8b1a1a;
+            --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-primary-container: #ffdad5;
+            --md-sys-color-on-primary-container: #410001;
+            --md-sys-color-secondary: #775652;
+            --md-sys-color-on-secondary: #ffffff;
+            --md-sys-color-secondary-container: #ffdad5;
+            --md-sys-color-on-secondary-container: #2c1512;
+            --md-sys-color-tertiary: #705c2e;
+            --md-sys-color-on-tertiary: #ffffff;
+            --md-sys-color-tertiary-container: #fcdfa6;
+            --md-sys-color-on-tertiary-container: #261a00;
+            --md-sys-color-error: #ba1a1a;
+            --md-sys-color-on-error: #ffffff;
+            --md-sys-color-error-container: #ffdad6;
+            --md-sys-color-on-error-container: #410002;
+            --md-sys-color-background: #fff8f6;
+            --md-sys-color-on-background: #201a19;
+            --md-sys-color-surface: #fff8f6;
+            --md-sys-color-on-surface: #201a19;
+            --md-sys-color-on-surface-variant: #534341;
+            --md-sys-color-surface-container-lowest: #ffffff;
+            --md-sys-color-surface-container-low: #fef1ef;
+            --md-sys-color-surface-container: #f8ebe9;
+            --md-sys-color-surface-container-high: #f3e5e2;
+            --md-sys-color-surface-container-highest: #ede0dd;
+            --md-sys-color-surface-dim: #e6d9d6;
+            --md-sys-color-outline: #857371;
+            --md-sys-color-outline-variant: #d8c2bf;
+            --md-sys-color-inverse-surface: #362f2e;
+            --md-sys-color-inverse-on-surface: #fbeeeb;
+            --md-sys-color-inverse-primary: #ffb4ab;
+        }
+        body.dark-mode {
+            --md-sys-color-primary: #ffb4ab;
+            --md-sys-color-on-primary: #690005;
+            --md-sys-color-primary-container: #930006;
+            --md-sys-color-on-primary-container: #ffdad5;
+            --md-sys-color-secondary: #e7bdb7;
+            --md-sys-color-on-secondary: #442926;
+            --md-sys-color-secondary-container: #5d3f3b;
+            --md-sys-color-on-secondary-container: #ffdad5;
+            --md-sys-color-tertiary: #dfc38c;
+            --md-sys-color-on-tertiary: #3e2e04;
+            --md-sys-color-tertiary-container: #574419;
+            --md-sys-color-on-tertiary-container: #fcdfa6;
+            --md-sys-color-error: #ffb4ab;
+            --md-sys-color-on-error: #690005;
+            --md-sys-color-error-container: #93000a;
+            --md-sys-color-on-error-container: #ffdad6;
+            --md-sys-color-background: #1a1110;
+            --md-sys-color-on-background: #ede0dd;
+            --md-sys-color-surface: #1a1110;
+            --md-sys-color-on-surface: #ede0dd;
+            --md-sys-color-on-surface-variant: #d8c2bf;
+            --md-sys-color-surface-container-lowest: #120d0c;
+            --md-sys-color-surface-container-low: #201a19;
+            --md-sys-color-surface-container: #251e1d;
+            --md-sys-color-surface-container-high: #2f2827;
+            --md-sys-color-surface-container-highest: #3b3332;
+            --md-sys-color-surface-dim: #1a1110;
+            --md-sys-color-outline: #a08c8a;
+            --md-sys-color-outline-variant: #534341;
+            --md-sys-color-inverse-surface: #ede0dd;
+            --md-sys-color-inverse-on-surface: #362f2e;
+            --md-sys-color-inverse-primary: #8b1a1a;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #f5f0eb;
-            color: #1a1a2e;
+            background: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-surface);
             min-height: 100vh;
         }
         .header {
@@ -45,11 +113,11 @@
             display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;
         }
         .download-card {
-            background: #fff; border-radius: 12px; padding: 24px;
+            background: var(--md-sys-color-surface-container-low); border-radius: 12px; padding: 24px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center;
         }
-        .download-card h3 { font-size: 1rem; margin-bottom: 8px; color: #374151; }
-        .download-card p { font-size: 0.8rem; color: #64748b; margin-bottom: 16px; }
+        .download-card h3 { font-size: 1rem; margin-bottom: 8px; color: var(--md-sys-color-on-surface); }
+        .download-card p { font-size: 0.8rem; color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px; }
         .btn-download {
             display: inline-block; padding: 12px 24px; border-radius: 8px;
             font-size: 0.9rem; font-weight: 600; text-decoration: none; color: #fff;
@@ -60,7 +128,7 @@
         .btn-csv:hover { opacity: 0.9; }
 
         .summary-card {
-            background: #fff; border-radius: 12px; overflow: hidden;
+            background: var(--md-sys-color-surface-container-low); border-radius: 12px; overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;
         }
         .summary-header {
@@ -70,11 +138,11 @@
         .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         .summary-table th {
             padding: 10px 14px; text-align: left; font-weight: 600;
-            color: #475569; font-size: 0.75rem; text-transform: uppercase;
-            border-bottom: 1px solid #e5e7eb; background: #f8fafc;
+            color: var(--md-sys-color-on-surface-variant); font-size: 0.75rem; text-transform: uppercase;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant); background: var(--md-sys-color-surface-container-high);
         }
         .summary-table td {
-            padding: 10px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle;
+            padding: 10px 14px; border-bottom: 1px solid var(--md-sys-color-outline-variant); vertical-align: middle; color: var(--md-sys-color-on-surface);
         }
         .damage-yes { color: #dc2626; font-weight: 700; }
         .damage-no { color: #16a34a; }
@@ -83,14 +151,14 @@
 
         .nav-links { text-align: center; margin-top: 20px; }
         .nav-links a {
-            display: inline-block; margin: 0 8px; color: #2563eb;
+            display: inline-block; margin: 0 8px; color: var(--md-sys-color-primary);
             text-decoration: none; font-size: 0.875rem;
         }
         .nav-links a:hover { text-decoration: underline; }
         .print-labels { display: none; }
         .btn-add-another {
-            display: inline-block; padding: 10px 20px; background: #8b1a1a;
-            color: #fff; border-radius: 8px; text-decoration: none;
+            display: inline-block; padding: 10px 20px; background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary); border-radius: 8px; text-decoration: none;
             font-size: 0.875rem; font-weight: 600;
         }
         .btn-add-another:hover { opacity: 0.9; }
@@ -115,17 +183,9 @@
         }
         .dark-toggle:hover { background: rgba(184,134,11,0.2); }
 
-        body.dark-mode { background: #111827; color: #f3f4f6; }
         body.dark-mode .success-banner { background: #064e3b; border-color: #16a34a; }
         body.dark-mode .success-banner h2 { color: #6ee7b7; }
         body.dark-mode .success-banner p { color: #34d399; }
-        body.dark-mode .download-card { background: #1f2937; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-        body.dark-mode .download-card h3 { color: #f3f4f6; }
-        body.dark-mode .download-card p { color: #9ca3af; }
-        body.dark-mode .summary-card { background: #1f2937; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-        body.dark-mode .summary-table th { color: #9ca3af; border-bottom-color: #374151; background: #2d3748; }
-        body.dark-mode .summary-table td { border-bottom-color: #374151; color: #d1d5db; }
-        body.dark-mode .nav-links a { color: #60a5fa; }
 
         @media print {
             /* Hide screen UI */
