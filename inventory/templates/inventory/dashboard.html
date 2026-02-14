@@ -197,6 +197,40 @@
         .toolbar .btn-tool.success:hover { background: #15803d; box-shadow: 0 3px 8px rgba(22,163,74,0.3); }
         .toolbar .btn-tool:disabled { opacity: 0.4; cursor: not-allowed; }
 
+        /* More dropdown */
+        .more-dropdown {
+            position: relative;
+        }
+        .more-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 4px);
+            background: var(--md-sys-color-surface-container-low);
+            border: 1.5px solid var(--md-sys-color-outline-variant);
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06);
+            min-width: 180px;
+            z-index: 100;
+            overflow: hidden;
+            padding: 4px 0;
+        }
+        .more-menu.open {
+            display: block;
+        }
+        .more-menu a {
+            display: block;
+            padding: 10px 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            text-decoration: none;
+            transition: background 0.12s ease;
+        }
+        .more-menu a:hover {
+            background: var(--md-sys-color-surface-container);
+        }
+
         /* Tabs */
         .tabs {
             display: flex;
@@ -738,18 +772,25 @@
                 <a class="btn-tool primary" href="/add-shipment/">Add Shipment</a>
                 <button class="btn-tool primary" onclick="openScanner()">Scan QR Code</button>
                 <button class="btn-tool" style="background:#7c3aed; color:#fff; border-color:#7c3aed;" onclick="openMultiScan()">Multi-Scan</button>
-                <button class="btn-tool" onclick="printAllQRLabels()">Print Labels</button>
-                <a class="btn-tool" href="/export/csv/{% if show_archived %}?archived=1{% endif %}">Export CSV</a>
-                <a class="btn-tool" href="/export/pdf/{% if show_archived %}?archived=1{% endif %}" target="_blank">Print Report</a>
-                <a class="btn-tool" href="/shipments/">Shipments</a>
-                <a class="btn-tool" href="/tags/">Manage Tags</a>
             </div>
             <div class="toolbar-group" style="margin-left:auto;">
-                {% if show_archived %}
-                <a class="btn-tool success" href="/dashboard/">View Active Inventory</a>
-                {% else %}
-                <a class="btn-tool" href="/dashboard/?archived=1">View Archive ({{ archived_count }})</a>
-                {% endif %}
+                <div class="more-dropdown">
+                    <button class="btn-tool" onclick="toggleMoreMenu()">
+                        <span class="material-icons" style="font-size:18px; vertical-align:middle;">more_horiz</span> More
+                    </button>
+                    <div class="more-menu" id="moreMenu">
+                        <a href="/shipments/">Shipments</a>
+                        <a href="/tags/">Manage Tags</a>
+                        <a href="/export/csv/{% if show_archived %}?archived=1{% endif %}">Export CSV</a>
+                        <a href="#" onclick="printAllQRLabels(); closeMoreMenu(); return false;">Print Labels</a>
+                        <a href="/export/pdf/{% if show_archived %}?archived=1{% endif %}" target="_blank">Print Report</a>
+                        {% if show_archived %}
+                        <a href="/dashboard/">View Active Inventory</a>
+                        {% else %}
+                        <a href="/dashboard/?archived=1">View Archive ({{ archived_count }})</a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -972,6 +1013,20 @@
 
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
+        // ---- More dropdown ----
+        function toggleMoreMenu() {
+            document.getElementById('moreMenu').classList.toggle('open');
+        }
+        function closeMoreMenu() {
+            document.getElementById('moreMenu').classList.remove('open');
+        }
+        document.addEventListener('click', function(e) {
+            var dropdown = document.querySelector('.more-dropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                closeMoreMenu();
+            }
+        });
+
         // ---- Tab switching ----
         let currentTab = 'all';
         function switchTab(tab) {
