@@ -261,7 +261,15 @@
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--md-sys-color-background);
+            padding: 12px 32px;
+            margin-left: -32px;
+            margin-right: -32px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
         }
         .filters input, .filters select {
             padding: 10px 14px;
@@ -286,10 +294,16 @@
             background: var(--md-sys-color-surface-container-low);
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-            overflow-x: auto;
+            overflow: auto;
+            max-height: calc(100vh - var(--sticky-total-height, 70px));
         }
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        thead { background: var(--md-sys-color-surface-container-high); }
+        thead {
+            background: var(--md-sys-color-surface-container-high);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
         th {
             padding: 14px 18px;
             text-align: left;
@@ -300,6 +314,7 @@
             letter-spacing: 0.06em;
             border-bottom: 2px solid var(--md-sys-color-outline-variant);
             white-space: nowrap;
+            background: var(--md-sys-color-surface-container-high);
         }
         td {
             padding: 14px 18px;
@@ -412,7 +427,7 @@
         }
         .view-link:hover { text-decoration: underline; }
         .view-col { position: sticky; right: 0; background: var(--md-sys-color-surface-container-low); }
-        thead .view-col { background: var(--md-sys-color-surface-container-high); }
+        thead .view-col { background: var(--md-sys-color-surface-container-high); z-index: 11; }
         tr:hover .view-col { background: var(--md-sys-color-surface-container); }
         tr.selected .view-col { background: #eff6ff; }
         tr.overdue-row .view-col { background: #fef2f2; }
@@ -454,6 +469,9 @@
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
+            position: sticky;
+            top: var(--filters-height, 54px);
+            z-index: 19;
         }
         .bulk-bar.active { display: flex; }
         .bulk-bar span { font-size: 0.875rem; font-weight: 600; }
@@ -589,7 +607,7 @@
             }
             .tab { padding: 8px 12px; font-size: 0.75rem; white-space: nowrap; }
 
-            .filters { flex-direction: column; }
+            .filters { flex-direction: column; margin-left: -8px; margin-right: -8px; padding-left: 8px; padding-right: 8px; }
             .filters input { min-width: unset; max-width: unset; width: 100%; flex: unset; }
 
             .table-wrap { border-radius: 8px; }
@@ -808,6 +826,7 @@
             {% endif %}
         </div>
 
+        <div class="inventory-section">
         <!-- Filters -->
         <div class="filters">
             <input type="text" id="searchInput" placeholder="Search by manufacturer, pallet, project, location, description, checked out by, tag ID, or tags" oninput="debouncedFilter()">
@@ -934,6 +953,7 @@
             <p>{% if show_archived %}Archive items from the main inventory view.{% else %}<a href="/add-shipment/" style="color:#2563eb;">Add a shipment</a> to create inventory items and generate QR codes.{% endif %}</p>
         </div>
         {% endif %}
+        </div>
 
     <!-- Activity Feed (#19) -->
         {% if recent_activity %}
@@ -1103,6 +1123,7 @@
             const count = checked.length;
             document.getElementById('selectedCount').textContent = count + ' selected';
             document.getElementById('bulkBar').classList.toggle('active', count > 0);
+            requestAnimationFrame(updateStickyOffsets);
 
             document.querySelectorAll('.row-check').forEach(cb => {
                 cb.closest('tr').classList.toggle('selected', cb.checked);
@@ -1388,8 +1409,28 @@
             }
         }
 
+        // Sticky offset calculation for freeze-rows
+        function updateStickyOffsets() {
+            var filters = document.querySelector('.filters');
+            var bulkBar = document.getElementById('bulkBar');
+            if (!filters) return;
+
+            var filtersHeight = filters.offsetHeight;
+            document.documentElement.style.setProperty('--filters-height', filtersHeight + 'px');
+
+            var totalStickyHeight = filtersHeight;
+            if (bulkBar && bulkBar.classList.contains('active')) {
+                totalStickyHeight += bulkBar.offsetHeight + 8;
+            }
+            document.documentElement.style.setProperty('--sticky-total-height', totalStickyHeight + 'px');
+        }
+        window.addEventListener('resize', updateStickyOffsets);
+
         // Run on page load
-        document.addEventListener('DOMContentLoaded', initPalletGroups);
+        document.addEventListener('DOMContentLoaded', function() {
+            initPalletGroups();
+            updateStickyOffsets();
+        });
 
         // ---- Multi-Scan ----
         let multiScanner = null;
