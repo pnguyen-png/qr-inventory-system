@@ -279,7 +279,7 @@
             box-shadow: 0 0 0 3px rgba(139, 26, 26, 0.1), 0 1px 3px rgba(0,0,0,0.04);
         }
         .filters input::placeholder { color: var(--md-sys-color-outline); }
-        .filters input { min-width: 160px; max-width: 280px; flex: 0 1 280px; }
+        .filters input { min-width: 200px; max-width: 580px; flex: 1 1 400px; }
 
         /* Table */
         .table-wrap {
@@ -810,7 +810,7 @@
 
         <!-- Filters -->
         <div class="filters">
-            <input type="text" id="searchInput" placeholder="Search by manufacturer, pallet, location..." oninput="debouncedFilter()">
+            <input type="text" id="searchInput" placeholder="Search by manufacturer, pallet, project, location, description, checked out by, tag ID, or tags" oninput="debouncedFilter()">
             <select id="statusFilter" onchange="filterTable()">
                 <option value="">All Statuses</option>
                 <option value="checked_in">Checked In</option>
