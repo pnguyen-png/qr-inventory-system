@@ -820,11 +820,11 @@
                 <option value="recycling">Recycling</option>
             </select>
             <select id="sortFilter" onchange="sortPalletGroups()">
-                <option value="recent">Recently Added</option>
-                <option value="updated">Recently Updated</option>
-                <option value="largest">Most Items</option>
-                <option value="smallest">Fewest Items</option>
-                <option value="alpha">Alphabetical (A-Z)</option>
+                <option value="recent">Date Added (Newest)</option>
+                <option value="oldest">Date Added (Oldest)</option>
+                <option value="updated">Last Updated (Newest)</option>
+                <option value="largest">Quantity (High to Low)</option>
+                <option value="smallest">Quantity (Low to High)</option>
             </select>
         </div>
 
@@ -1332,8 +1332,10 @@
                 const itemRows = Array.from(document.querySelectorAll(`tr.pallet-item[data-pallet="${key}"]`));
 
                 let sortValue = 0;
-                if (sortBy === 'recent') {
-                    sortValue = Math.max(...itemRows.map(r => parseInt(r.dataset.created) || 0));
+                if (sortBy === 'recent' || sortBy === 'oldest') {
+                    sortValue = sortBy === 'recent'
+                        ? Math.max(...itemRows.map(r => parseInt(r.dataset.created) || 0))
+                        : Math.min(...itemRows.map(r => parseInt(r.dataset.created) || 0));
                 } else if (sortBy === 'updated') {
                     sortValue = Math.max(...itemRows.map(r => parseInt(r.dataset.updated) || 0));
                 } else if (sortBy === 'largest') {
@@ -1342,13 +1344,11 @@
                     sortValue = itemRows.length;
                 }
 
-                return { header, itemRows, sortValue, key };
+                return { header, itemRows, sortValue };
             });
 
             // Sort
-            if (sortBy === 'alpha') {
-                groups.sort((a, b) => a.key.localeCompare(b.key));
-            } else if (sortBy === 'smallest') {
+            if (sortBy === 'smallest' || sortBy === 'oldest') {
                 groups.sort((a, b) => a.sortValue - b.sortValue);
             } else {
                 groups.sort((a, b) => b.sortValue - a.sortValue);
