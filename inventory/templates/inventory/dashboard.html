@@ -1076,6 +1076,11 @@
                 const childRows = document.querySelectorAll(`tr.pallet-item[data-pallet="${key}"]`);
                 const anyVisible = Array.from(childRows).some(r => r.style.display !== 'none');
                 groupRow.style.display = anyVisible ? '' : 'none';
+
+                // Respect collapsed state — hide child rows if group is collapsed
+                if (groupRow.classList.contains('collapsed')) {
+                    childRows.forEach(r => r.style.display = 'none');
+                }
             });
         }
 
