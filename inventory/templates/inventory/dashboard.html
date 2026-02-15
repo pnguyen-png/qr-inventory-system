@@ -820,10 +820,11 @@
                 <option value="recycling">Recycling</option>
             </select>
             <select id="sortFilter" onchange="sortPalletGroups()">
-                <option value="recent">Most Recently Added</option>
+                <option value="recent">Recently Added</option>
                 <option value="updated">Recently Updated</option>
-                <option value="largest">Largest Quantity</option>
-                <option value="smallest">Smallest Quantity</option>
+                <option value="largest">Most Items</option>
+                <option value="smallest">Fewest Items</option>
+                <option value="alpha">Alphabetical (A-Z)</option>
             </select>
         </div>
 
@@ -1332,24 +1333,22 @@
 
                 let sortValue = 0;
                 if (sortBy === 'recent') {
-                    // Max created timestamp in group
                     sortValue = Math.max(...itemRows.map(r => parseInt(r.dataset.created) || 0));
                 } else if (sortBy === 'updated') {
-                    // Max updated timestamp in group
                     sortValue = Math.max(...itemRows.map(r => parseInt(r.dataset.updated) || 0));
                 } else if (sortBy === 'largest') {
-                    // Number of items in group
                     sortValue = itemRows.length;
                 } else if (sortBy === 'smallest') {
-                    // Number of items in group (ascending)
                     sortValue = itemRows.length;
                 }
 
-                return { header, itemRows, sortValue };
+                return { header, itemRows, sortValue, key };
             });
 
             // Sort
-            if (sortBy === 'smallest') {
+            if (sortBy === 'alpha') {
+                groups.sort((a, b) => a.key.localeCompare(b.key));
+            } else if (sortBy === 'smallest') {
                 groups.sort((a, b) => a.sortValue - b.sortValue);
             } else {
                 groups.sort((a, b) => b.sortValue - a.sortValue);
