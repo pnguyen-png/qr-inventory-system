@@ -279,7 +279,7 @@
             box-shadow: 0 0 0 3px rgba(139, 26, 26, 0.1), 0 1px 3px rgba(0,0,0,0.04);
         }
         .filters input::placeholder { color: var(--md-sys-color-outline); }
-        .filters input { flex: 1; min-width: 200px; }
+        .filters input { min-width: 160px; max-width: 280px; flex: 0 1 280px; }
 
         /* Table */
         .table-wrap {
@@ -590,7 +590,7 @@
             .tab { padding: 8px 12px; font-size: 0.75rem; white-space: nowrap; }
 
             .filters { flex-direction: column; }
-            .filters input { min-width: unset; width: 100%; }
+            .filters input { min-width: unset; max-width: unset; width: 100%; flex: unset; }
 
             .table-wrap { border-radius: 8px; }
             table { font-size: 0.75rem; }
@@ -819,6 +819,12 @@
                 <option value="will_be_reused">Will Be Reused</option>
                 <option value="recycling">Recycling</option>
             </select>
+            <select id="sortFilter" onchange="sortPalletGroups()">
+                <option value="recent">Most Recently Added</option>
+                <option value="updated">Recently Updated</option>
+                <option value="largest">Largest Quantity</option>
+                <option value="smallest">Smallest Quantity</option>
+            </select>
         </div>
 
         <!-- Bulk Action Bar -->
@@ -887,6 +893,7 @@
                     <tr data-id="{{ item.id }}" data-status="{{ item.status }}" data-damaged="{{ item.damaged|yesno:'true,false' }}"
                         data-overdue="{{ item.is_overdue|yesno:'true,false' }}"
                         data-pallet="{{ item.manufacturer|lower }}-{{ item.pallet_id|lower }}"
+                        data-created="{{ item.created_at|date:'U' }}" data-updated="{{ item.updated_at|date:'U' }}"
                         data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.project_number|lower }} {{ item.location|lower }} {{ item.description|lower }} {{ item.checked_out_by|lower }} {{ item.tag_id|lower }} {{ item.tags|lower }}"
                         class="{% if item.is_overdue %}overdue-row{% endif %} pallet-item">
                         <td class="checkbox-col"><input type="checkbox" class="row-check" value="{{ item.id }}" onchange="updateSelection()"></td>
@@ -1263,7 +1270,6 @@
                 }
             });
 
-            // Only create group headers for pallets with more than 1 item
             const colCount = tbody.closest('table').querySelector('thead tr').children.length;
 
             palletOrder.forEach(key => {
@@ -1275,12 +1281,15 @@
 
                 // Create group header row
                 const groupRow = document.createElement('tr');
-                groupRow.className = 'pallet-group-row';
+                groupRow.className = 'pallet-group-row collapsed';
                 groupRow.dataset.palletGroup = key;
                 groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>Pallet ${escapeHtml(palletId)}<span class="group-count">(${groupRows.length} item${groupRows.length === 1 ? '' : 's'})</span></td>`;
 
                 // Insert before the first row of this group
                 firstRow.parentNode.insertBefore(groupRow, firstRow);
+
+                // Default collapsed — hide child rows
+                groupRows.forEach(r => r.style.display = 'none');
 
                 // Click to toggle
                 groupRow.addEventListener('click', () => {
@@ -1289,6 +1298,62 @@
                         r.style.display = isCollapsed ? 'none' : '';
                     });
                 });
+            });
+
+            // Set collapse-all button to reflect collapsed state
+            const btn = document.getElementById('btnCollapseAll');
+            if (btn) {
+                btn.classList.add('collapsed');
+                btn.title = 'Expand All';
+            }
+
+            // Apply default sort (most recently added)
+            sortPalletGroups();
+        }
+
+        // ---- Sort Pallet Groups ----
+        function sortPalletGroups() {
+            const tbody = document.querySelector('#inventoryTable tbody');
+            if (!tbody) return;
+            const sortBy = document.getElementById('sortFilter').value;
+
+            const groupRows = Array.from(document.querySelectorAll('.pallet-group-row'));
+            if (!groupRows.length) return;
+
+            // Build group data: { headerRow, itemRows, sortValue }
+            const groups = groupRows.map(header => {
+                const key = header.dataset.palletGroup;
+                const itemRows = Array.from(document.querySelectorAll(`tr.pallet-item[data-pallet="${key}"]`));
+
+                let sortValue = 0;
+                if (sortBy === 'recent') {
+                    // Max created timestamp in group
+                    sortValue = Math.max(...itemRows.map(r => parseInt(r.dataset.created) || 0));
+                } else if (sortBy === 'updated') {
+                    // Max updated timestamp in group
+                    sortValue = Math.max(...itemRows.map(r => parseInt(r.dataset.updated) || 0));
+                } else if (sortBy === 'largest') {
+                    // Number of items in group
+                    sortValue = itemRows.length;
+                } else if (sortBy === 'smallest') {
+                    // Number of items in group (ascending)
+                    sortValue = itemRows.length;
+                }
+
+                return { header, itemRows, sortValue };
+            });
+
+            // Sort
+            if (sortBy === 'smallest') {
+                groups.sort((a, b) => a.sortValue - b.sortValue);
+            } else {
+                groups.sort((a, b) => b.sortValue - a.sortValue);
+            }
+
+            // Reorder DOM
+            groups.forEach(group => {
+                tbody.appendChild(group.header);
+                group.itemRows.forEach(row => tbody.appendChild(row));
             });
         }
 
