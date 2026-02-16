@@ -186,3 +186,31 @@ class NotificationLog(models.Model):
 
     def __str__(self):
         return f"{self.get_notification_type_display()} - {self.item}"
+
+
+class PrintJob(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('printing', 'Printing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+
+    item_ids = models.JSONField(help_text="List of InventoryItem IDs to print labels for")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    description = models.CharField(max_length=255, blank=True, default='')
+    requested_by = models.CharField(max_length=255, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    printed_at = models.DateTimeField(null=True, blank=True)
+    error_message = models.TextField(blank=True, default='')
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"PrintJob #{self.id} - {self.status} ({len(self.item_ids)} items)"
+
+    @property
+    def item_count(self):
+        return len(self.item_ids) if self.item_ids else 0

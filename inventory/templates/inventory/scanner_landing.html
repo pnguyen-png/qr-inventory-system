@@ -427,7 +427,7 @@
             font-size: 0.75rem; color: var(--md-sys-color-on-surface-variant); margin-top: 8px;
         }
 
-        /* Print single label for Brother QL-820NWB (62mm x 62mm, 2.4" roll) */
+        /* Print single label for Brother QL-820NWB (2.4" x 2.3" labels) */
         .print-single-label { display: none; }
         @media print {
             .header, .container { display: none !important; }
@@ -435,11 +435,11 @@
                 display: flex !important;
                 flex-direction: column;
                 align-items: center;
-                width: 58mm; height: 58mm;
+                width: 57mm; height: 54mm;
                 padding: 2mm; gap: 1mm;
             }
             .print-single-label .qr-box {
-                width: 50mm; height: 50mm;
+                width: 46mm; height: 46mm;
                 flex-shrink: 0;
                 display: flex; align-items: center; justify-content: center;
                 overflow: hidden;
@@ -448,7 +448,7 @@
             .print-single-label .lbl-text { text-align: center; font-family: Arial, sans-serif; line-height: 1.2; overflow: hidden; width: 100%; }
             .print-single-label .lbl-mfr { font-size: 8pt; font-weight: 700; }
             .print-single-label .lbl-detail { font-size: 7pt; color: #333; }
-            @page { size: 62mm 62mm; margin: 0; }
+            @page { size: 2.4in 2.3in; margin: 0; }
         }
     </style>
 </head>
@@ -579,6 +579,10 @@
                 <button onclick="printSingleLabel()" style="display:inline-block; margin-top:10px; padding:10px 20px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer;">
                     Print QR Label
                 </button>
+                <button onclick="sendToPrintHub({{ item.id }})" id="printHubBtn" style="display:inline-block; margin-top:10px; margin-left:8px; padding:10px 20px; background:#6d28d9; color:#fff; border:none; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer;">
+                    Send to Print Hub
+                </button>
+                <div id="printHubStatus" style="margin-top:8px; font-size:0.8rem; display:none;"></div>
             </div>
 
             <!-- Photos -->
@@ -1093,6 +1097,44 @@
     <script>
     function printSingleLabel() {
         window.print();
+    }
+
+    async function sendToPrintHub(itemId) {
+        var btn = document.getElementById('printHubBtn');
+        var statusEl = document.getElementById('printHubStatus');
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+
+        try {
+            var resp = await fetch('/api/print-jobs/create/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    item_ids: [itemId],
+                    description: '{{ item.manufacturer }} Box #{{ item.box_id }}',
+                })
+            });
+            var data = await resp.json();
+            if (data.success) {
+                btn.textContent = 'Sent!';
+                btn.style.background = '#16a34a';
+                statusEl.style.display = 'block';
+                statusEl.innerHTML = 'Job #' + data.job_id + ' queued';
+            } else {
+                btn.textContent = 'Error';
+                btn.style.background = '#dc2626';
+                statusEl.style.display = 'block';
+                statusEl.textContent = data.error;
+            }
+        } catch (err) {
+            btn.textContent = 'Network Error';
+            btn.style.background = '#dc2626';
+        }
+        setTimeout(function() {
+            btn.disabled = false;
+            btn.textContent = 'Send to Print Hub';
+            btn.style.background = '#6d28d9';
+        }, 3000);
     }
     </script>
     {% endif %}

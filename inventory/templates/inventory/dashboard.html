@@ -668,7 +668,7 @@
         .activity-text { flex: 1; color: var(--md-sys-color-on-surface); }
         .activity-time { color: var(--md-sys-color-outline); font-size: 0.7rem; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 
-        /* --- Print Labels Layout for Brother QL-820NWB (62mm x 62mm, 2.4" roll) --- */
+        /* --- Print Labels Layout for Brother QL-820NWB (2.4" x 2.3" labels) --- */
         .print-labels { display: none; }
         @media print {
             body * { visibility: hidden; }
@@ -679,8 +679,8 @@
                 top: 0; left: 0;
             }
             .print-label {
-                width: 58mm;
-                height: 58mm;
+                width: 57mm;
+                height: 54mm;
                 page-break-inside: avoid;
                 break-inside: avoid;
                 page-break-after: always;
@@ -693,7 +693,7 @@
             }
             .print-label:last-child { page-break-after: avoid; }
             .print-label .qr-box {
-                width: 50mm; height: 50mm;
+                width: 46mm; height: 46mm;
                 flex-shrink: 0;
                 display: flex; align-items: center; justify-content: center;
                 overflow: hidden;
@@ -716,7 +716,7 @@
                 font-size: 7pt; color: #333;
             }
             @page {
-                size: 62mm 62mm;
+                size: 2.4in 2.3in;
                 margin: 0;
             }
         }
@@ -801,7 +801,9 @@
                         <a href="/tags/">Manage Tags</a>
                         <a href="/export/csv/{% if show_archived %}?archived=1{% endif %}">Export CSV</a>
                         <a href="#" onclick="printAllQRLabels(); closeMoreMenu(); return false;">Print Labels</a>
+                        <a href="#" onclick="sendAllToPrintHub(); closeMoreMenu(); return false;">Send to Print Hub</a>
                         <a href="/export/pdf/{% if show_archived %}?archived=1{% endif %}" target="_blank">Print Report</a>
+                        <a href="/print-hub/" target="_blank">Open Print Hub</a>
                         {% if show_archived %}
                         <a href="/dashboard/">View Active Inventory</a>
                         {% else %}
@@ -879,6 +881,7 @@
             {% else %}
             <button class="btn-bulk archive" onclick="applyBulkArchive(true)">Archive Selected</button>
             {% endif %}
+            <button class="btn-bulk" style="background:#7c3aed;" onclick="sendSelectedToPrintHub()">Send to Print Hub</button>
             <button class="btn-bulk cancel" onclick="clearSelection()">Cancel</button>
         </div>
 
@@ -1706,6 +1709,42 @@
             const rows = Array.from(document.querySelectorAll('#inventoryTable tbody tr.pallet-item')).filter(r => r.style.display !== 'none');
             if (!rows.length) { showToast('No items to print', true); return; }
             printLabelsFromRows(rows);
+        }
+
+        // ---- Print Hub ----
+        async function submitPrintJob(itemIds, description) {
+            try {
+                const resp = await fetch('/api/print-jobs/create/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        item_ids: itemIds,
+                        description: description,
+                        requested_by: document.getElementById('bulkChangedBy')?.value || '',
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showToast('Sent ' + data.item_count + ' label(s) to Print Hub (Job #' + data.job_id + ')');
+                } else {
+                    showToast('Error: ' + data.error, true);
+                }
+            } catch (err) {
+                showToast('Network error sending to Print Hub', true);
+            }
+        }
+
+        function sendAllToPrintHub() {
+            const rows = Array.from(document.querySelectorAll('#inventoryTable tbody tr.pallet-item')).filter(r => r.style.display !== 'none');
+            if (!rows.length) { showToast('No items to send', true); return; }
+            const itemIds = rows.map(r => parseInt(r.dataset.id));
+            submitPrintJob(itemIds, itemIds.length + ' labels from dashboard');
+        }
+
+        function sendSelectedToPrintHub() {
+            const ids = getSelectedIds();
+            if (!ids.length) { showToast('No items selected', true); return; }
+            submitPrintJob(ids, ids.length + ' selected labels');
         }
 
         // ---- #4: Debounced search ----
