@@ -197,10 +197,10 @@
                 display: block !important;
             }
 
-            /* Each label: 62mm x 62mm square for Brother QL-820NWB (2.4" roll) */
+            /* Each label: 2.4" x 2.3" for Brother QL-820NWB */
             .print-label {
-                width: 58mm;
-                height: 58mm;
+                width: 57mm;
+                height: 54mm;
                 page-break-inside: avoid;
                 break-inside: avoid;
                 page-break-after: always;
@@ -213,7 +213,7 @@
             }
             .print-label:last-child { page-break-after: avoid; }
             .print-label .qr-box {
-                width: 50mm; height: 50mm;
+                width: 46mm; height: 46mm;
                 flex-shrink: 0;
                 display: flex; align-items: center; justify-content: center;
                 overflow: hidden;
@@ -237,7 +237,7 @@
             }
 
             @page {
-                size: 62mm 62mm;
+                size: 2.4in 2.3in;
                 margin: 0;
             }
         }

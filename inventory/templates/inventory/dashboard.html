@@ -668,7 +668,7 @@
         .activity-text { flex: 1; color: var(--md-sys-color-on-surface); }
         .activity-time { color: var(--md-sys-color-outline); font-size: 0.7rem; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 
-        /* --- Print Labels Layout for Brother QL-820NWB (62mm x 62mm, 2.4" roll) --- */
+        /* --- Print Labels Layout for Brother QL-820NWB (2.4" x 2.3" labels) --- */
         .print-labels { display: none; }
         @media print {
             body * { visibility: hidden; }
@@ -679,8 +679,8 @@
                 top: 0; left: 0;
             }
             .print-label {
-                width: 58mm;
-                height: 58mm;
+                width: 57mm;
+                height: 54mm;
                 page-break-inside: avoid;
                 break-inside: avoid;
                 page-break-after: always;
@@ -693,7 +693,7 @@
             }
             .print-label:last-child { page-break-after: avoid; }
             .print-label .qr-box {
-                width: 50mm; height: 50mm;
+                width: 46mm; height: 46mm;
                 flex-shrink: 0;
                 display: flex; align-items: center; justify-content: center;
                 overflow: hidden;
@@ -716,7 +716,7 @@
                 font-size: 7pt; color: #333;
             }
             @page {
-                size: 62mm 62mm;
+                size: 2.4in 2.3in;
                 margin: 0;
             }
         }
