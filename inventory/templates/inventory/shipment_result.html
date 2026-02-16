@@ -264,11 +264,17 @@
             <p {% if is_history %}style="color:#1d4ed8;"{% endif %}>{{ items|length }} item{{ items|length|pluralize }} for {{ manufacturer }} - Pallet {{ pallet_id }}</p>
         </div>
 
-        <div class="download-cards" style="grid-template-columns: 1fr 1fr 1fr;">
+        <div class="download-cards" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
             <div class="download-card">
                 <h3>Print Labels</h3>
-                <p>Print QR labels to your Brother QL-820NWB</p>
+                <p>Print QR labels directly from this browser</p>
                 <button onclick="printLabels()" class="btn-print">Print Labels</button>
+            </div>
+            <div class="download-card">
+                <h3>Send to Print Hub</h3>
+                <p>Queue labels on the desktop printer</p>
+                <button onclick="sendToPrintHub()" class="btn-print" id="printHubBtn" style="background:#7c3aed;">Send to Print Hub</button>
+                <div id="printHubStatus" style="margin-top:8px; font-size:0.8rem; display:none;"></div>
             </div>
             <div class="download-card">
                 <h3>Excel File (.xlsx)</h3>
@@ -300,9 +306,50 @@
         </div>
 
         <script>
+        var shipmentItemIds = [{% for item in items %}{{ item.id }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
         function printLabels() {
             window.print();
         }
+
+        async function sendToPrintHub() {
+            var btn = document.getElementById('printHubBtn');
+            var statusEl = document.getElementById('printHubStatus');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                var resp = await fetch('/api/print-jobs/create/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        item_ids: shipmentItemIds,
+                        description: '{{ manufacturer }} Pallet {{ pallet_id }} - {{ items|length }} labels',
+                    })
+                });
+                var data = await resp.json();
+                if (data.success) {
+                    btn.textContent = 'Sent!';
+                    btn.style.background = '#16a34a';
+                    statusEl.style.display = 'block';
+                    statusEl.innerHTML = 'Job #' + data.job_id + ' queued (' + data.item_count + ' labels)';
+                } else {
+                    btn.textContent = 'Error';
+                    btn.style.background = '#dc2626';
+                    statusEl.style.display = 'block';
+                    statusEl.textContent = data.error;
+                }
+            } catch (err) {
+                btn.textContent = 'Network Error';
+                btn.style.background = '#dc2626';
+            }
+            setTimeout(function() {
+                btn.disabled = false;
+                btn.textContent = 'Send to Print Hub';
+                btn.style.background = '#7c3aed';
+            }, 3000);
+        }
+
         function toggleDarkMode() {
             var isDark = document.body.classList.toggle('dark-mode');
             localStorage.setItem('darkMode', isDark ? '1' : '0');

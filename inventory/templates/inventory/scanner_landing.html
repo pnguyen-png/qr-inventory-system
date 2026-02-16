@@ -579,6 +579,10 @@
                 <button onclick="printSingleLabel()" style="display:inline-block; margin-top:10px; padding:10px 20px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer;">
                     Print QR Label
                 </button>
+                <button onclick="sendToPrintHub({{ item.id }})" id="printHubBtn" style="display:inline-block; margin-top:10px; margin-left:8px; padding:10px 20px; background:#6d28d9; color:#fff; border:none; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer;">
+                    Send to Print Hub
+                </button>
+                <div id="printHubStatus" style="margin-top:8px; font-size:0.8rem; display:none;"></div>
             </div>
 
             <!-- Photos -->
@@ -1093,6 +1097,44 @@
     <script>
     function printSingleLabel() {
         window.print();
+    }
+
+    async function sendToPrintHub(itemId) {
+        var btn = document.getElementById('printHubBtn');
+        var statusEl = document.getElementById('printHubStatus');
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+
+        try {
+            var resp = await fetch('/api/print-jobs/create/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    item_ids: [itemId],
+                    description: '{{ item.manufacturer }} Box #{{ item.box_id }}',
+                })
+            });
+            var data = await resp.json();
+            if (data.success) {
+                btn.textContent = 'Sent!';
+                btn.style.background = '#16a34a';
+                statusEl.style.display = 'block';
+                statusEl.innerHTML = 'Job #' + data.job_id + ' queued';
+            } else {
+                btn.textContent = 'Error';
+                btn.style.background = '#dc2626';
+                statusEl.style.display = 'block';
+                statusEl.textContent = data.error;
+            }
+        } catch (err) {
+            btn.textContent = 'Network Error';
+            btn.style.background = '#dc2626';
+        }
+        setTimeout(function() {
+            btn.disabled = false;
+            btn.textContent = 'Send to Print Hub';
+            btn.style.background = '#6d28d9';
+        }, 3000);
     }
     </script>
     {% endif %}

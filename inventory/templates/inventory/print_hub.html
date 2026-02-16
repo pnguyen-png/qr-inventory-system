@@ -1,0 +1,608 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Hub - Fire &amp; Risk Alliance</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            --md-sys-color-primary: #8b1a1a;
+            --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-primary-container: #ffdad5;
+            --md-sys-color-on-primary-container: #410001;
+            --md-sys-color-secondary: #775652;
+            --md-sys-color-on-secondary: #ffffff;
+            --md-sys-color-tertiary: #705c2e;
+            --md-sys-color-on-tertiary: #ffffff;
+            --md-sys-color-tertiary-container: #fcdfa6;
+            --md-sys-color-background: #fff8f6;
+            --md-sys-color-on-background: #201a19;
+            --md-sys-color-surface: #fff8f6;
+            --md-sys-color-on-surface: #201a19;
+            --md-sys-color-on-surface-variant: #534341;
+            --md-sys-color-surface-container-lowest: #ffffff;
+            --md-sys-color-surface-container-low: #fef1ef;
+            --md-sys-color-surface-container: #f8ebe9;
+            --md-sys-color-surface-container-high: #f3e5e2;
+            --md-sys-color-outline: #857371;
+            --md-sys-color-outline-variant: #d8c2bf;
+        }
+        body.dark-mode {
+            --md-sys-color-primary: #ffb4ab;
+            --md-sys-color-on-primary: #690005;
+            --md-sys-color-primary-container: #930006;
+            --md-sys-color-on-primary-container: #ffdad5;
+            --md-sys-color-secondary: #e7bdb7;
+            --md-sys-color-on-secondary: #442926;
+            --md-sys-color-tertiary: #dfc38c;
+            --md-sys-color-on-tertiary: #3e2e04;
+            --md-sys-color-tertiary-container: #574419;
+            --md-sys-color-background: #1a1110;
+            --md-sys-color-on-background: #ede0dd;
+            --md-sys-color-surface: #1a1110;
+            --md-sys-color-on-surface: #ede0dd;
+            --md-sys-color-on-surface-variant: #d8c2bf;
+            --md-sys-color-surface-container-lowest: #120d0c;
+            --md-sys-color-surface-container-low: #201a19;
+            --md-sys-color-surface-container: #251e1d;
+            --md-sys-color-surface-container-high: #2f2827;
+            --md-sys-color-outline: #a08c8a;
+            --md-sys-color-outline-variant: #534341;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-surface);
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d1518 100%);
+            color: #fff;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #b8860b;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .header-brand img { height: 44px; width: auto; }
+        .header-brand-text h1 { font-size: 1.1rem; font-weight: 700; color: #fff; line-height: 1.2; }
+        .header-brand-text .subtitle { font-size: 0.7rem; color: #b8860b; text-transform: uppercase; letter-spacing: 0.1em; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-right a { color: #fff; text-decoration: none; font-size: 0.85rem; padding: 6px 14px; border-radius: 8px; background: rgba(255,255,255,0.1); }
+        .header-right a:hover { background: rgba(255,255,255,0.2); }
+        .dark-toggle {
+            background: rgba(255,255,255,0.1); color: #fff; border: none;
+            padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 0.8rem;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 24px 32px; }
+
+        /* Status bar */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: var(--md-sys-color-surface-container-low);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            margin-bottom: 24px;
+        }
+        .status-dot {
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: #16a34a;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(22,163,74,0.4); }
+            50% { opacity: 0.8; box-shadow: 0 0 0 8px rgba(22,163,74,0); }
+        }
+        .status-text { font-weight: 600; font-size: 0.95rem; }
+        .status-count {
+            margin-left: auto;
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: none;
+        }
+
+        /* Queue section */
+        .section-title {
+            font-size: 1rem; font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--md-sys-color-on-surface);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--md-sys-color-outline);
+            font-size: 0.9rem;
+        }
+        .empty-state .material-icons { font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.4; }
+
+        /* Job cards */
+        .job-card {
+            background: var(--md-sys-color-surface-container-lowest);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: border-color 0.2s;
+        }
+        .job-card.new-job {
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 2px rgba(124,58,237,0.15);
+        }
+        .job-card.printing {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+        body.dark-mode .job-card.printing { background: #2f2817; }
+        .job-icon {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .job-icon.pending { background: #ede9fe; color: #7c3aed; }
+        .job-icon.printing { background: #fef3c7; color: #d97706; }
+        .job-icon.completed { background: #dcfce7; color: #16a34a; }
+        .job-icon.failed { background: #fee2e2; color: #dc2626; }
+        body.dark-mode .job-icon.pending { background: #3b2e6b; }
+        body.dark-mode .job-icon.completed { background: #1a3d27; }
+        body.dark-mode .job-icon.failed { background: #3d1a1a; }
+        body.dark-mode .job-icon.printing { background: #3d3017; }
+        .job-info { flex: 1; min-width: 0; }
+        .job-title { font-weight: 600; font-size: 0.9rem; }
+        .job-meta { font-size: 0.75rem; color: var(--md-sys-color-outline); margin-top: 2px; }
+        .job-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+        .btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-print { background: #7c3aed; color: #fff; }
+        .btn-dismiss { background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface); }
+        .btn-print-all {
+            background: #7c3aed; color: #fff;
+            padding: 10px 24px; border: none; border-radius: 8px;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            margin-bottom: 16px; display: none;
+        }
+        .btn-print-all:hover { opacity: 0.85; }
+
+        /* History section */
+        .history-section { margin-top: 32px; }
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+            font-size: 0.8rem;
+        }
+        .history-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .history-badge.completed { background: #dcfce7; color: #166534; }
+        .history-badge.failed { background: #fee2e2; color: #991b1b; }
+        body.dark-mode .history-badge.completed { background: #1a3d27; color: #86efac; }
+        body.dark-mode .history-badge.failed { background: #3d1a1a; color: #fca5a5; }
+        .history-desc { flex: 1; color: var(--md-sys-color-on-surface); }
+        .history-time { color: var(--md-sys-color-outline); font-size: 0.7rem; white-space: nowrap; }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            padding: 12px 24px; border-radius: 10px; font-size: 0.875rem;
+            font-weight: 600; color: #fff; z-index: 9999;
+            transition: opacity 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            opacity: 0; pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+
+        /* --- Print Labels Layout (reused from dashboard) --- */
+        .print-labels { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            .print-labels, .print-labels * { visibility: visible !important; }
+            .print-labels {
+                display: block !important;
+                position: absolute;
+                top: 0; left: 0;
+            }
+            .print-label {
+                width: 57mm; height: 54mm;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                page-break-after: always;
+                display: flex !important;
+                flex-direction: column;
+                align-items: center;
+                padding: 2mm; gap: 1mm; margin: 0;
+            }
+            .print-label:last-child { page-break-after: avoid; }
+            .print-label .qr-box {
+                width: 46mm; height: 46mm;
+                flex-shrink: 0;
+                display: flex; align-items: center; justify-content: center;
+                overflow: hidden;
+            }
+            .print-label .qr-box img {
+                width: 100% !important; height: 100% !important;
+                object-fit: contain;
+            }
+            .print-label-text {
+                text-align: center;
+                font-family: Arial, Helvetica, sans-serif;
+                line-height: 1.2; overflow: hidden; width: 100%;
+            }
+            .print-label-text .mfr { font-size: 8pt; font-weight: 700; }
+            .print-label-text .detail { font-size: 7pt; color: #333; }
+            @page { size: 2.4in 2.3in; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/dashboard/" class="header-brand">
+            <img src="{% static 'inventory/img/logo.png' %}" alt="Fire &amp; Risk Alliance">
+            <div class="header-brand-text">
+                <h1>Fire &amp; Risk Alliance</h1>
+                <div class="subtitle">Print Hub</div>
+            </div>
+        </a>
+        <div class="header-right">
+            <button class="dark-toggle" onclick="toggleDarkMode()" id="darkToggle">Dark Mode</button>
+            <a href="/dashboard/">Dashboard</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Status bar -->
+        <div class="status-bar">
+            <div class="status-dot" id="statusDot"></div>
+            <span class="status-text" id="statusText">Listening for print jobs...</span>
+            <span class="status-count" id="statusCount">0 pending</span>
+        </div>
+
+        <!-- Print All button -->
+        <button class="btn-print-all" id="btnPrintAll" onclick="printAllPending()">
+            <span class="material-icons" style="font-size:18px; vertical-align:middle; margin-right:4px;">print</span>
+            Print All Pending
+        </button>
+
+        <!-- Queue -->
+        <div class="section-title">Print Queue</div>
+        <div id="queueContainer">
+            <div class="empty-state" id="emptyState">
+                <span class="material-icons">print</span>
+                No pending print jobs.<br>
+                Other users can send labels here from the dashboard or shipment pages.
+            </div>
+        </div>
+
+        <!-- History -->
+        <div class="history-section">
+            <div class="section-title">Recent History</div>
+            <div id="historyContainer">
+                {% for job in recent_jobs %}
+                {% if job.status == 'completed' or job.status == 'failed' %}
+                <div class="history-item">
+                    <span class="history-badge {{ job.status }}">{{ job.get_status_display }}</span>
+                    <span class="history-desc">{{ job.item_count }} label{{ job.item_count|pluralize }} — {{ job.description|default:"No description" }}</span>
+                    <span class="history-time">{{ job.created_at|timesince }} ago</span>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden print container -->
+    <div class="print-labels" id="printLabels"></div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+    // ---- State ----
+    let knownJobIds = new Set();
+    let currentJobs = [];
+    let currentPrintingJobId = null;
+    let pollInterval = null;
+    let audioCtx = null;
+
+    // ---- Dark mode ----
+    function toggleDarkMode() {
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', isDark ? '1' : '0');
+        document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+    }
+    if (localStorage.getItem('darkMode') === '1') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('darkToggle').textContent = 'Light Mode';
+    }
+
+    // ---- Toast ----
+    function showToast(message, isError) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.style.background = isError ? '#dc2626' : '#16a34a';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // ---- Notification sound (Web Audio API) ----
+    function playNotificationSound() {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.value = 880;
+            osc.type = 'sine';
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.5);
+        } catch (e) { /* Audio not available */ }
+    }
+
+    // ---- HTML helpers ----
+    function escapeHtml(text) {
+        const d = document.createElement('div');
+        d.textContent = text;
+        return d.innerHTML;
+    }
+
+    function buildLabelHTML(label) {
+        return `<div class="print-label">
+            <div class="qr-box"><img src="${label.qr_url}" alt="QR"></div>
+            <div class="print-label-text">
+                <div class="mfr">${escapeHtml(label.manufacturer)}</div>
+                <div class="detail">Box #${label.box_id}</div>
+                <div class="detail">Pallet ${escapeHtml(label.pallet_id)}</div>
+                <div class="detail">${label.project_number ? escapeHtml(label.project_number) : ''}</div>
+            </div>
+        </div>`;
+    }
+
+    function buildJobCardHTML(job) {
+        return `<div class="job-card new-job" id="job-${job.id}" data-id="${job.id}">
+            <div class="job-icon pending">
+                <span class="material-icons">print</span>
+            </div>
+            <div class="job-info">
+                <div class="job-title">${job.item_count} label${job.item_count !== 1 ? 's' : ''}</div>
+                <div class="job-meta">
+                    ${escapeHtml(job.description || 'Print job')}
+                    ${job.requested_by ? ' &mdash; ' + escapeHtml(job.requested_by) : ''}
+                    &middot; ${escapeHtml(job.created_at)}
+                </div>
+            </div>
+            <div class="job-actions">
+                <button class="btn btn-print" onclick="printJob(${job.id})">Print Now</button>
+                <button class="btn btn-dismiss" onclick="dismissJob(${job.id})">Dismiss</button>
+            </div>
+        </div>`;
+    }
+
+    // ---- Polling ----
+    async function pollForJobs() {
+        try {
+            const resp = await fetch('/api/print-jobs/pending/');
+            const data = await resp.json();
+
+            const currentIds = new Set(data.jobs.map(j => j.id));
+            const newJobs = data.jobs.filter(j => !knownJobIds.has(j.id));
+
+            if (newJobs.length > 0) {
+                playNotificationSound();
+            }
+
+            knownJobIds = currentIds;
+            currentJobs = data.jobs;
+            renderQueue(data.jobs);
+            updateStatusBar(data.count);
+        } catch (err) {
+            console.error('Poll error:', err);
+        }
+    }
+
+    function renderQueue(jobs) {
+        const container = document.getElementById('queueContainer');
+        const emptyState = document.getElementById('emptyState');
+        const btnAll = document.getElementById('btnPrintAll');
+
+        if (jobs.length === 0) {
+            container.innerHTML = '';
+            container.appendChild(emptyState.cloneNode ? createEmptyState() : emptyState);
+            btnAll.style.display = 'none';
+            return;
+        }
+
+        container.innerHTML = jobs.map(buildJobCardHTML).join('');
+        btnAll.style.display = jobs.length > 1 ? 'inline-block' : 'none';
+
+        // Remove "new" highlight after 3 seconds
+        setTimeout(() => {
+            container.querySelectorAll('.new-job').forEach(el => el.classList.remove('new-job'));
+        }, 3000);
+    }
+
+    function createEmptyState() {
+        const div = document.createElement('div');
+        div.className = 'empty-state';
+        div.innerHTML = '<span class="material-icons">print</span>No pending print jobs.<br>Other users can send labels here from the dashboard or shipment pages.';
+        return div;
+    }
+
+    function updateStatusBar(count) {
+        const countEl = document.getElementById('statusCount');
+        const titleBase = 'Print Hub - Fire & Risk Alliance';
+        if (count > 0) {
+            countEl.style.display = 'inline-block';
+            countEl.textContent = count + ' pending';
+            document.title = `(${count}) ${titleBase}`;
+        } else {
+            countEl.style.display = 'none';
+            document.title = titleBase;
+        }
+    }
+
+    // ---- Printing ----
+    async function printJob(jobId) {
+        const card = document.getElementById('job-' + jobId);
+        if (card) {
+            card.classList.remove('new-job');
+            card.classList.add('printing');
+            const icon = card.querySelector('.job-icon');
+            if (icon) { icon.className = 'job-icon printing'; }
+            const btn = card.querySelector('.btn-print');
+            if (btn) { btn.disabled = true; btn.textContent = 'Printing...'; }
+        }
+
+        // Mark as printing on the server
+        await fetch('/api/print-jobs/update/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({job_id: jobId, status: 'printing'})
+        });
+
+        // Find job data and render labels
+        const job = currentJobs.find(j => j.id === jobId);
+        if (!job) { showToast('Job not found', true); return; }
+
+        const container = document.getElementById('printLabels');
+        container.innerHTML = job.labels.map(buildLabelHTML).join('');
+
+        // Wait for QR images to load
+        const images = container.querySelectorAll('img');
+        await waitForImages(images);
+
+        // Print
+        currentPrintingJobId = jobId;
+        window.print();
+    }
+
+    function waitForImages(images) {
+        return new Promise(resolve => {
+            let loaded = 0;
+            const total = images.length;
+            if (total === 0) { resolve(); return; }
+
+            const done = () => { loaded++; if (loaded >= total) resolve(); };
+            const timeout = setTimeout(resolve, 10000); // safety net
+
+            images.forEach(img => {
+                if (img.complete) { done(); }
+                else { img.onload = img.onerror = done; }
+            });
+        });
+    }
+
+    // After print dialog closes
+    window.addEventListener('afterprint', async () => {
+        if (!currentPrintingJobId) return;
+        const jobId = currentPrintingJobId;
+        currentPrintingJobId = null;
+
+        const confirmed = confirm('Did the labels print successfully?');
+        const status = confirmed ? 'completed' : 'failed';
+        const errorMsg = confirmed ? '' : 'Cancelled or failed by operator';
+
+        await fetch('/api/print-jobs/update/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                job_id: jobId,
+                status: status,
+                error_message: errorMsg
+            })
+        });
+
+        showToast(confirmed ? 'Job marked as printed' : 'Job marked as failed', !confirmed);
+        knownJobIds.delete(jobId);
+        pollForJobs();
+        refreshHistory();
+    });
+
+    async function printAllPending() {
+        for (const job of [...currentJobs]) {
+            await printJob(job.id);
+            // Wait a moment between jobs for the afterprint cycle
+            await new Promise(r => setTimeout(r, 500));
+        }
+    }
+
+    async function dismissJob(jobId) {
+        await fetch('/api/print-jobs/update/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({job_id: jobId, status: 'failed', error_message: 'Dismissed by operator'})
+        });
+        knownJobIds.delete(jobId);
+        showToast('Job dismissed');
+        pollForJobs();
+        refreshHistory();
+    }
+
+    // ---- History ----
+    async function refreshHistory() {
+        try {
+            const resp = await fetch('/api/print-jobs/status/');
+            const data = await resp.json();
+            const container = document.getElementById('historyContainer');
+            const finished = data.jobs.filter(j => j.status === 'completed' || j.status === 'failed');
+
+            if (finished.length === 0) {
+                container.innerHTML = '<div style="padding:12px 0; color:var(--md-sys-color-outline); font-size:0.85rem;">No history yet.</div>';
+                return;
+            }
+
+            container.innerHTML = finished.map(j => `
+                <div class="history-item">
+                    <span class="history-badge ${j.status}">${j.status === 'completed' ? 'Printed' : 'Failed'}</span>
+                    <span class="history-desc">${j.item_count} label${j.item_count !== 1 ? 's' : ''} &mdash; ${escapeHtml(j.description || 'No description')}</span>
+                    <span class="history-time">${escapeHtml(j.created_at)}</span>
+                </div>
+            `).join('');
+        } catch (e) { /* ignore */ }
+    }
+
+    // ---- Start polling ----
+    pollInterval = setInterval(pollForJobs, 3000);
+    pollForJobs();
+    </script>
+</body>
+</html>

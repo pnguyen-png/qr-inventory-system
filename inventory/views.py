@@ -12,7 +12,7 @@ import os
 import uuid
 from datetime import timedelta
 from itertools import chain
-from .models import InventoryItem, StatusHistory, NotificationLog, ItemPhoto, ChangeLog, ScanLog, Tag
+from .models import InventoryItem, StatusHistory, NotificationLog, ItemPhoto, ChangeLog, ScanLog, Tag, PrintJob
 
 LOCATION_CHOICES = [
     'York, PA',
@@ -1514,3 +1514,150 @@ def create_tag(request):
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ───────────────────── Print Hub ─────────────────────
+
+def print_hub(request):
+    """Print Hub page — desktop print station that polls for print jobs."""
+    recent_jobs = PrintJob.objects.order_by('-created_at')[:50]
+    return render(request, 'inventory/print_hub.html', {
+        'recent_jobs': recent_jobs,
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_print_job(request):
+    """Create a new print job from any device."""
+    try:
+        data = json.loads(request.body)
+        item_ids = data.get('item_ids', [])
+        description = data.get('description', '')
+        requested_by = data.get('requested_by', '')
+
+        if not item_ids:
+            return JsonResponse({'success': False, 'error': 'No items specified'}, status=400)
+
+        # Validate that all item IDs exist
+        existing_ids = set(
+            InventoryItem.objects.filter(id__in=item_ids).values_list('id', flat=True)
+        )
+        invalid_ids = [i for i in item_ids if i not in existing_ids]
+        if invalid_ids:
+            return JsonResponse({
+                'success': False,
+                'error': f'Invalid item IDs: {invalid_ids}'
+            }, status=400)
+
+        job = PrintJob.objects.create(
+            item_ids=item_ids,
+            description=description,
+            requested_by=requested_by,
+        )
+
+        return JsonResponse({
+            'success': True,
+            'job_id': job.id,
+            'item_count': job.item_count,
+            'status': job.status,
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+def pending_print_jobs(request):
+    """Return pending print jobs for the Print Hub page to poll."""
+    jobs = PrintJob.objects.filter(status='pending').order_by('created_at')
+
+    result = []
+    for job in jobs:
+        items = list(InventoryItem.objects.filter(id__in=job.item_ids).order_by('box_id'))
+        labels = []
+        for item in items:
+            labels.append({
+                'item_id': item.id,
+                'manufacturer': item.manufacturer,
+                'pallet_id': item.pallet_id,
+                'box_id': item.box_id,
+                'project_number': item.project_number or '',
+                'qr_url': f'/qr/{item.id}/code.png',
+            })
+
+        result.append({
+            'id': job.id,
+            'item_count': job.item_count,
+            'description': job.description,
+            'requested_by': job.requested_by,
+            'created_at': job.created_at.strftime('%b %d, %Y %I:%M %p'),
+            'labels': labels,
+        })
+
+    return JsonResponse({'jobs': result, 'count': len(result)})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def update_print_job(request):
+    """Mark a print job as completed or failed."""
+    try:
+        data = json.loads(request.body)
+        job_id = data.get('job_id')
+        new_status = data.get('status')
+        error_message = data.get('error_message', '')
+
+        if new_status not in ('printing', 'completed', 'failed'):
+            return JsonResponse({
+                'success': False,
+                'error': 'Status must be printing, completed, or failed'
+            }, status=400)
+
+        job = get_object_or_404(PrintJob, id=job_id)
+        job.status = new_status
+
+        if new_status == 'completed':
+            job.printed_at = timezone.now()
+        if new_status == 'failed':
+            job.error_message = error_message
+
+        job.save()
+
+        return JsonResponse({
+            'success': True,
+            'job_id': job.id,
+            'status': job.status,
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+def print_job_status(request):
+    """Check status of a specific print job or recent jobs."""
+    job_id = request.GET.get('job_id')
+
+    if job_id:
+        job = get_object_or_404(PrintJob, id=job_id)
+        return JsonResponse({
+            'id': job.id,
+            'status': job.status,
+            'item_count': job.item_count,
+            'created_at': job.created_at.strftime('%b %d, %Y %I:%M %p'),
+            'printed_at': job.printed_at.strftime('%b %d, %Y %I:%M %p') if job.printed_at else None,
+            'error_message': job.error_message,
+        })
+
+    # Return recent jobs (last 20)
+    jobs = PrintJob.objects.order_by('-created_at')[:20]
+    result = []
+    for job in jobs:
+        result.append({
+            'id': job.id,
+            'status': job.status,
+            'item_count': job.item_count,
+            'description': job.description,
+            'requested_by': job.requested_by,
+            'created_at': job.created_at.strftime('%b %d, %Y %I:%M %p'),
+            'printed_at': job.printed_at.strftime('%b %d, %Y %I:%M %p') if job.printed_at else None,
+        })
+
+    return JsonResponse({'jobs': result})

@@ -64,4 +64,11 @@ urlpatterns = [
     # Reports & alerts
     path('api/overdue/', views.overdue_items_api, name='overdue_items'),
     path('api/report/', views.inventory_report_api, name='inventory_report'),
+
+    # Print Hub
+    path('print-hub/', views.print_hub, name='print_hub'),
+    path('api/print-jobs/create/', views.create_print_job, name='create_print_job'),
+    path('api/print-jobs/pending/', views.pending_print_jobs, name='pending_print_jobs'),
+    path('api/print-jobs/update/', views.update_print_job, name='update_print_job'),
+    path('api/print-jobs/status/', views.print_job_status, name='print_job_status'),
 ]
