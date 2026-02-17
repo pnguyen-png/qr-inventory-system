@@ -194,6 +194,52 @@
         }
         .btn-print-all:hover { opacity: 0.85; }
 
+        /* Auto-print toggle */
+        .auto-print-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            background: var(--md-sys-color-surface-container);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            margin-bottom: 20px;
+        }
+        .auto-print-bar.active {
+            background: #f0fdf4;
+            border-color: #16a34a;
+        }
+        body.dark-mode .auto-print-bar.active {
+            background: #0f2918;
+            border-color: #16a34a;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 48px; height: 26px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--md-sys-color-outline);
+            border-radius: 26px;
+            transition: 0.3s;
+        }
+        .toggle-slider:before {
+            content: "";
+            position: absolute;
+            height: 20px; width: 20px;
+            left: 3px; bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle-switch input:checked + .toggle-slider { background: #16a34a; }
+        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(22px); }
+        .auto-print-label { font-weight: 600; font-size: 0.9rem; }
+        .auto-print-desc { font-size: 0.75rem; color: var(--md-sys-color-outline); }
+
         /* History section */
         .history-section { margin-top: 32px; }
         .history-item {
@@ -294,6 +340,18 @@
             <span class="status-count" id="statusCount">0 pending</span>
         </div>
 
+        <!-- Auto-print toggle -->
+        <div class="auto-print-bar" id="autoPrintBar">
+            <label class="toggle-switch">
+                <input type="checkbox" id="autoPrintToggle" onchange="toggleAutoPrint()">
+                <span class="toggle-slider"></span>
+            </label>
+            <div>
+                <div class="auto-print-label" id="autoPrintLabel">Auto-Print: OFF</div>
+                <div class="auto-print-desc">When enabled, jobs print automatically as they arrive. Use Chrome's --kiosk-printing flag to skip the print dialog.</div>
+            </div>
+        </div>
+
         <!-- Print All button -->
         <button class="btn-print-all" id="btnPrintAll" onclick="printAllPending()">
             <span class="material-icons" style="font-size:18px; vertical-align:middle; margin-right:4px;">print</span>
@@ -340,6 +398,8 @@
     let currentPrintingJobId = null;
     let pollInterval = null;
     let audioCtx = null;
+    let autoPrintEnabled = false;
+    let autoPrintBusy = false; // prevents overlapping auto-prints
 
     // ---- Dark mode ----
     function toggleDarkMode() {
@@ -417,6 +477,45 @@
         </div>`;
     }
 
+    // ---- Auto-print ----
+    function toggleAutoPrint() {
+        autoPrintEnabled = document.getElementById('autoPrintToggle').checked;
+        const bar = document.getElementById('autoPrintBar');
+        const label = document.getElementById('autoPrintLabel');
+        if (autoPrintEnabled) {
+            bar.classList.add('active');
+            label.textContent = 'Auto-Print: ON';
+            localStorage.setItem('autoPrint', '1');
+            showToast('Auto-print enabled — jobs will print automatically');
+            // Immediately process any pending jobs
+            if (currentJobs.length > 0 && !autoPrintBusy) {
+                autoPrintNext();
+            }
+        } else {
+            bar.classList.remove('active');
+            label.textContent = 'Auto-Print: OFF';
+            localStorage.setItem('autoPrint', '0');
+            showToast('Auto-print disabled');
+        }
+    }
+
+    // Restore auto-print setting
+    if (localStorage.getItem('autoPrint') === '1') {
+        document.getElementById('autoPrintToggle').checked = true;
+        autoPrintEnabled = true;
+        document.getElementById('autoPrintBar').classList.add('active');
+        document.getElementById('autoPrintLabel').textContent = 'Auto-Print: ON';
+    }
+
+    async function autoPrintNext() {
+        if (!autoPrintEnabled || autoPrintBusy || currentJobs.length === 0) return;
+        autoPrintBusy = true;
+
+        const job = currentJobs[0]; // oldest pending job
+        await printJob(job.id);
+        // afterprint handler will set autoPrintBusy = false and trigger next
+    }
+
     // ---- Polling ----
     async function pollForJobs() {
         try {
@@ -434,6 +533,11 @@
             currentJobs = data.jobs;
             renderQueue(data.jobs);
             updateStatusBar(data.count);
+
+            // Auto-print if enabled and not already printing
+            if (autoPrintEnabled && newJobs.length > 0 && !autoPrintBusy) {
+                autoPrintNext();
+            }
         } catch (err) {
             console.error('Poll error:', err);
         }
@@ -537,9 +641,17 @@
         const jobId = currentPrintingJobId;
         currentPrintingJobId = null;
 
-        const confirmed = confirm('Did the labels print successfully?');
-        const status = confirmed ? 'completed' : 'failed';
-        const errorMsg = confirmed ? '' : 'Cancelled or failed by operator';
+        let status, errorMsg;
+
+        if (autoPrintEnabled) {
+            // In auto-print mode, assume success (no confirmation dialog)
+            status = 'completed';
+            errorMsg = '';
+        } else {
+            const confirmed = confirm('Did the labels print successfully?');
+            status = confirmed ? 'completed' : 'failed';
+            errorMsg = confirmed ? '' : 'Cancelled or failed by operator';
+        }
 
         await fetch('/api/print-jobs/update/', {
             method: 'POST',
@@ -551,10 +663,16 @@
             })
         });
 
-        showToast(confirmed ? 'Job marked as printed' : 'Job marked as failed', !confirmed);
+        showToast(status === 'completed' ? 'Job printed' : 'Job marked as failed', status !== 'completed');
         knownJobIds.delete(jobId);
-        pollForJobs();
+        autoPrintBusy = false;
+        await pollForJobs();
         refreshHistory();
+
+        // In auto-print mode, process next job after a brief pause
+        if (autoPrintEnabled && currentJobs.length > 0) {
+            setTimeout(autoPrintNext, 1000);
+        }
     });
 
     async function printAllPending() {
