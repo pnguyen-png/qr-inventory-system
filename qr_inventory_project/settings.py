@@ -12,6 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Core security
 # -----------------------------------------------------------------------------
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-insecure-secret-key-change-me")
+PRINT_API_SECRET = os.environ.get("PRINT_API_SECRET", "")
 
 # DEBUG: default OFF; enable locally by setting DEBUG=1
 DEBUG = os.environ.get("DEBUG", "").strip() in ("1", "true", "True", "yes", "YES")

@@ -132,6 +132,13 @@
             text-decoration: none; color: #fff; cursor: pointer; border: none;
         }
         .btn-print:hover { opacity: 0.9; }
+        .btn-send-printer {
+            background: #ea580c; display: inline-block; padding: 12px 24px;
+            border-radius: 8px; font-size: 0.9rem; font-weight: 600;
+            text-decoration: none; color: #fff; cursor: pointer; border: none;
+        }
+        .btn-send-printer:hover { opacity: 0.9; }
+        .btn-send-printer:disabled { opacity: 0.6; cursor: not-allowed; }
         .print-labels { display: none; }
 
         .summary-card {
@@ -236,11 +243,17 @@
             <p {% if is_history %}style="color:#1d4ed8;"{% endif %}>{{ items|length }} item{{ items|length|pluralize }} for {{ manufacturer }} - Pallet {{ pallet_id }}</p>
         </div>
 
-        <div class="download-cards" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="download-cards" style="grid-template-columns: repeat(4, 1fr);">
             <div class="download-card">
                 <h3>Print QR Codes</h3>
                 <p>Print labels for label printer</p>
                 <button onclick="window.print()" class="btn-print">Print QR Codes</button>
+            </div>
+            <div class="download-card">
+                <h3>Send to Printer</h3>
+                <p>Send to Brother QL printer</p>
+                <button onclick="sendToPrinter()" class="btn-send-printer" id="btnSendPrinter">Send to Printer</button>
+                <div id="printStatus" style="margin-top:8px; font-size:0.8rem;"></div>
             </div>
             <div class="download-card">
                 <h3>Excel File (.xlsx)</h3>
@@ -263,6 +276,42 @@
         if (localStorage.getItem('darkMode') === '1') {
             document.body.classList.add('dark-mode');
             document.getElementById('darkToggle').textContent = 'Light Mode';
+        }
+
+        function sendToPrinter() {
+            var btn = document.getElementById('btnSendPrinter');
+            var status = document.getElementById('printStatus');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            status.textContent = '';
+            status.style.color = '';
+
+            var itemIds = [{% for item in items %}{{ item.id }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+            fetch('/api/print-jobs/create/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({item_ids: itemIds})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    status.textContent = data.jobs_created + ' label(s) queued for printing';
+                    status.style.color = '#16a34a';
+                    btn.textContent = 'Sent!';
+                } else {
+                    status.textContent = 'Error: ' + (data.error || 'Unknown error');
+                    status.style.color = '#dc2626';
+                    btn.disabled = false;
+                    btn.textContent = 'Send to Printer';
+                }
+            })
+            .catch(function(err) {
+                status.textContent = 'Network error: ' + err.message;
+                status.style.color = '#dc2626';
+                btn.disabled = false;
+                btn.textContent = 'Send to Printer';
+            });
         }
         </script>
 

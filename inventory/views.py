@@ -12,7 +12,7 @@ import os
 import uuid
 from datetime import timedelta
 from itertools import chain
-from .models import InventoryItem, StatusHistory, NotificationLog, ItemPhoto, ChangeLog, ScanLog, Tag
+from .models import InventoryItem, StatusHistory, NotificationLog, ItemPhoto, ChangeLog, ScanLog, Tag, PrintJob
 
 LOCATION_CHOICES = [
     'York, PA',
@@ -1514,3 +1514,109 @@ def create_tag(request):
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ---- Wireless Printing API ----
+
+def _check_print_api_auth(request):
+    """Verify Bearer token matches PRINT_API_SECRET. Returns None if OK, or JsonResponse with error."""
+    from django.conf import settings
+    secret = getattr(settings, 'PRINT_API_SECRET', '')
+    if not secret:
+        return JsonResponse({'error': 'Print API not configured'}, status=503)
+    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+    if not auth_header.startswith('Bearer ') or auth_header[7:] != secret:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    return None
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_print_jobs(request):
+    """Create one PrintJob per item. Called by the web UI 'Send to Printer' button."""
+    try:
+        data = json.loads(request.body)
+        item_ids = data.get('item_ids', [])
+
+        if not item_ids:
+            return JsonResponse({'success': False, 'error': 'No item IDs provided'}, status=400)
+
+        items = InventoryItem.objects.filter(id__in=item_ids)
+        if not items.exists():
+            return JsonResponse({'success': False, 'error': 'No matching items found'}, status=404)
+
+        created = []
+        for item in items:
+            job = PrintJob.objects.create(item=item, status='pending')
+            created.append({'id': job.id, 'item_id': item.id, 'tag_id': item.tag_id})
+
+        return JsonResponse({'success': True, 'jobs_created': len(created), 'jobs': created})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def pending_print_jobs(request):
+    """Return pending print jobs for the print worker. Requires Bearer auth."""
+    auth_err = _check_print_api_auth(request)
+    if auth_err:
+        return auth_err
+
+    jobs = PrintJob.objects.filter(status='pending').select_related('item').order_by('created_at')
+    base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
+
+    result = []
+    for job in jobs:
+        result.append({
+            'id': job.id,
+            'image_url': f"{base_url}/api/print-jobs/{job.id}/label.png",
+        })
+
+    return JsonResponse(result, safe=False)
+
+
+@csrf_exempt
+@require_http_methods(["PATCH"])
+def update_print_job_status(request, job_id):
+    """Update print job status. Called by print worker. Requires Bearer auth."""
+    auth_err = _check_print_api_auth(request)
+    if auth_err:
+        return auth_err
+
+    try:
+        data = json.loads(request.body)
+        new_status = data.get('status', '')
+
+        if new_status not in ('printed', 'failed'):
+            return JsonResponse({'error': 'Status must be "printed" or "failed"'}, status=400)
+
+        job = get_object_or_404(PrintJob, id=job_id)
+        job.status = new_status
+        if new_status == 'printed':
+            job.printed_at = timezone.now()
+        elif new_status == 'failed':
+            job.error_message = data.get('error', '')
+        job.save()
+
+        return JsonResponse({'success': True, 'id': job.id, 'status': job.status})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def print_job_label_image(request, job_id):
+    """Serve the QR label PNG for a print job. Requires Bearer auth."""
+    auth_err = _check_print_api_auth(request)
+    if auth_err:
+        return auth_err
+
+    job = get_object_or_404(PrintJob, id=job_id)
+    buf = _make_labeled_qr_image(job.item)
+    if not buf:
+        return HttpResponse('Failed to generate label image', status=500)
+
+    response = HttpResponse(buf.read(), content_type='image/png')
+    response['Cache-Control'] = 'no-cache'
+    return response
