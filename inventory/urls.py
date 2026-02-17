@@ -55,6 +55,8 @@ urlpatterns = [
     path('api/print-jobs/<int:job_id>/update-status/', views.update_print_job_status, name='update_print_job_status'),
     path('api/print-jobs/<int:job_id>/label.png', views.print_job_label_image, name='print_job_label_image'),
     path('api/print-jobs/<int:job_id>/status/', views.print_job_status, name='print_job_status'),
+    path('api/items/<int:item_id>/label.png', views.item_label_image, name='item_label_image'),
+    path('api/items/<int:item_id>/label-preview.png', views.label_preview_image, name='label_preview_image'),
 
     # QR code images (local generation)
     path('qr/<int:item_id>/code.png', views.generate_qr_image, name='generate_qr_image'),

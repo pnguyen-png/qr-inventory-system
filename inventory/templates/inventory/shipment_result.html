@@ -140,6 +140,20 @@
         .btn-send-printer:hover { opacity: 0.9; }
         .btn-send-printer:disabled { opacity: 0.6; cursor: not-allowed; }
         .print-labels { display: none; }
+        .label-preview-container { margin-top: 10px; text-align: center; }
+        .label-preview-container img {
+            max-width: 100%; border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: 4px;
+        }
+        .print-status-inline {
+            font-size: 0.75rem; margin-top: 4px; min-height: 1.2em;
+        }
+        .btn-print-item {
+            background: #ea580c; color: #fff; border: none; border-radius: 4px;
+            padding: 4px 10px; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+        }
+        .btn-print-item:hover { opacity: 0.9; }
+        .btn-print-item:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .summary-card {
             background: var(--md-sys-color-surface-container-low); border-radius: 12px; overflow: hidden;
@@ -198,27 +212,29 @@
 
             .print-labels { display: block !important; }
 
+            /* Landscape layout matching Brother QL 62mm continuous label */
             .print-label {
-                width: 57mm; height: 57mm;
+                width: 62mm;
                 page-break-inside: avoid; break-inside: avoid;
                 page-break-after: always;
-                display: flex !important; flex-direction: column;
-                align-items: center; padding: 2mm; gap: 1mm; margin: 0;
+                display: flex !important; flex-direction: row;
+                align-items: center; padding: 2mm; gap: 2mm; margin: 0;
             }
             .print-label:last-child { page-break-after: avoid; }
             .print-label .qr-box {
-                width: 36mm; height: 36mm; flex-shrink: 0;
+                width: 26mm; height: 26mm; flex-shrink: 0;
                 display: flex; align-items: center; justify-content: center;
             }
             .print-label .qr-box img { width: 100% !important; height: 100% !important; object-fit: contain; }
             .print-label-text {
-                text-align: center; font-family: Arial, Helvetica, sans-serif;
-                line-height: 1.3; width: 100%;
+                text-align: left; font-family: Arial, Helvetica, sans-serif;
+                line-height: 1.3; flex: 1;
             }
             .print-label-text .mfr { font-size: 8pt; font-weight: 700; }
             .print-label-text .detail { font-size: 7pt; color: #333; }
+            .print-label-text .tag-id { font-size: 6pt; color: #666; margin-top: 1mm; }
 
-            @page { size: 2.4in 2.4in; margin: 0; }
+            @page { size: 62mm auto; margin: 0; }
         }
     </style>
 </head>
@@ -299,6 +315,9 @@
                     status.textContent = data.jobs_created + ' label(s) queued for printing';
                     status.style.color = '#16a34a';
                     btn.textContent = 'Sent!';
+                    // Start polling for each job
+                    data.jobs.forEach(function(job) { pollJobStatus(job.id, job.item_id); });
+                    setTimeout(function() { btn.disabled = false; btn.textContent = 'Send to Printer'; }, 5000);
                 } else {
                     status.textContent = 'Error: ' + (data.error || 'Unknown error');
                     status.style.color = '#dc2626';
@@ -313,6 +332,67 @@
                 btn.textContent = 'Send to Printer';
             });
         }
+
+        function sendItemToPrinter(itemId, btnEl) {
+            btnEl.disabled = true;
+            btnEl.textContent = 'Sending...';
+            var statusEl = document.getElementById('ps-' + itemId);
+            statusEl.textContent = '';
+            statusEl.style.color = '';
+
+            fetch('/api/print-jobs/create/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({item_ids: [itemId]})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var job = data.jobs[0];
+                    statusEl.textContent = 'Queued';
+                    statusEl.style.color = '#92400e';
+                    pollJobStatus(job.id, itemId);
+                } else {
+                    statusEl.textContent = data.error || 'Error';
+                    statusEl.style.color = '#dc2626';
+                    btnEl.disabled = false;
+                    btnEl.textContent = 'Print';
+                }
+            })
+            .catch(function(err) {
+                statusEl.textContent = 'Network error';
+                statusEl.style.color = '#dc2626';
+                btnEl.disabled = false;
+                btnEl.textContent = 'Print';
+            });
+        }
+
+        function pollJobStatus(jobId, itemId) {
+            var timer = setInterval(function() {
+                fetch('/api/print-jobs/' + jobId + '/status/')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var statusEl = document.getElementById('ps-' + itemId);
+                    if (!statusEl) { clearInterval(timer); return; }
+                    if (data.status === 'printed') {
+                        clearInterval(timer);
+                        statusEl.textContent = 'Printed';
+                        statusEl.style.color = '#16a34a';
+                        var btn = statusEl.previousElementSibling;
+                        if (btn) { btn.disabled = false; btn.textContent = 'Print'; }
+                    } else if (data.status === 'failed') {
+                        clearInterval(timer);
+                        statusEl.textContent = 'Failed';
+                        statusEl.style.color = '#dc2626';
+                        var btn = statusEl.previousElementSibling;
+                        if (btn) { btn.disabled = false; btn.textContent = 'Retry'; }
+                    }
+                })
+                .catch(function() {});
+            }, 3000);
+            // Stop polling after 2 minutes
+            setTimeout(function() { clearInterval(timer); }, 120000);
+        }
         </script>
 
         <div class="summary-card">
@@ -325,6 +405,7 @@
                         <th>Qty</th>
                         <th>Damaged</th>
                         <th>QR Code</th>
+                        <th>Print</th>
                         <th>View</th>
                     </tr>
                 </thead>
@@ -343,6 +424,10 @@
                                 {{ item.manufacturer }}<br>Pallet {{ item.pallet_id }} &bull; Box #{{ item.box_id }}
                             </div>
                         </td>
+                        <td style="text-align:center;">
+                            <button class="btn-print-item" onclick="sendItemToPrinter({{ item.id }}, this)" title="Send this label to Brother QL printer">Print</button>
+                            <div class="print-status-inline" id="ps-{{ item.id }}"></div>
+                        </td>
                         <td><a href="/scan/?id={{ item.id }}" style="color:#2563eb; font-size:0.85rem;">View</a></td>
                     </tr>
                     {% endfor %}
@@ -360,7 +445,9 @@
                     <div class="mfr">{{ item.manufacturer }}</div>
                     <div class="detail">Box #{{ item.box_id }}</div>
                     <div class="detail">Pallet {{ item.pallet_id }}</div>
-                    <div class="detail">{{ item.project_number|default:"" }}</div>
+                    {% if item.content %}<div class="detail">Qty: {{ item.content }}</div>{% endif %}
+                    {% if item.project_number %}<div class="detail">{{ item.project_number }}</div>{% endif %}
+                    <div class="tag-id">{{ item.tag_id }}</div>
                 </div>
             </div>
             {% endfor %}

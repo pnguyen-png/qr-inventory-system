@@ -7,12 +7,15 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; padding: 24px; color: #333; background: #f9fafb; }
-        .card { background: #fff; border-radius: 8px; padding: 24px; max-width: 480px; margin: 0 auto; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .card { background: #fff; border-radius: 8px; padding: 24px; max-width: 520px; margin: 0 auto; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         h1 { font-size: 20px; margin-bottom: 4px; }
         .subtitle { font-size: 13px; color: #666; margin-bottom: 20px; }
-        .item-info { background: #f3f4f6; border-radius: 6px; padding: 14px; margin-bottom: 20px; font-size: 14px; }
+        .item-info { background: #f3f4f6; border-radius: 6px; padding: 14px; margin-bottom: 16px; font-size: 14px; }
         .item-info p { margin-bottom: 4px; }
         .item-info .label { font-weight: bold; color: #555; }
+        .label-preview { text-align: center; margin-bottom: 16px; }
+        .label-preview img { max-width: 100%; border: 1px solid #e5e7eb; border-radius: 6px; }
+        .label-preview-caption { font-size: 11px; color: #999; margin-top: 4px; }
         .btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; }
         .btn-send { background: #8b1a1a; color: #fff; }
         .btn-send:disabled { background: #ccc; cursor: not-allowed; }
@@ -20,19 +23,27 @@
         .status.pending { display: block; background: #fef3c7; color: #92400e; }
         .status.success { display: block; background: #d1fae5; color: #065f46; }
         .status.error { display: block; background: #fee2e2; color: #991b1b; }
+        .back-link { display: block; text-align: center; margin-top: 16px; color: #8b1a1a; text-decoration: none; font-size: 14px; }
+        .back-link:hover { text-decoration: underline; }
         .device-info { margin-top: 20px; font-size: 11px; color: #999; word-break: break-all; }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>Test Print</h1>
-        <div class="subtitle">Send a QR label to the Brother QL-820NWB to verify printing works from this device.</div>
+        <div class="subtitle">Send a QR label to the Brother QL-820NWB to verify printing works.</div>
 
         {% if item %}
         <div class="item-info">
             <p><span class="label">Item:</span> {{ item.manufacturer }}</p>
             <p><span class="label">Pallet:</span> {{ item.pallet_id }}</p>
             <p><span class="label">Box:</span> #{{ item.box_id }}</p>
+            <p><span class="label">Tag ID:</span> {{ item.tag_id }}</p>
+        </div>
+
+        <div class="label-preview">
+            <img src="/api/items/{{ item.id }}/label-preview.png" alt="Label preview">
+            <div class="label-preview-caption">Label preview (696 x ~352px at 300dpi for 62mm continuous)</div>
         </div>
 
         <button class="btn btn-send" id="sendBtn" onclick="sendTestPrint()">Send Test Label to Printer</button>
@@ -61,8 +72,21 @@
                 .then(function(data) {
                     if (data.success) {
                         jobId = data.jobs[0].id;
-                        status.textContent = 'Job #' + jobId + ' created — waiting for printer to pick it up...';
+                        status.textContent = 'Job #' + jobId + ' created \u2014 waiting for print worker to pick it up...';
                         pollTimer = setInterval(pollStatus, 3000);
+                        // Stop polling after 2 minutes
+                        setTimeout(function() {
+                            if (pollTimer) {
+                                clearInterval(pollTimer);
+                                var s = document.getElementById('status');
+                                if (s.className.indexOf('pending') !== -1) {
+                                    s.className = 'status error';
+                                    s.textContent = 'Timed out waiting for printer response. Is the print worker running?';
+                                    document.getElementById('sendBtn').disabled = false;
+                                    document.getElementById('sendBtn').textContent = 'Retry Test Print';
+                                }
+                            }
+                        }, 120000);
                     } else {
                         status.className = 'status error';
                         status.textContent = 'Error: ' + (data.error || 'Unknown error');
@@ -85,12 +109,14 @@
                     var status = document.getElementById('status');
                     if (data.status === 'printed') {
                         clearInterval(pollTimer);
+                        pollTimer = null;
                         status.className = 'status success';
                         status.textContent = 'Job #' + jobId + ' printed successfully!';
                         document.getElementById('sendBtn').disabled = false;
                         document.getElementById('sendBtn').textContent = 'Send Another Test';
                     } else if (data.status === 'failed') {
                         clearInterval(pollTimer);
+                        pollTimer = null;
                         status.className = 'status error';
                         status.textContent = 'Job #' + jobId + ' failed: ' + (data.error || 'Unknown error');
                         document.getElementById('sendBtn').disabled = false;
@@ -104,6 +130,7 @@
         <p style="color:#991b1b;">No inventory items found. Add a shipment first.</p>
         {% endif %}
 
+        <a href="/dashboard/" class="back-link">Back to Dashboard</a>
         <div class="device-info">Device: <span id="device"></span></div>
         <script>document.getElementById('device').textContent = navigator.userAgent;</script>
     </div>

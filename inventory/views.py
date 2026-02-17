@@ -1622,49 +1622,79 @@ def print_job_status(request, job_id):
 
 
 def _make_brother_ql_label(item):
-    """Generate a label image sized for Brother QL 62mm continuous label (696px printable at 300dpi)."""
+    """Generate a label image sized for Brother QL 62mm continuous label (696px printable at 300dpi).
+
+    Layout: QR code on left, item details on right, tag ID bottom.
+    Uses pure black on white for optimal thermal printing.
+    """
     from PIL import Image as PilImage, ImageDraw, ImageFont
     from io import BytesIO
 
     try:
-        qr_buf = _generate_qr_bytes(item.id)
-        qr_img = PilImage.open(qr_buf).convert('RGB')
+        qr_buf = _generate_qr_bytes(item.id, size=300)
+        qr_img = PilImage.open(qr_buf).convert('1')  # 1-bit for crisp thermal print
+        qr_img = qr_img.convert('RGB')
     except Exception:
         return None
 
-    # 62mm label: brother_ql expects 696px printable width (not 720)
+    # Brother QL 62mm continuous label: 696px printable width at 300dpi
     label_width = 696
-    qr_size = 340
+    qr_size = 300
     qr_img = qr_img.resize((qr_size, qr_size), PilImage.LANCZOS)
 
-    padding = 20
-    text_area_width = label_width - qr_size - padding * 3
-    total_h = qr_size + padding * 2
+    padding = 16
+    total_h = qr_size + padding * 2 + 36  # extra space for tag ID row at bottom
 
-    canvas = PilImage.new('RGB', (label_width, total_h), 'white')
+    canvas = PilImage.new('RGB', (label_width, total_h), '#FFFFFF')
     canvas.paste(qr_img, (padding, padding))
 
     draw = ImageDraw.Draw(canvas)
 
-    try:
-        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
-        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 28)
-    except (OSError, IOError):
-        font_large = ImageFont.load_default()
-        font_small = font_large
+    # Try platform-specific fonts (Linux server, then Windows, then fallback)
+    def _load_font(size, bold=False):
+        paths = [
+            f"/usr/share/fonts/truetype/dejavu/DejaVuSans{'-Bold' if bold else ''}.ttf",
+            f"C:/Windows/Fonts/arial{'bd' if bold else ''}.ttf",
+        ]
+        for p in paths:
+            try:
+                return ImageFont.truetype(p, size)
+            except (OSError, IOError):
+                continue
+        return ImageFont.load_default()
+
+    font_large = _load_font(32, bold=True)
+    font_med = _load_font(26)
+    font_small = _load_font(20)
 
     text_x = padding + qr_size + padding
-    text_y = padding + 20
+    text_y = padding + 16
 
-    draw.text((text_x, text_y), item.manufacturer, fill='#000', font=font_large)
-    text_y += 60
-    draw.text((text_x, text_y), f"Box #{item.box_id}", fill='#000', font=font_small)
-    text_y += 45
-    draw.text((text_x, text_y), f"Pallet {item.pallet_id}", fill='#000', font=font_small)
-    text_y += 45
+    # Manufacturer name
+    draw.text((text_x, text_y), item.manufacturer or '', fill='#000000', font=font_large)
+    text_y += 48
+
+    # Box and pallet info
+    draw.text((text_x, text_y), f"Box #{item.box_id}", fill='#000000', font=font_med)
+    text_y += 38
+    draw.text((text_x, text_y), f"Pallet {item.pallet_id}", fill='#000000', font=font_med)
+    text_y += 38
+
+    # Quantity
+    if item.content:
+        draw.text((text_x, text_y), f"Qty: {item.content}", fill='#000000', font=font_med)
+        text_y += 38
+
+    # Project number if available
     project = getattr(item, 'project_number', '') or ''
     if project:
-        draw.text((text_x, text_y), f"Project {project}", fill='#000', font=font_small)
+        draw.text((text_x, text_y), f"Project {project}", fill='#000000', font=font_small)
+
+    # Tag ID along the bottom for easy reference
+    tag_id = getattr(item, 'tag_id', '') or ''
+    if tag_id:
+        tag_y = total_h - padding - 20
+        draw.text((padding, tag_y), tag_id, fill='#666666', font=font_small)
 
     buf = BytesIO()
     canvas.save(buf, format='PNG')
@@ -1687,4 +1717,36 @@ def print_job_label_image(request, job_id):
 
     response = HttpResponse(buf.read(), content_type='image/png')
     response['Cache-Control'] = 'no-cache'
+    return response
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def item_label_image(request, item_id):
+    """Serve the Brother QL label PNG for an item directly (no print job required). Requires Bearer auth."""
+    auth_err = _check_print_api_auth(request)
+    if auth_err:
+        return auth_err
+
+    item = get_object_or_404(InventoryItem, id=item_id)
+    buf = _make_brother_ql_label(item)
+    if not buf:
+        return HttpResponse('Failed to generate label image', status=500)
+
+    response = HttpResponse(buf.read(), content_type='image/png')
+    response['Cache-Control'] = 'no-cache'
+    return response
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def label_preview_image(request, item_id):
+    """Serve label preview PNG (no auth, for browser preview)."""
+    item = get_object_or_404(InventoryItem, id=item_id)
+    buf = _make_brother_ql_label(item)
+    if not buf:
+        return HttpResponse('Failed to generate label image', status=500)
+
+    response = HttpResponse(buf.read(), content_type='image/png')
+    response['Cache-Control'] = 'public, max-age=300'
     return response
