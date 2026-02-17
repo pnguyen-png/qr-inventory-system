@@ -724,7 +724,7 @@ def inventory_report_api(request):
 
 def _next_pallet_id(manufacturer=None):
     """Compute the next pallet ID (max existing + 1). Global across all manufacturers."""
-    result = InventoryItem.objects.aggregate(max_pallet=Max('pallet_id'))
+    result = InventoryItem.objects.aggregate(max_pallet=Max(Cast('pallet_id', IntegerField())))
     max_pallet = result['max_pallet']
     if max_pallet:
         try:
