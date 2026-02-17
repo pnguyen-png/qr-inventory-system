@@ -668,58 +668,6 @@
         .activity-text { flex: 1; color: var(--md-sys-color-on-surface); }
         .activity-time { color: var(--md-sys-color-outline); font-size: 0.7rem; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 
-        /* --- Print Labels Layout for Brother QL-820NWB (2.4" x 2.3" labels) --- */
-        .print-labels { display: none; }
-        @media print {
-            body * { visibility: hidden; }
-            .print-labels, .print-labels * { visibility: visible !important; }
-            .print-labels {
-                display: block !important;
-                position: absolute;
-                top: 0; left: 0;
-            }
-            .print-label {
-                width: 57mm;
-                height: 54mm;
-                page-break-inside: avoid;
-                break-inside: avoid;
-                page-break-after: always;
-                display: flex !important;
-                flex-direction: column;
-                align-items: center;
-                padding: 2mm;
-                gap: 1mm;
-                margin: 0;
-            }
-            .print-label:last-child { page-break-after: avoid; }
-            .print-label .qr-box {
-                width: 46mm; height: 46mm;
-                flex-shrink: 0;
-                display: flex; align-items: center; justify-content: center;
-                overflow: hidden;
-            }
-            .print-label .qr-box img {
-                width: 100% !important; height: 100% !important;
-                object-fit: contain;
-            }
-            .print-label-text {
-                text-align: center;
-                font-family: Arial, Helvetica, sans-serif;
-                line-height: 1.2;
-                overflow: hidden;
-                width: 100%;
-            }
-            .print-label-text .mfr {
-                font-size: 8pt; font-weight: 700;
-            }
-            .print-label-text .detail {
-                font-size: 7pt; color: #333;
-            }
-            @page {
-                size: 2.4in 2.3in;
-                margin: 0;
-            }
-        }
     </style>
 </head>
 <body>
@@ -800,10 +748,7 @@
                         <a href="/shipments/">Shipments</a>
                         <a href="/tags/">Manage Tags</a>
                         <a href="/export/csv/{% if show_archived %}?archived=1{% endif %}">Export CSV</a>
-                        <a href="#" onclick="printAllQRLabels(); closeMoreMenu(); return false;">Print Labels</a>
-                        <a href="#" onclick="sendAllToPrintHub(); closeMoreMenu(); return false;">Send to Print Hub</a>
                         <a href="/export/pdf/{% if show_archived %}?archived=1{% endif %}" target="_blank">Print Report</a>
-                        <a href="/print-hub/" target="_blank">Open Print Hub</a>
                         {% if show_archived %}
                         <a href="/dashboard/">View Active Inventory</a>
                         {% else %}
@@ -881,7 +826,6 @@
             {% else %}
             <button class="btn-bulk archive" onclick="applyBulkArchive(true)">Archive Selected</button>
             {% endif %}
-            <button class="btn-bulk" style="background:#7c3aed;" onclick="sendSelectedToPrintHub()">Send to Print Hub</button>
             <button class="btn-bulk cancel" onclick="clearSelection()">Cancel</button>
         </div>
 
@@ -1040,7 +984,6 @@
     </div>
 
     <!-- Hidden print labels container -->
-    <div class="print-labels" id="printLabels"></div>
 
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
@@ -1650,101 +1593,6 @@
             const d = document.createElement('div');
             d.textContent = text;
             return d.innerHTML;
-        }
-
-        // ---- Print QR Labels ----
-        function buildLabelHTML(row) {
-            const mfr = row.children[1].textContent.trim();
-            const palletId = row.children[2].textContent.trim();
-            const projectNum = row.children[3].textContent.trim();
-            const boxId = row.children[4].textContent.trim();
-            const itemId = row.dataset.id;
-            const qrUrl = `/qr/${itemId}/code.png`;
-
-            return `<div class="print-label">
-                <div class="qr-box"><img src="${qrUrl}" alt="QR"></div>
-                <div class="print-label-text">
-                    <div class="mfr">${escapeHtml(mfr)}</div>
-                    <div class="detail">Box ${escapeHtml(boxId)}</div>
-                    <div class="detail">Pallet ${escapeHtml(palletId)}</div>
-                    <div class="detail">${projectNum !== '-' ? escapeHtml(projectNum) : ''}</div>
-                </div>
-            </div>`;
-        }
-
-        function printLabelsFromRows(rows) {
-            const container = document.getElementById('printLabels');
-            container.innerHTML = rows.map(r => buildLabelHTML(r)).join('');
-
-            // Wait for QR images to load before printing, with a timeout safety net
-            const images = container.querySelectorAll('img');
-            let loaded = 0;
-            let printed = false;
-            const total = images.length;
-            if (total === 0) { window.print(); return; }
-
-            function triggerPrint() {
-                if (printed) return;
-                printed = true;
-                window.print();
-            }
-
-            // Safety timeout — print after 10 seconds even if images haven't loaded
-            setTimeout(triggerPrint, 10000);
-
-            images.forEach(function(img) {
-                if (img.complete) {
-                    loaded++;
-                    if (loaded === total) triggerPrint();
-                } else {
-                    img.onload = img.onerror = function() {
-                        loaded++;
-                        if (loaded === total) triggerPrint();
-                    };
-                }
-            });
-        }
-
-        function printAllQRLabels() {
-            const rows = Array.from(document.querySelectorAll('#inventoryTable tbody tr.pallet-item')).filter(r => r.style.display !== 'none');
-            if (!rows.length) { showToast('No items to print', true); return; }
-            printLabelsFromRows(rows);
-        }
-
-        // ---- Print Hub ----
-        async function submitPrintJob(itemIds, description) {
-            try {
-                const resp = await fetch('/api/print-jobs/create/', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        item_ids: itemIds,
-                        description: description,
-                        requested_by: document.getElementById('bulkChangedBy')?.value || '',
-                    })
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    showToast('Sent ' + data.item_count + ' label(s) to Print Hub (Job #' + data.job_id + ')');
-                } else {
-                    showToast('Error: ' + data.error, true);
-                }
-            } catch (err) {
-                showToast('Network error sending to Print Hub', true);
-            }
-        }
-
-        function sendAllToPrintHub() {
-            const rows = Array.from(document.querySelectorAll('#inventoryTable tbody tr.pallet-item')).filter(r => r.style.display !== 'none');
-            if (!rows.length) { showToast('No items to send', true); return; }
-            const itemIds = rows.map(r => parseInt(r.dataset.id));
-            submitPrintJob(itemIds, itemIds.length + ' labels from dashboard');
-        }
-
-        function sendSelectedToPrintHub() {
-            const ids = getSelectedIds();
-            if (!ids.length) { showToast('No items selected', true); return; }
-            submitPrintJob(ids, ids.length + ' selected labels');
         }
 
         // ---- #4: Debounced search ----

@@ -157,8 +157,8 @@
         .nav-links a:hover { text-decoration: underline; }
         .print-labels { display: none; }
         .btn-add-another {
-            display: inline-block; padding: 10px 20px; background: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary); border-radius: 8px; text-decoration: none;
+            display: inline-block; padding: 10px 20px; background: #16a34a;
+            color: #fff; border-radius: 8px; text-decoration: none;
             font-size: 0.875rem; font-weight: 600;
         }
         .btn-add-another:hover { opacity: 0.9; }
@@ -166,14 +166,6 @@
         @media (max-width: 600px) {
             .download-cards { grid-template-columns: 1fr; }
         }
-
-        /* --- Print Labels Layout for Brother QL-820NWB (62mm x 50mm labels) --- */
-        .btn-print {
-            background: #7c3aed; display: inline-block; padding: 12px 24px;
-            border-radius: 8px; font-size: 0.9rem; font-weight: 600;
-            text-decoration: none; color: #fff; cursor: pointer; border: none;
-        }
-        .btn-print:hover { opacity: 0.9; }
 
         /* Dark mode */
         .dark-toggle {
@@ -197,10 +189,10 @@
                 display: block !important;
             }
 
-            /* Each label: 2.4" x 2.3" for Brother QL-820NWB */
+            /* Each label: 2.4" x 2.5" for Brother QL-820NWB */
             .print-label {
                 width: 57mm;
-                height: 54mm;
+                height: 58mm;
                 page-break-inside: avoid;
                 break-inside: avoid;
                 page-break-after: always;
@@ -213,10 +205,9 @@
             }
             .print-label:last-child { page-break-after: avoid; }
             .print-label .qr-box {
-                width: 46mm; height: 46mm;
+                width: 36mm; height: 36mm;
                 flex-shrink: 0;
                 display: flex; align-items: center; justify-content: center;
-                overflow: hidden;
             }
             .print-label .qr-box img {
                 width: 100% !important; height: 100% !important;
@@ -225,8 +216,7 @@
             .print-label-text {
                 text-align: center;
                 font-family: Arial, Helvetica, sans-serif;
-                line-height: 1.2;
-                overflow: hidden;
+                line-height: 1.3;
                 width: 100%;
             }
             .print-label-text .mfr {
@@ -237,7 +227,7 @@
             }
 
             @page {
-                size: 2.4in 2.3in;
+                size: 2.4in 2.5in;
                 margin: 0;
             }
         }
@@ -264,18 +254,7 @@
             <p {% if is_history %}style="color:#1d4ed8;"{% endif %}>{{ items|length }} item{{ items|length|pluralize }} for {{ manufacturer }} - Pallet {{ pallet_id }}</p>
         </div>
 
-        <div class="download-cards" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
-            <div class="download-card">
-                <h3>Print Labels</h3>
-                <p>Print QR labels directly from this browser</p>
-                <button onclick="printLabels()" class="btn-print">Print Labels</button>
-            </div>
-            <div class="download-card">
-                <h3>Send to Print Hub</h3>
-                <p>Queue labels on the desktop printer</p>
-                <button onclick="sendToPrintHub()" class="btn-print" id="printHubBtn" style="background:#7c3aed;">Send to Print Hub</button>
-                <div id="printHubStatus" style="margin-top:8px; font-size:0.8rem; display:none;"></div>
-            </div>
+        <div class="download-cards">
             <div class="download-card">
                 <h3>Excel File (.xlsx)</h3>
                 <p>Download with embedded QR codes</p>
@@ -306,50 +285,6 @@
         </div>
 
         <script>
-        var shipmentItemIds = [{% for item in items %}{{ item.id }}{% if not forloop.last %},{% endif %}{% endfor %}];
-
-        function printLabels() {
-            window.print();
-        }
-
-        async function sendToPrintHub() {
-            var btn = document.getElementById('printHubBtn');
-            var statusEl = document.getElementById('printHubStatus');
-            btn.disabled = true;
-            btn.textContent = 'Sending...';
-
-            try {
-                var resp = await fetch('/api/print-jobs/create/', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        item_ids: shipmentItemIds,
-                        description: '{{ manufacturer }} Pallet {{ pallet_id }} - {{ items|length }} labels',
-                    })
-                });
-                var data = await resp.json();
-                if (data.success) {
-                    btn.textContent = 'Sent!';
-                    btn.style.background = '#16a34a';
-                    statusEl.style.display = 'block';
-                    statusEl.innerHTML = 'Job #' + data.job_id + ' queued (' + data.item_count + ' labels)';
-                } else {
-                    btn.textContent = 'Error';
-                    btn.style.background = '#dc2626';
-                    statusEl.style.display = 'block';
-                    statusEl.textContent = data.error;
-                }
-            } catch (err) {
-                btn.textContent = 'Network Error';
-                btn.style.background = '#dc2626';
-            }
-            setTimeout(function() {
-                btn.disabled = false;
-                btn.textContent = 'Send to Print Hub';
-                btn.style.background = '#7c3aed';
-            }, 3000);
-        }
-
         function toggleDarkMode() {
             var isDark = document.body.classList.toggle('dark-mode');
             localStorage.setItem('darkMode', isDark ? '1' : '0');

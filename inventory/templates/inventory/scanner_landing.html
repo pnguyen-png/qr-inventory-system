@@ -427,29 +427,6 @@
             font-size: 0.75rem; color: var(--md-sys-color-on-surface-variant); margin-top: 8px;
         }
 
-        /* Print single label for Brother QL-820NWB (2.4" x 2.3" labels) */
-        .print-single-label { display: none; }
-        @media print {
-            .header, .container { display: none !important; }
-            .print-single-label {
-                display: flex !important;
-                flex-direction: column;
-                align-items: center;
-                width: 57mm; height: 54mm;
-                padding: 2mm; gap: 1mm;
-            }
-            .print-single-label .qr-box {
-                width: 46mm; height: 46mm;
-                flex-shrink: 0;
-                display: flex; align-items: center; justify-content: center;
-                overflow: hidden;
-            }
-            .print-single-label .qr-box img { width: 100% !important; height: 100% !important; object-fit: contain; }
-            .print-single-label .lbl-text { text-align: center; font-family: Arial, sans-serif; line-height: 1.2; overflow: hidden; width: 100%; }
-            .print-single-label .lbl-mfr { font-size: 8pt; font-weight: 700; }
-            .print-single-label .lbl-detail { font-size: 7pt; color: #333; }
-            @page { size: 2.4in 2.3in; margin: 0; }
-        }
     </style>
 </head>
 <body>
@@ -570,19 +547,11 @@
 
             <div class="qr-section">
                 <h3>QR Code</h3>
-                <img class="qr-code-img" src="{{ item.short_qr_url }}" alt="QR Code for {{ item.manufacturer }} Box #{{ item.box_id }}"
-                     onclick="printSingleLabel()" title="Click to print label">
+                <img class="qr-code-img" src="{{ item.short_qr_url }}" alt="QR Code for {{ item.manufacturer }} Box #{{ item.box_id }}">
                 <div style="margin-top:8px; font-size:0.85rem; font-weight:600; color:#374151; line-height:1.5;">
                     {{ item.manufacturer }}<br>
                     Pallet {{ item.pallet_id }} &bull; Box #{{ item.box_id }}
                 </div>
-                <button onclick="printSingleLabel()" style="display:inline-block; margin-top:10px; padding:10px 20px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer;">
-                    Print QR Label
-                </button>
-                <button onclick="sendToPrintHub({{ item.id }})" id="printHubBtn" style="display:inline-block; margin-top:10px; margin-left:8px; padding:10px 20px; background:#6d28d9; color:#fff; border:none; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer;">
-                    Send to Print Hub
-                </button>
-                <div id="printHubStatus" style="margin-top:8px; font-size:0.8rem; display:none;"></div>
             </div>
 
             <!-- Photos -->
@@ -1082,61 +1051,6 @@
     {% endif %}
 
     {% if item %}
-    <!-- Hidden print-only label for Brother QL-820NWB (29mm x 90mm) -->
-    <div class="print-single-label" id="printLabel">
-        <div class="qr-box">
-            <img src="{{ item.short_qr_url }}" alt="QR">
-        </div>
-        <div class="lbl-text">
-            <div class="lbl-mfr">{{ item.manufacturer }}</div>
-            <div class="lbl-detail">Box #{{ item.box_id }}</div>
-            <div class="lbl-detail">Pallet {{ item.pallet_id }}</div>
-            <div class="lbl-detail">{{ item.project_number|default:"" }}</div>
-        </div>
-    </div>
-    <script>
-    function printSingleLabel() {
-        window.print();
-    }
-
-    async function sendToPrintHub(itemId) {
-        var btn = document.getElementById('printHubBtn');
-        var statusEl = document.getElementById('printHubStatus');
-        btn.disabled = true;
-        btn.textContent = 'Sending...';
-
-        try {
-            var resp = await fetch('/api/print-jobs/create/', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    item_ids: [itemId],
-                    description: '{{ item.manufacturer }} Box #{{ item.box_id }}',
-                })
-            });
-            var data = await resp.json();
-            if (data.success) {
-                btn.textContent = 'Sent!';
-                btn.style.background = '#16a34a';
-                statusEl.style.display = 'block';
-                statusEl.innerHTML = 'Job #' + data.job_id + ' queued';
-            } else {
-                btn.textContent = 'Error';
-                btn.style.background = '#dc2626';
-                statusEl.style.display = 'block';
-                statusEl.textContent = data.error;
-            }
-        } catch (err) {
-            btn.textContent = 'Network Error';
-            btn.style.background = '#dc2626';
-        }
-        setTimeout(function() {
-            btn.disabled = false;
-            btn.textContent = 'Send to Print Hub';
-            btn.style.background = '#6d28d9';
-        }, 3000);
-    }
-    </script>
     {% endif %}
     <script>
     // Dark mode toggle
