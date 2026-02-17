@@ -111,34 +111,41 @@ def send_to_printer(image):
             blocking=True,
         )
 
-        # brother_ql often reports "printing potentially not successful" even when
-        # the print actually worked fine (USB status read timeout). We treat it as
-        # success unless we get an explicit error status.
+        log.info('Printer result: %s', status)
+
         did_print = status.get('did_print', False)
-        outcome = status.get('outcome', 'unknown')
+        instructions_sent = status.get('instructions_sent', False)
 
         if did_print:
             log.info('Print confirmed successful.')
             return True, ''
 
-        # Check for real errors vs the common false-negative
-        ready = status.get('ready_for_next_job', False)
-        errors = [k for k, v in status.items()
-                  if k.startswith('error') and v]
-        media_error = any(k for k in errors if 'media' in k.lower())
+        # The real errors are in printer_state.errors (a list).
+        # The QL-820NWB over USB often reports status_type='Error occurred'
+        # with an empty errors list — this is a USB status read timeout,
+        # NOT an actual print error.
+        printer_state = status.get('printer_state', {})
+        real_errors = printer_state.get('errors', [])
 
-        if errors and media_error:
-            err = f'Printer error: {errors}'
+        if real_errors:
+            err = f'Printer errors: {real_errors}'
             log.error(err)
             return False, err
 
-        # Common case: status read timed out but print likely succeeded
-        log.warning(
-            'Print status ambiguous (outcome=%s, did_print=%s). '
-            'Treating as success — check physical output.',
-            outcome, did_print,
-        )
-        return True, ''
+        # Instructions were sent and no real errors reported —
+        # the QL-820NWB just didn't send back the "completed" status
+        # over USB (known limitation). Treat as success.
+        if instructions_sent:
+            log.info(
+                'Instructions sent, no errors reported. '
+                'Treating as success (QL-820NWB USB status timeout is normal).'
+            )
+            return True, ''
+
+        # Fallback: nothing was sent at all
+        err = f'Print failed: outcome={status.get("outcome", "unknown")}'
+        log.error(err)
+        return False, err
 
     except Exception as e:
         err = str(e)
