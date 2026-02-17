@@ -155,7 +155,6 @@
             text-decoration: none; font-size: 0.875rem;
         }
         .nav-links a:hover { text-decoration: underline; }
-        .print-labels { display: none; }
         .btn-add-another {
             display: inline-block; padding: 10px 20px; background: #16a34a;
             color: #fff; border-radius: 8px; text-decoration: none;
@@ -179,58 +178,6 @@
         body.dark-mode .success-banner h2 { color: #6ee7b7; }
         body.dark-mode .success-banner p { color: #34d399; }
 
-        @media print {
-            /* Hide screen UI */
-            .header, .success-banner, .download-cards,
-            .summary-card, .nav-links { display: none !important; }
-
-            /* Show print labels */
-            .print-labels {
-                display: block !important;
-            }
-
-            /* Each label: 2.4" x 2.5" for Brother QL-820NWB */
-            .print-label {
-                width: 57mm;
-                height: 58mm;
-                page-break-inside: avoid;
-                break-inside: avoid;
-                page-break-after: always;
-                display: flex !important;
-                flex-direction: column;
-                align-items: center;
-                padding: 2mm;
-                gap: 1mm;
-                margin: 0;
-            }
-            .print-label:last-child { page-break-after: avoid; }
-            .print-label .qr-box {
-                width: 36mm; height: 36mm;
-                flex-shrink: 0;
-                display: flex; align-items: center; justify-content: center;
-            }
-            .print-label .qr-box img {
-                width: 100% !important; height: 100% !important;
-                object-fit: contain;
-            }
-            .print-label-text {
-                text-align: center;
-                font-family: Arial, Helvetica, sans-serif;
-                line-height: 1.3;
-                width: 100%;
-            }
-            .print-label-text .mfr {
-                font-size: 8pt; font-weight: 700;
-            }
-            .print-label-text .detail {
-                font-size: 7pt; color: #333;
-            }
-
-            @page {
-                size: 2.4in 2.5in;
-                margin: 0;
-            }
-        }
     </style>
 </head>
 <body>
@@ -265,23 +212,6 @@
                 <p>Alternative format for compatibility</p>
                 <a href="/shipment/{{ shipment_key }}/download/csv/" class="btn-download btn-csv">Download CSV</a>
             </div>
-        </div>
-
-        <!-- Print-only layout: one label per item, 29mm x 90mm landscape -->
-        <div class="print-labels" id="printLabels">
-            {% for item in items %}
-            <div class="print-label">
-                <div class="qr-box">
-                    <img src="{{ item.short_qr_url }}" alt="QR">
-                </div>
-                <div class="print-label-text">
-                    <div class="mfr">{{ item.manufacturer }}</div>
-                    <div class="detail">Box #{{ item.box_id }}</div>
-                    <div class="detail">Pallet {{ item.pallet_id }}</div>
-                    <div class="detail">{{ item.project_number|default:"" }}</div>
-                </div>
-            </div>
-            {% endfor %}
         </div>
 
         <script>
