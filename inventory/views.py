@@ -594,6 +594,11 @@ def export_qr_codes(request):
     return response
 
 
+def test_print(request):
+    """Temporary test print page to verify browser printing works on any device."""
+    return render(request, 'inventory/test_print.html')
+
+
 def export_pdf(request):
     """Export inventory to a simple HTML-based printable report (PDF-ready)"""
     show_archived = request.GET.get('archived', '') == '1'
