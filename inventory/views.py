@@ -1604,6 +1604,57 @@ def update_print_job_status(request, job_id):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+def _make_brother_ql_label(item):
+    """Generate a label image sized for Brother QL 62mm continuous label (720px wide at 300dpi)."""
+    from PIL import Image as PilImage, ImageDraw, ImageFont
+    from io import BytesIO
+
+    try:
+        qr_buf = _generate_qr_bytes(item.id)
+        qr_img = PilImage.open(qr_buf).convert('RGB')
+    except Exception:
+        return None
+
+    # 62mm label = 720 pixels wide at 300dpi
+    label_width = 720
+    qr_size = 350
+    qr_img = qr_img.resize((qr_size, qr_size), PilImage.LANCZOS)
+
+    padding = 20
+    text_area_width = label_width - qr_size - padding * 3
+    total_h = qr_size + padding * 2
+
+    canvas = PilImage.new('RGB', (label_width, total_h), 'white')
+    canvas.paste(qr_img, (padding, padding))
+
+    draw = ImageDraw.Draw(canvas)
+
+    try:
+        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
+        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 28)
+    except (OSError, IOError):
+        font_large = ImageFont.load_default()
+        font_small = font_large
+
+    text_x = padding + qr_size + padding
+    text_y = padding + 20
+
+    draw.text((text_x, text_y), item.manufacturer, fill='#000', font=font_large)
+    text_y += 60
+    draw.text((text_x, text_y), f"Box #{item.box_id}", fill='#333', font=font_small)
+    text_y += 45
+    draw.text((text_x, text_y), f"Pallet {item.pallet_id}", fill='#333', font=font_small)
+    text_y += 45
+    project = getattr(item, 'project_number', '') or ''
+    if project:
+        draw.text((text_x, text_y), f"Project {project}", fill='#333', font=font_small)
+
+    buf = BytesIO()
+    canvas.save(buf, format='PNG')
+    buf.seek(0)
+    return buf
+
+
 @csrf_exempt
 @require_http_methods(["GET"])
 def print_job_label_image(request, job_id):
@@ -1613,7 +1664,7 @@ def print_job_label_image(request, job_id):
         return auth_err
 
     job = get_object_or_404(PrintJob, id=job_id)
-    buf = _make_labeled_qr_image(job.item)
+    buf = _make_brother_ql_label(job.item)
     if not buf:
         return HttpResponse('Failed to generate label image', status=500)
 
