@@ -2,32 +2,110 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test Print</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
-        h1 { font-size: 24px; margin-bottom: 8px; }
-        .info { font-size: 14px; color: #666; margin-bottom: 24px; }
-        .test-box { border: 2px solid #000; padding: 20px; max-width: 500px; }
-        .test-box p { margin-bottom: 8px; font-size: 14px; }
-        .label { font-weight: bold; }
-        @media print {
-            body { padding: 0; }
-            @page { margin: 0.5in; }
-        }
+        body { font-family: Arial, sans-serif; padding: 24px; color: #333; background: #f9fafb; }
+        .card { background: #fff; border-radius: 8px; padding: 24px; max-width: 480px; margin: 0 auto; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        h1 { font-size: 20px; margin-bottom: 4px; }
+        .subtitle { font-size: 13px; color: #666; margin-bottom: 20px; }
+        .item-info { background: #f3f4f6; border-radius: 6px; padding: 14px; margin-bottom: 20px; font-size: 14px; }
+        .item-info p { margin-bottom: 4px; }
+        .item-info .label { font-weight: bold; color: #555; }
+        .btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; }
+        .btn-send { background: #8b1a1a; color: #fff; }
+        .btn-send:disabled { background: #ccc; cursor: not-allowed; }
+        .status { margin-top: 16px; padding: 12px; border-radius: 6px; font-size: 14px; display: none; }
+        .status.pending { display: block; background: #fef3c7; color: #92400e; }
+        .status.success { display: block; background: #d1fae5; color: #065f46; }
+        .status.error { display: block; background: #fee2e2; color: #991b1b; }
+        .device-info { margin-top: 20px; font-size: 11px; color: #999; word-break: break-all; }
     </style>
 </head>
 <body>
-    <h1>Test Print</h1>
-    <div class="info">If this page printed successfully, browser printing works on this device.</div>
-    <div class="test-box">
-        <p><span class="label">Time:</span> <span id="timestamp"></span></p>
-        <p><span class="label">Device:</span> <span id="device"></span></p>
+    <div class="card">
+        <h1>Test Print</h1>
+        <div class="subtitle">Send a QR label to the Brother QL-820NWB to verify printing works from this device.</div>
+
+        {% if item %}
+        <div class="item-info">
+            <p><span class="label">Item:</span> {{ item.manufacturer }}</p>
+            <p><span class="label">Pallet:</span> {{ item.pallet_id }}</p>
+            <p><span class="label">Box:</span> #{{ item.box_id }}</p>
+        </div>
+
+        <button class="btn btn-send" id="sendBtn" onclick="sendTestPrint()">Send Test Label to Printer</button>
+
+        <div class="status" id="status"></div>
+
+        <script>
+            var jobId = null;
+            var pollTimer = null;
+
+            function sendTestPrint() {
+                var btn = document.getElementById('sendBtn');
+                var status = document.getElementById('status');
+                btn.disabled = true;
+                btn.textContent = 'Sending...';
+                status.className = 'status pending';
+                status.style.display = 'block';
+                status.textContent = 'Creating print job...';
+
+                fetch('/api/print-jobs/create/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({item_ids: [{{ item.id }}]})
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        jobId = data.jobs[0].id;
+                        status.textContent = 'Job #' + jobId + ' created — waiting for printer to pick it up...';
+                        pollTimer = setInterval(pollStatus, 3000);
+                    } else {
+                        status.className = 'status error';
+                        status.textContent = 'Error: ' + (data.error || 'Unknown error');
+                        btn.disabled = false;
+                        btn.textContent = 'Send Test Label to Printer';
+                    }
+                })
+                .catch(function(err) {
+                    status.className = 'status error';
+                    status.textContent = 'Network error: ' + err.message;
+                    btn.disabled = false;
+                    btn.textContent = 'Send Test Label to Printer';
+                });
+            }
+
+            function pollStatus() {
+                fetch('/api/print-jobs/' + jobId + '/status/')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var status = document.getElementById('status');
+                    if (data.status === 'printed') {
+                        clearInterval(pollTimer);
+                        status.className = 'status success';
+                        status.textContent = 'Job #' + jobId + ' printed successfully!';
+                        document.getElementById('sendBtn').disabled = false;
+                        document.getElementById('sendBtn').textContent = 'Send Another Test';
+                    } else if (data.status === 'failed') {
+                        clearInterval(pollTimer);
+                        status.className = 'status error';
+                        status.textContent = 'Job #' + jobId + ' failed: ' + (data.error || 'Unknown error');
+                        document.getElementById('sendBtn').disabled = false;
+                        document.getElementById('sendBtn').textContent = 'Retry Test Print';
+                    }
+                })
+                .catch(function() {});
+            }
+        </script>
+        {% else %}
+        <p style="color:#991b1b;">No inventory items found. Add a shipment first.</p>
+        {% endif %}
+
+        <div class="device-info">Device: <span id="device"></span></div>
+        <script>document.getElementById('device').textContent = navigator.userAgent;</script>
     </div>
-    <script>
-        document.getElementById('timestamp').textContent = new Date().toLocaleString();
-        document.getElementById('device').textContent = navigator.userAgent;
-        window.onload = function() { window.print(); };
-    </script>
 </body>
 </html>

@@ -595,8 +595,9 @@ def export_qr_codes(request):
 
 
 def test_print(request):
-    """Temporary test print page to verify browser printing works on any device."""
-    return render(request, 'inventory/test_print.html')
+    """Temporary test print page — sends a real QR label to the Brother QL printer."""
+    item = InventoryItem.objects.filter(archived=False).order_by('?').first()
+    return render(request, 'inventory/test_print.html', {'item': item})
 
 
 def export_pdf(request):
@@ -1607,6 +1608,17 @@ def update_print_job_status(request, job_id):
         return JsonResponse({'success': True, 'id': job.id, 'status': job.status})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def print_job_status(request, job_id):
+    """Return current status of a print job (used by test print polling)."""
+    job = get_object_or_404(PrintJob, id=job_id)
+    return JsonResponse({
+        'id': job.id,
+        'status': job.status,
+        'error': job.error_message,
+    })
 
 
 def _make_brother_ql_label(item):
