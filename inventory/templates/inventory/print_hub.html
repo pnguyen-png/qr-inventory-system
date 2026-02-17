@@ -275,6 +275,99 @@
         }
         .toast.show { opacity: 1; }
 
+        /* Setup guide */
+        .setup-guide {
+            border-radius: 12px;
+            border: 1px solid var(--md-sys-color-outline-variant);
+            background: var(--md-sys-color-surface-container-low);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .setup-guide-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .setup-guide-header:hover { background: var(--md-sys-color-surface-container); }
+        .setup-guide-header .material-icons { color: #7c3aed; font-size: 20px; }
+        .setup-guide-hint {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--md-sys-color-on-surface);
+            flex: 1;
+        }
+        .setup-guide-arrow {
+            font-size: 18px;
+            color: var(--md-sys-color-outline);
+            transition: transform 0.2s;
+        }
+        .setup-guide.open .setup-guide-arrow { transform: rotate(180deg); }
+        .setup-guide-body {
+            display: none;
+            padding: 0 20px 20px;
+        }
+        .setup-guide.open .setup-guide-body { display: block; }
+        .setup-guide-body p {
+            font-size: 0.8rem;
+            color: var(--md-sys-color-on-surface-variant);
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        .setup-step {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .setup-step-num {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: #7c3aed;
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .setup-step-text {
+            font-size: 0.8rem;
+            color: var(--md-sys-color-on-surface);
+            line-height: 1.5;
+        }
+        .setup-step-text strong { font-weight: 700; }
+        .code-block {
+            display: block;
+            margin-top: 6px;
+            padding: 8px 12px;
+            background: var(--md-sys-color-surface-container-high);
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.72rem;
+            word-break: break-all;
+            color: var(--md-sys-color-on-surface);
+            border: 1px solid var(--md-sys-color-outline-variant);
+        }
+        .setup-result {
+            margin-top: 16px;
+            padding: 12px 16px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #166534;
+            line-height: 1.5;
+        }
+        body.dark-mode .setup-result {
+            background: #0f2918;
+            border-color: #166534;
+            color: #86efac;
+        }
+
         /* --- Print Labels Layout (reused from dashboard) --- */
         .print-labels { display: none; }
         @media print {
@@ -352,6 +445,54 @@
             </div>
         </div>
 
+        <!-- Setup Guide (collapsible) -->
+        <div class="setup-guide" id="setupGuide">
+            <div class="setup-guide-header" onclick="toggleSetupGuide()">
+                <span class="material-icons">help_outline</span>
+                <span class="setup-guide-hint">Skip the print dialog for fully hands-free printing</span>
+                <span class="material-icons setup-guide-arrow">expand_more</span>
+            </div>
+            <div class="setup-guide-body">
+                <p>
+                    Browsers always show a print dialog when <code>window.print()</code> is called &mdash; this is a security feature.
+                    To bypass it and get true zero-touch auto-printing, launch Chrome with a special flag:
+                </p>
+
+                <div class="setup-step">
+                    <div class="setup-step-num">1</div>
+                    <div class="setup-step-text">
+                        <strong>Set your Brother QL-810W as the default printer</strong> in Windows Settings &rarr; Devices &rarr; Printers &amp; Scanners. Make sure "Let Windows manage my default printer" is OFF.
+                    </div>
+                </div>
+
+                <div class="setup-step">
+                    <div class="setup-step-num">2</div>
+                    <div class="setup-step-text">
+                        <strong>Create a Chrome shortcut</strong> on your desktop. Right-click Desktop &rarr; New &rarr; Shortcut. Paste this as the target:
+                        <code class="code-block">"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing</code>
+                    </div>
+                </div>
+
+                <div class="setup-step">
+                    <div class="setup-step-num">3</div>
+                    <div class="setup-step-text">
+                        <strong>Name the shortcut</strong> something like <strong>"Print Hub (Auto)"</strong> so you remember what it does.
+                    </div>
+                </div>
+
+                <div class="setup-step">
+                    <div class="setup-step-num">4</div>
+                    <div class="setup-step-text">
+                        <strong>Open the shortcut</strong> and navigate to this Print Hub page. Turn on <strong>Auto-Print</strong> above.
+                    </div>
+                </div>
+
+                <div class="setup-result">
+                    <strong>Result:</strong> When a print job arrives, the labels render automatically, Chrome sends them straight to your default printer (no dialog), the job is marked complete, and it moves to the next one. Fully hands-free!
+                </div>
+            </div>
+        </div>
+
         <!-- Print All button -->
         <button class="btn-print-all" id="btnPrintAll" onclick="printAllPending()">
             <span class="material-icons" style="font-size:18px; vertical-align:middle; margin-right:4px;">print</span>
@@ -410,6 +551,17 @@
     if (localStorage.getItem('darkMode') === '1') {
         document.body.classList.add('dark-mode');
         document.getElementById('darkToggle').textContent = 'Light Mode';
+    }
+
+    // ---- Setup guide ----
+    function toggleSetupGuide() {
+        const guide = document.getElementById('setupGuide');
+        const isOpen = guide.classList.toggle('open');
+        localStorage.setItem('setupGuideOpen', isOpen ? '1' : '0');
+    }
+    // Restore setup guide state
+    if (localStorage.getItem('setupGuideOpen') === '1') {
+        document.getElementById('setupGuide').classList.add('open');
     }
 
     // ---- Toast ----
