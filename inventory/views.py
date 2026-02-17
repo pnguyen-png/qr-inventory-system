@@ -1605,7 +1605,7 @@ def update_print_job_status(request, job_id):
 
 
 def _make_brother_ql_label(item):
-    """Generate a label image sized for Brother QL 62mm continuous label (720px wide at 300dpi)."""
+    """Generate a label image sized for Brother QL 62mm continuous label (696px printable at 300dpi)."""
     from PIL import Image as PilImage, ImageDraw, ImageFont
     from io import BytesIO
 
@@ -1615,9 +1615,9 @@ def _make_brother_ql_label(item):
     except Exception:
         return None
 
-    # 62mm label = 720 pixels wide at 300dpi
-    label_width = 720
-    qr_size = 350
+    # 62mm label: brother_ql expects 696px printable width (not 720)
+    label_width = 696
+    qr_size = 340
     qr_img = qr_img.resize((qr_size, qr_size), PilImage.LANCZOS)
 
     padding = 20
