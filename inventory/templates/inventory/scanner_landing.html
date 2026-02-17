@@ -427,7 +427,7 @@
             font-size: 0.75rem; color: var(--md-sys-color-on-surface-variant); margin-top: 8px;
         }
 
-        /* Print single label for Brother QL-820NWB (2.4" x 2.3" labels) */
+        /* Print single label 2.4" x 2.4" */
         .print-single-label { display: none; }
         @media print {
             .header, .container { display: none !important; }
@@ -435,20 +435,22 @@
                 display: flex !important;
                 flex-direction: column;
                 align-items: center;
-                width: 57mm; height: 54mm;
-                padding: 2mm; gap: 1mm;
+                justify-content: center;
+                width: 2.4in; height: 2.4in;
+                box-sizing: border-box;
+                padding: 1mm; gap: 0;
             }
             .print-single-label .qr-box {
-                width: 46mm; height: 46mm;
+                width: 2in; height: 2in;
                 flex-shrink: 0;
                 display: flex; align-items: center; justify-content: center;
                 overflow: hidden;
             }
             .print-single-label .qr-box img { width: 100% !important; height: 100% !important; object-fit: contain; }
-            .print-single-label .lbl-text { text-align: center; font-family: Arial, sans-serif; line-height: 1.2; overflow: hidden; width: 100%; }
-            .print-single-label .lbl-mfr { font-size: 8pt; font-weight: 700; }
-            .print-single-label .lbl-detail { font-size: 7pt; color: #333; }
-            @page { size: 2.4in 2.3in; margin: 0; }
+            .print-single-label .lbl-text { text-align: center; font-family: Arial, sans-serif; line-height: 1.1; overflow: hidden; width: 100%; }
+            .print-single-label .lbl-mfr { font-size: 7pt; font-weight: 700; }
+            .print-single-label .lbl-detail { font-size: 6pt; color: #333; }
+            @page { size: 2.4in 2.4in; margin: 0; }
         }
     </style>
 </head>
