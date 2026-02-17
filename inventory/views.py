@@ -448,8 +448,7 @@ def generate_qr_image(request, item_id):
 
 
 def _make_labeled_qr_image(item):
-    """Helper: QR label sized for Brother QL-820NWB 62mm labels at 300 DPI.
-    Large QR on top, text info below. Returns BytesIO PNG or None."""
+    """Helper: landscape QR label — QR on left, text on right. Returns BytesIO PNG or None."""
     from PIL import Image as PilImage, ImageDraw, ImageFont
     from io import BytesIO
 
@@ -459,45 +458,39 @@ def _make_labeled_qr_image(item):
     except Exception:
         return None
 
-    # Brother QL-820NWB: 62mm label = 720px wide at 300 DPI
-    label_w = 720
-    label_h = 720  # square label for clean layout
-
-    padding = 30
-    qr_size = 480
+    # Scale QR to fit label (140px square)
+    qr_size = 140
     qr_img = qr_img.resize((qr_size, qr_size), PilImage.LANCZOS)
 
-    canvas = PilImage.new('RGB', (label_w, label_h), 'white')
-    # Center QR horizontally
-    qr_x = (label_w - qr_size) // 2
-    canvas.paste(qr_img, (qr_x, padding))
+    padding = 10
+    text_area_width = 220
+    total_w = padding + qr_size + padding + text_area_width + padding
+    total_h = qr_size + padding * 2
+
+    canvas = PilImage.new('RGB', (total_w, total_h), 'white')
+    canvas.paste(qr_img, (padding, padding))
 
     draw = ImageDraw.Draw(canvas)
 
     try:
-        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 38)
-        font_med = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 30)
+        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
+        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 13)
     except (OSError, IOError):
         font_large = ImageFont.load_default()
-        font_med = font_large
+        font_small = font_large
 
-    # Text below QR
-    text_y = padding + qr_size + 20
-    # Manufacturer name centered
-    mfr = item.manufacturer or ''
-    bbox = draw.textbbox((0, 0), mfr, font=font_large)
-    mfr_w = bbox[2] - bbox[0]
-    draw.text(((label_w - mfr_w) // 2, text_y), mfr, fill='black', font=font_large)
+    text_x = padding + qr_size + padding
+    text_y = padding + 10
 
-    text_y += 50
-    # Box and Pallet on one line
-    info = f"Box #{item.box_id}  |  Pallet {item.pallet_id}"
+    draw.text((text_x, text_y), item.manufacturer, fill='#333', font=font_large)
+    text_y += 28
+    draw.text((text_x, text_y), f"Box #{item.box_id}", fill='#333', font=font_small)
+    text_y += 22
+    draw.text((text_x, text_y), f"Pallet {item.pallet_id}", fill='#333', font=font_small)
+    text_y += 22
     project = getattr(item, 'project_number', '') or ''
     if project:
-        info += f"  |  Proj {project}"
-    bbox = draw.textbbox((0, 0), info, font=font_med)
-    info_w = bbox[2] - bbox[0]
-    draw.text(((label_w - info_w) // 2, text_y), info, fill='black', font=font_med)
+        draw.text((text_x, text_y), f"Project {project}", fill='#333', font=font_small)
 
     buf = BytesIO()
     canvas.save(buf, format='PNG')
@@ -1655,6 +1648,9 @@ def _make_brother_ql_label(item):
     project = getattr(item, 'project_number', '') or ''
     if project:
         draw.text((text_x, text_y), f"Project {project}", fill='#333', font=font_small)
+
+    # Convert to 1-bit monochrome for Brother QL (eliminates brother_ql resize issues)
+    canvas = canvas.convert('1')
 
     buf = BytesIO()
     canvas.save(buf, format='PNG')
