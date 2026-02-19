@@ -126,12 +126,6 @@
         .btn-excel:hover { opacity: 0.9; }
         .btn-csv { background: #2563eb; }
         .btn-csv:hover { opacity: 0.9; }
-        .btn-print {
-            background: #7c3aed; display: inline-block; padding: 12px 24px;
-            border-radius: 8px; font-size: 0.9rem; font-weight: 600;
-            text-decoration: none; color: #fff; cursor: pointer; border: none;
-        }
-        .btn-print:hover { opacity: 0.9; }
         .btn-send-printer {
             background: #ea580c; display: inline-block; padding: 12px 24px;
             border-radius: 8px; font-size: 0.9rem; font-weight: 600;
@@ -139,8 +133,6 @@
         }
         .btn-send-printer:hover { opacity: 0.9; }
         .btn-send-printer:disabled { opacity: 0.6; cursor: not-allowed; }
-        .print-labels { display: none; }
-
         .summary-card {
             background: var(--md-sys-color-surface-container-low); border-radius: 12px; overflow: hidden;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;
@@ -192,34 +184,6 @@
         body.dark-mode .success-banner h2 { color: #6ee7b7; }
         body.dark-mode .success-banner p { color: #34d399; }
 
-        @media print {
-            .header, .success-banner, .download-cards,
-            .summary-card, .nav-links { display: none !important; }
-
-            .print-labels { display: block !important; }
-
-            .print-label {
-                width: 57mm; height: 57mm;
-                page-break-inside: avoid; break-inside: avoid;
-                page-break-after: always;
-                display: flex !important; flex-direction: column;
-                align-items: center; padding: 2mm; gap: 1mm; margin: 0;
-            }
-            .print-label:last-child { page-break-after: avoid; }
-            .print-label .qr-box {
-                width: 36mm; height: 36mm; flex-shrink: 0;
-                display: flex; align-items: center; justify-content: center;
-            }
-            .print-label .qr-box img { width: 100% !important; height: 100% !important; object-fit: contain; }
-            .print-label-text {
-                text-align: center; font-family: Arial, Helvetica, sans-serif;
-                line-height: 1.3; width: 100%;
-            }
-            .print-label-text .mfr { font-size: 8pt; font-weight: 700; }
-            .print-label-text .detail { font-size: 7pt; color: #333; }
-
-            @page { size: 2.4in 2.4in; margin: 0; }
-        }
     </style>
 </head>
 <body>
@@ -243,12 +207,7 @@
             <p {% if is_history %}style="color:#1d4ed8;"{% endif %}>{{ items|length }} item{{ items|length|pluralize }} for {{ manufacturer }} - Pallet {{ pallet_id }}</p>
         </div>
 
-        <div class="download-cards" style="grid-template-columns: repeat(4, 1fr);">
-            <div class="download-card">
-                <h3>Print QR Codes</h3>
-                <p>Print labels for label printer</p>
-                <button onclick="window.print()" class="btn-print">Print QR Codes</button>
-            </div>
+        <div class="download-cards" style="grid-template-columns: repeat(3, 1fr);">
             <div class="download-card">
                 <h3>Send to Printer</h3>
                 <p>Send to Brother QL printer</p>
@@ -348,22 +307,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-
-        <div class="print-labels">
-            {% for item in items %}
-            <div class="print-label">
-                <div class="qr-box">
-                    <img src="{{ item.short_qr_url }}" alt="QR">
-                </div>
-                <div class="print-label-text">
-                    <div class="mfr">{{ item.manufacturer }}</div>
-                    <div class="detail">Box #{{ item.box_id }}</div>
-                    <div class="detail">Pallet {{ item.pallet_id }}</div>
-                    <div class="detail">{{ item.project_number|default:"" }}</div>
-                </div>
-            </div>
-            {% endfor %}
         </div>
 
         <div class="nav-links">
