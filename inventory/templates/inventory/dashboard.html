@@ -860,7 +860,7 @@
                     {% for item in items %}
                     <tr data-id="{{ item.id }}" data-status="{{ item.status }}" data-damaged="{{ item.damaged|yesno:'true,false' }}"
                         data-overdue="{{ item.is_overdue|yesno:'true,false' }}"
-                        data-pallet="{{ item.manufacturer|lower }}-{{ item.pallet_id|lower }}"
+                        data-pallet="{{ item.pallet_id|lower }}"
                         data-created="{{ item.created_at|date:'U' }}" data-updated="{{ item.updated_at|date:'U' }}"
                         data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.project_number|lower }} {{ item.location|lower }} {{ item.description|lower }} {{ item.checked_out_by|lower }} {{ item.tag_id|lower }} {{ item.tags|lower }}"
                         class="{% if item.is_overdue %}overdue-row{% endif %} pallet-item">
