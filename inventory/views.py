@@ -472,10 +472,23 @@ def _make_labeled_qr_image(item):
 
     draw = ImageDraw.Draw(canvas)
 
-    try:
-        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
-        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 13)
-    except (OSError, IOError):
+    import os
+    bundled_dir = os.path.join(os.path.dirname(__file__), 'static', 'inventory', 'fonts')
+    font_paths = [
+        (os.path.join(bundled_dir, 'DejaVuSans-Bold.ttf'),
+         os.path.join(bundled_dir, 'DejaVuSans.ttf')),
+        ('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+         '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'),
+    ]
+    font_large = font_small = None
+    for bold_path, regular_path in font_paths:
+        try:
+            font_large = ImageFont.truetype(bold_path, 16)
+            font_small = ImageFont.truetype(regular_path, 13)
+            break
+        except (OSError, IOError):
+            continue
+    if font_large is None:
         font_large = ImageFont.load_default()
         font_small = font_large
 
@@ -1646,10 +1659,24 @@ def _make_brother_ql_label(item):
 
     draw = ImageDraw.Draw(canvas)
 
-    try:
-        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 52)
-        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 42)
-    except (OSError, IOError):
+    # Try bundled fonts first (for Railway/production), then system fonts
+    import os
+    bundled_dir = os.path.join(os.path.dirname(__file__), 'static', 'inventory', 'fonts')
+    font_paths = [
+        (os.path.join(bundled_dir, 'DejaVuSans-Bold.ttf'),
+         os.path.join(bundled_dir, 'DejaVuSans.ttf')),
+        ('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+         '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'),
+    ]
+    font_large = font_small = None
+    for bold_path, regular_path in font_paths:
+        try:
+            font_large = ImageFont.truetype(bold_path, 52)
+            font_small = ImageFont.truetype(regular_path, 42)
+            break
+        except (OSError, IOError):
+            continue
+    if font_large is None:
         font_large = ImageFont.load_default()
         font_small = font_large
 
