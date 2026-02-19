@@ -1647,8 +1647,8 @@ def _make_brother_ql_label(item):
     draw = ImageDraw.Draw(canvas)
 
     try:
-        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
-        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 28)
+        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 52)
+        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 42)
     except (OSError, IOError):
         font_large = ImageFont.load_default()
         font_small = font_large
@@ -1657,11 +1657,11 @@ def _make_brother_ql_label(item):
     text_y = padding + 20
 
     draw.text((text_x, text_y), item.manufacturer, fill='#000', font=font_large)
-    text_y += 60
+    text_y += 75
     draw.text((text_x, text_y), f"Box #{item.box_id}", fill='#000', font=font_small)
-    text_y += 45
+    text_y += 60
     draw.text((text_x, text_y), f"Pallet {item.pallet_id}", fill='#000', font=font_small)
-    text_y += 45
+    text_y += 60
     project = getattr(item, 'project_number', '') or ''
     if project:
         draw.text((text_x, text_y), f"Project {project}", fill='#000', font=font_small)
