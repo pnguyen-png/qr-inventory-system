@@ -212,6 +212,31 @@
         .error-msg .material-icons {
             font-size: 1.2rem;
         }
+        .lockout-msg {
+            background: var(--md-sys-color-tertiary-container);
+            color: var(--md-sys-color-on-tertiary-container);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+        }
+        .lockout-msg .material-icons {
+            font-size: 1.4rem;
+        }
+        /* Honeypot: invisible to humans */
+        .hp-field {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            opacity: 0;
+            height: 0;
+            width: 0;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body>
@@ -232,7 +257,12 @@
         <div class="login-card">
             <h2>Sign In</h2>
             <p class="login-subtitle">Enter your credentials to continue</p>
-            {% if form.errors %}
+            {% if lockout_minutes %}
+            <div class="lockout-msg">
+                <span class="material-icons">lock</span>
+                Too many failed attempts. Please try again in {{ lockout_minutes }} minute{{ lockout_minutes|pluralize }}.
+            </div>
+            {% elif form.errors %}
             <div class="error-msg">
                 <span class="material-icons">error_outline</span>
                 Invalid username or password. Please try again.
@@ -247,6 +277,11 @@
                 <div class="form-group">
                     <label for="id_password">Password</label>
                     <input type="password" name="password" id="id_password" required>
+                </div>
+                <!-- Honeypot: invisible to humans, bots auto-fill it -->
+                <div class="hp-field" aria-hidden="true">
+                    <label for="id_website">Website</label>
+                    <input type="text" name="website" id="id_website" tabindex="-1" autocomplete="off">
                 </div>
                 <input type="hidden" name="next" value="{{ next }}">
                 <button type="submit" class="btn-login">Sign In</button>

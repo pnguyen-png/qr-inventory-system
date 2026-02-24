@@ -1,3 +1,13 @@
+import json
+import csv
+import time
+import urllib.parse
+import os
+import uuid
+from datetime import timedelta
+from itertools import chain
+
+from django.contrib.auth.views import LoginView
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -5,14 +15,71 @@ from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from django.db.models import Max, IntegerField, Count, Min
 from django.db.models.functions import Cast
-import json
-import csv
-import urllib.parse
-import os
-import uuid
-from datetime import timedelta
-from itertools import chain
-from .models import InventoryItem, StatusHistory, NotificationLog, ItemPhoto, ChangeLog, ScanLog, Tag, PrintJob
+
+from .forms import SecureLoginForm
+from .models import (
+    InventoryItem, StatusHistory, NotificationLog, ItemPhoto,
+    ChangeLog, ScanLog, Tag, PrintJob, LoginAttempt,
+)
+
+# ---------------------------------------------------------------------------
+# Secure Login View
+# ---------------------------------------------------------------------------
+
+def _get_client_ip(request):
+    """Extract real client IP, accounting for Railway/Cloudflare proxies."""
+    # Cloudflare sets CF-Connecting-IP
+    cf_ip = request.META.get('HTTP_CF_CONNECTING_IP')
+    if cf_ip:
+        return cf_ip.strip()
+    # Standard proxy header
+    xff = request.META.get('HTTP_X_FORWARDED_FOR')
+    if xff:
+        return xff.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', '0.0.0.0')
+
+
+class SecureLoginView(LoginView):
+    template_name = 'inventory/login.html'
+    form_class = SecureLoginForm
+
+    def dispatch(self, request, *args, **kwargs):
+        ip = _get_client_ip(request)
+        if LoginAttempt.is_locked_out(ip):
+            remaining = LoginAttempt.lockout_remaining(ip)
+            minutes = max(remaining // 60, 1)
+            return render(request, self.template_name, {
+                'form': self.form_class(),
+                'lockout_minutes': minutes,
+            })
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        ip = _get_client_ip(self.request)
+        LoginAttempt.objects.create(
+            ip_address=ip,
+            username=form.cleaned_data.get('username', ''),
+            success=True,
+        )
+        LoginAttempt.clear_failures(ip)
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        ip = _get_client_ip(self.request)
+        is_bot = form.is_bot
+        LoginAttempt.objects.create(
+            ip_address=ip,
+            username=self.request.POST.get('username', ''),
+            success=False,
+            is_bot=is_bot,
+        )
+        # Progressive delay (don't delay bots — just reject them fast)
+        if not is_bot:
+            delay = LoginAttempt.get_delay(ip)
+            if delay > 0:
+                time.sleep(delay)
+        return super().form_invalid(form)
+
 
 LOCATION_CHOICES = [
     'York, PA',

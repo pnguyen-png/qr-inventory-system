@@ -207,3 +207,73 @@ class PrintJob(models.Model):
 
     def __str__(self):
         return f"PrintJob #{self.id} - {self.item} ({self.status})"
+
+
+class LoginAttempt(models.Model):
+    """Tracks every login attempt for auditing, lockout, and rate-limiting."""
+    ip_address = models.CharField(max_length=45)  # supports IPv6
+    username = models.CharField(max_length=150, blank=True, default='')
+    success = models.BooleanField(default=False)
+    is_bot = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['ip_address', 'timestamp']),
+        ]
+
+    def __str__(self):
+        status = 'OK' if self.success else ('BOT' if self.is_bot else 'FAIL')
+        return f"{self.ip_address} - {self.username} - {status} @ {self.timestamp}"
+
+    # ---------- class-level helpers ----------
+
+    LOCKOUT_THRESHOLD = 10
+    LOCKOUT_WINDOW = timedelta(hours=1)
+    DELAY_SCHEDULE = [0, 0, 0, 1, 2, 5, 10, 15, 20, 30]  # seconds by attempt #
+
+    @classmethod
+    def recent_failures(cls, ip):
+        """Count failed (non-bot) attempts from this IP in the lockout window."""
+        cutoff = timezone.now() - cls.LOCKOUT_WINDOW
+        return cls.objects.filter(
+            ip_address=ip, success=False, is_bot=False, timestamp__gte=cutoff
+        ).count()
+
+    @classmethod
+    def is_locked_out(cls, ip):
+        return cls.recent_failures(ip) >= cls.LOCKOUT_THRESHOLD
+
+    @classmethod
+    def lockout_remaining(cls, ip):
+        """Return seconds remaining in lockout, or 0 if not locked out."""
+        cutoff = timezone.now() - cls.LOCKOUT_WINDOW
+        oldest_in_window = (
+            cls.objects.filter(
+                ip_address=ip, success=False, is_bot=False, timestamp__gte=cutoff
+            )
+            .order_by('timestamp')
+            .first()
+        )
+        if oldest_in_window and cls.is_locked_out(ip):
+            expires = oldest_in_window.timestamp + cls.LOCKOUT_WINDOW
+            remaining = (expires - timezone.now()).total_seconds()
+            return max(int(remaining), 0)
+        return 0
+
+    @classmethod
+    def get_delay(cls, ip):
+        """Progressive delay in seconds based on recent failure count."""
+        failures = cls.recent_failures(ip)
+        if failures >= len(cls.DELAY_SCHEDULE):
+            return cls.DELAY_SCHEDULE[-1]
+        return cls.DELAY_SCHEDULE[failures]
+
+    @classmethod
+    def clear_failures(cls, ip):
+        """Mark recent failures as resolved by deleting them (on successful login)."""
+        cutoff = timezone.now() - cls.LOCKOUT_WINDOW
+        cls.objects.filter(
+            ip_address=ip, success=False, timestamp__gte=cutoff
+        ).delete()
