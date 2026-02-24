@@ -1682,16 +1682,45 @@ def _make_brother_ql_label(item):
 
     text_x = padding + qr_size + padding
     text_y = padding + 20
+    max_text_w = label_width - text_x - padding
 
-    draw.text((text_x, text_y), item.manufacturer, fill='#000', font=font_large)
+    def draw_fitted_text(x, y, text, font, base_size, bold=False):
+        """Draw text, shrinking font size if it exceeds max_text_w."""
+        tw = draw.textlength(text, font=font)
+        if tw <= max_text_w:
+            draw.text((x, y), text, fill='#000', font=font)
+            return
+        # Shrink font until text fits
+        font_path = bold_path if bold else regular_path
+        for size in range(base_size - 2, 10, -2):
+            try:
+                smaller = ImageFont.truetype(font_path, size)
+            except (OSError, IOError):
+                break
+            if draw.textlength(text, font=smaller) <= max_text_w:
+                draw.text((x, y), text, fill='#000', font=smaller)
+                return
+        draw.text((x, y), text, fill='#000', font=font)
+
+    # Store the resolved font paths for draw_fitted_text
+    bold_path = regular_path = None
+    for bp, rp in font_paths:
+        try:
+            ImageFont.truetype(bp, 10)
+            bold_path, regular_path = bp, rp
+            break
+        except (OSError, IOError):
+            continue
+
+    draw_fitted_text(text_x, text_y, item.manufacturer, font_large, 52, bold=True)
     text_y += 75
-    draw.text((text_x, text_y), f"Box #{item.box_id}", fill='#000', font=font_small)
+    draw_fitted_text(text_x, text_y, f"Box #{item.box_id}", font_small, 42)
     text_y += 60
-    draw.text((text_x, text_y), f"Pallet {item.pallet_id}", fill='#000', font=font_small)
+    draw_fitted_text(text_x, text_y, f"Pallet {item.pallet_id}", font_small, 42)
     text_y += 60
     project = getattr(item, 'project_number', '') or ''
     if project:
-        draw.text((text_x, text_y), f"Project {project}", fill='#000', font=font_small)
+        draw_fitted_text(text_x, text_y, f"Project {project}", font_small, 42)
 
     buf = BytesIO()
     canvas.save(buf, format='PNG')
