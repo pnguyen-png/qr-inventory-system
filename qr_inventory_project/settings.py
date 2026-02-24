@@ -22,6 +22,8 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     ".railway.app",
+    "fratrack.com",
+    "www.fratrack.com",
 ]
 
 # If you are testing via ngrok locally
@@ -154,6 +156,8 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "https://*.railway.app",
     "https://web-production-57c20.up.railway.app",
+    "https://fratrack.com",
+    "https://www.fratrack.com",
 ]
 
 # -----------------------------------------------------------------------------
