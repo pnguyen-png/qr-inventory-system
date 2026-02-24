@@ -54,6 +54,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "inventory.middleware.LoginRequiredMiddleware",
 ]
 
 ROOT_URLCONF = "qr_inventory_project.urls"
@@ -195,3 +196,14 @@ LOGGING = {
         },
     },
 }
+
+# -----------------------------------------------------------------------------
+# Authentication
+# -----------------------------------------------------------------------------
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/dashboard/"
+LOGOUT_REDIRECT_URL = "/accounts/login/"
+
+# Session expires after 15 minutes of inactivity; timer resets on each request
+SESSION_COOKIE_AGE = 60 * 15  # 15 minutes
+SESSION_SAVE_EVERY_REQUEST = True
