@@ -433,13 +433,22 @@ def bulk_update_status(request):
 
 
 def export_csv(request):
-    """Export inventory to CSV"""
-    show_archived = request.GET.get('archived', '') == '1'
+    """Export inventory to CSV. Supports ?ids=1,2,3 for selective export."""
+    ids_param = request.GET.get('ids', '').strip()
 
-    if show_archived:
-        items = InventoryItem.objects.filter(archived=True).order_by('-updated_at')
+    if ids_param:
+        # Selective export by item IDs
+        try:
+            item_ids = [int(x) for x in ids_param.split(',') if x.strip()]
+        except ValueError:
+            item_ids = []
+        items = InventoryItem.objects.filter(id__in=item_ids).order_by('-updated_at')
     else:
-        items = InventoryItem.objects.filter(archived=False).order_by('-updated_at')
+        show_archived = request.GET.get('archived', '') == '1'
+        if show_archived:
+            items = InventoryItem.objects.filter(archived=True).order_by('-updated_at')
+        else:
+            items = InventoryItem.objects.filter(archived=False).order_by('-updated_at')
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="inventory_export.csv"'
@@ -688,13 +697,22 @@ def test_print(request):
 
 
 def export_pdf(request):
-    """Export inventory to a simple HTML-based printable report (PDF-ready)"""
-    show_archived = request.GET.get('archived', '') == '1'
+    """Export inventory to a simple HTML-based printable report (PDF-ready).
+    Supports ?ids=1,2,3 for selective export."""
+    ids_param = request.GET.get('ids', '').strip()
 
-    if show_archived:
-        items = InventoryItem.objects.filter(archived=True).order_by('-updated_at')
+    if ids_param:
+        try:
+            item_ids = [int(x) for x in ids_param.split(',') if x.strip()]
+        except ValueError:
+            item_ids = []
+        items = InventoryItem.objects.filter(id__in=item_ids).order_by('-updated_at')
     else:
-        items = InventoryItem.objects.filter(archived=False).order_by('-updated_at')
+        show_archived = request.GET.get('archived', '') == '1'
+        if show_archived:
+            items = InventoryItem.objects.filter(archived=True).order_by('-updated_at')
+        else:
+            items = InventoryItem.objects.filter(archived=False).order_by('-updated_at')
 
     return render(request, 'inventory/export_pdf.html', {
         'items': items,

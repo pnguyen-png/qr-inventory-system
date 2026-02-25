@@ -407,6 +407,37 @@
         .bulk-bar .btn-bulk.apply { background: #16a34a; }
         .bulk-bar .btn-bulk.archive { background: #f59e0b; color: #1a1a2e; }
         .bulk-bar .btn-bulk.cancel { background: #64748b; }
+        .bulk-bar .btn-bulk.report { background: #2563eb; }
+        .report-menu {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            margin-bottom: 6px;
+            background: var(--card-bg);
+            border: 0.5px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            overflow: hidden;
+            min-width: 170px;
+            z-index: 30;
+        }
+        .report-menu.active { display: block; }
+        .report-menu button {
+            display: block;
+            width: 100%;
+            padding: 10px 14px;
+            border: none;
+            background: none;
+            text-align: left;
+            font-size: 0.82rem;
+            font-family: inherit;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        .report-menu button:hover { background: var(--bg-secondary); }
+        .report-menu button + button { border-top: 0.5px solid var(--border-light); }
 
         /* ---- Modal ---- */
         .modal-overlay {
@@ -773,6 +804,16 @@
             {% else %}
             <button class="btn-bulk archive" onclick="applyBulkArchive(true)">Archive Selected</button>
             {% endif %}
+            <span style="border-left:1px solid #4b5563; height:24px;"></span>
+            <div class="report-dropdown" style="position:relative; display:inline-block;">
+                <button class="btn-bulk report" onclick="toggleReportMenu()" style="background:#2563eb; color:#fff;">
+                    <span class="material-icons" style="font-size:14px; vertical-align:-2px;">description</span> Report
+                </button>
+                <div class="report-menu" id="reportMenu">
+                    <button onclick="generateReport('print')"><span class="material-icons" style="font-size:14px; vertical-align:-2px;">print</span> Print Report</button>
+                    <button onclick="generateReport('csv')"><span class="material-icons" style="font-size:14px; vertical-align:-2px;">download</span> Download CSV</button>
+                </div>
+            </div>
             <button class="btn-bulk cancel" onclick="clearSelection()">Cancel</button>
         </div>
 
@@ -1038,58 +1079,80 @@
             filterTable();
         }
 
-        function filterTable() {
+        // Helper: check if a row/card matches the current filter
+        function doesRowMatchFilter(el) {
             const search = document.getElementById('searchInput').value.toLowerCase();
             const status = document.getElementById('statusFilter').value;
+            const matchSearch = !search || (el.dataset.search && el.dataset.search.includes(search));
+            let matchStatus = !status || el.dataset.status === status;
+            let matchTab = true;
+            if (currentTab === 'damaged') matchTab = el.dataset.damaged === 'true';
+            if (currentTab === 'overdue') matchTab = el.dataset.overdue === 'true';
+            return matchSearch && matchStatus && matchTab;
+        }
+
+        function filterTable() {
             const rows = document.querySelectorAll('#inventoryTable tbody tr.pallet-item');
 
             rows.forEach(row => {
-                const matchSearch = !search || (row.dataset.search && row.dataset.search.includes(search));
-                let matchStatus = !status || row.dataset.status === status;
-                let matchTab = true;
-
-                if (currentTab === 'damaged') matchTab = row.dataset.damaged === 'true';
-                if (currentTab === 'overdue') matchTab = row.dataset.overdue === 'true';
-
-                row.style.display = (matchSearch && matchStatus && matchTab) ? '' : 'none';
+                row._matchesFilter = doesRowMatchFilter(row);
+                row.style.display = row._matchesFilter ? '' : 'none';
             });
 
-            // Show/hide group headers based on whether any child items are visible
+            // Update group headers: count, visibility, and respect collapsed state
             document.querySelectorAll('.pallet-group-row').forEach(groupRow => {
                 const key = groupRow.dataset.palletGroup;
-                const childRows = document.querySelectorAll(`tr.pallet-item[data-pallet="${key}"]`);
-                const anyVisible = Array.from(childRows).some(r => r.style.display !== 'none');
-                groupRow.style.display = anyVisible ? '' : 'none';
+                const childRows = Array.from(document.querySelectorAll(`tr.pallet-item[data-pallet="${key}"]`));
+                const matchingRows = childRows.filter(r => r._matchesFilter);
+                const totalRows = childRows.length;
+                const filteredCount = matchingRows.length;
 
-                // Respect collapsed state
+                // Update group count badge
+                const countEl = groupRow.querySelector('.group-count');
+                if (countEl) {
+                    if (filteredCount === totalRows) {
+                        countEl.textContent = `(${totalRows} item${totalRows === 1 ? '' : 's'})`;
+                    } else {
+                        countEl.textContent = `(${filteredCount} of ${totalRows} item${totalRows === 1 ? '' : 's'})`;
+                    }
+                }
+
+                groupRow.style.display = filteredCount > 0 ? '' : 'none';
+
+                // If collapsed, hide all children; if expanded, only show matching
                 if (groupRow.classList.contains('collapsed')) {
                     childRows.forEach(r => r.style.display = 'none');
+                } else {
+                    childRows.forEach(r => {
+                        r.style.display = r._matchesFilter ? '' : 'none';
+                    });
                 }
             });
 
             // Also filter mobile cards
             document.querySelectorAll('.mobile-group-header').forEach(header => {
                 const key = header.dataset.mobileGroup;
-                const cards = document.querySelectorAll(`.pallet-item-mobile[data-mobile-pallet="${key}"]`);
-                let anyVisible = false;
+                const cards = Array.from(document.querySelectorAll(`.pallet-item-mobile[data-mobile-pallet="${key}"]`));
+                let filteredCount = 0;
+                const totalCount = cards.length;
 
                 cards.forEach(card => {
-                    const matchSearch = !search || (card.dataset.search && card.dataset.search.includes(search));
-                    let matchStatus = !status || card.dataset.status === status;
-                    let matchTab = true;
-
-                    if (currentTab === 'damaged') matchTab = card.dataset.damaged === 'true';
-                    if (currentTab === 'overdue') matchTab = card.dataset.overdue === 'true';
-
-                    const matchesFilter = matchSearch && matchStatus && matchTab;
-                    if (matchesFilter) anyVisible = true;
-
-                    // Show card only if it matches AND the group is expanded
-                    card.style.display = (matchesFilter && !header.classList.contains('collapsed')) ? '' : 'none';
+                    card._matchesFilter = doesRowMatchFilter(card);
+                    if (card._matchesFilter) filteredCount++;
+                    card.style.display = (card._matchesFilter && !header.classList.contains('collapsed')) ? '' : 'none';
                 });
 
-                // Show/hide the group header based on whether any cards match
-                header.style.display = anyVisible ? '' : 'none';
+                // Update mobile group count
+                const countEl = header.querySelector('.group-count');
+                if (countEl) {
+                    if (filteredCount === totalCount) {
+                        countEl.textContent = `(${totalCount} item${totalCount === 1 ? '' : 's'})`;
+                    } else {
+                        countEl.textContent = `(${filteredCount} of ${totalCount} item${totalCount === 1 ? '' : 's'})`;
+                    }
+                }
+
+                header.style.display = filteredCount > 0 ? '' : 'none';
             });
         }
 
@@ -1128,6 +1191,53 @@
 
         function getSelectedIds() {
             return Array.from(document.querySelectorAll('.row-check:checked')).map(cb => parseInt(cb.value));
+        }
+
+        // ---- Pallet-level selection ----
+        function togglePalletSelect(checkbox) {
+            const key = checkbox.dataset.palletKey;
+            const rows = document.querySelectorAll(`tr.pallet-item[data-pallet="${key}"]`);
+            rows.forEach(r => {
+                // Only select/deselect rows that match the current filter
+                if (doesRowMatchFilter(r)) {
+                    const cb = r.querySelector('.row-check');
+                    if (cb) {
+                        cb.checked = checkbox.checked;
+                        r.classList.toggle('selected', checkbox.checked);
+                    }
+                }
+            });
+            updateSelection();
+        }
+
+        // ---- Report generation ----
+        function toggleReportMenu() {
+            const menu = document.getElementById('reportMenu');
+            menu.classList.toggle('active');
+        }
+
+        // Close report menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('reportMenu');
+            if (menu && !e.target.closest('.report-dropdown')) {
+                menu.classList.remove('active');
+            }
+        });
+
+        function generateReport(type) {
+            const ids = getSelectedIds();
+            if (!ids.length) {
+                showToast('No items selected', true);
+                return;
+            }
+            document.getElementById('reportMenu').classList.remove('active');
+
+            const idsParam = ids.join(',');
+            if (type === 'print') {
+                window.open('/export/pdf/?ids=' + idsParam, '_blank');
+            } else if (type === 'csv') {
+                window.location.href = '/export/csv/?ids=' + idsParam;
+            }
         }
 
         async function applyBulkStatus() {
@@ -1286,15 +1396,22 @@
                 const groupRow = document.createElement('tr');
                 groupRow.className = 'pallet-group-row collapsed';
                 groupRow.dataset.palletGroup = key;
-                groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>Pallet ${escapeHtml(palletId)}<span class="group-count">(${groupRows.length} item${groupRows.length === 1 ? '' : 's'})</span></td>`;
+                groupRow.innerHTML = `<td colspan="${colCount}"><input type="checkbox" class="pallet-group-check" data-pallet-key="${key}" onchange="togglePalletSelect(this)" title="Select all visible items in this pallet" style="margin-right:8px; vertical-align:-1px; cursor:pointer;"><span class="toggle-arrow">&#9660;</span>Pallet ${escapeHtml(palletId)}<span class="group-count">(${groupRows.length} item${groupRows.length === 1 ? '' : 's'})</span></td>`;
 
                 firstRow.parentNode.insertBefore(groupRow, firstRow);
                 groupRows.forEach(r => r.style.display = 'none');
 
-                groupRow.addEventListener('click', () => {
+                groupRow.addEventListener('click', (e) => {
+                    // Don't toggle if clicking the pallet checkbox
+                    if (e.target.classList.contains('pallet-group-check')) return;
                     const isCollapsed = groupRow.classList.toggle('collapsed');
                     groupRows.forEach(r => {
-                        r.style.display = isCollapsed ? 'none' : '';
+                        // When expanding, only show rows matching the current filter
+                        if (isCollapsed) {
+                            r.style.display = 'none';
+                        } else {
+                            r.style.display = doesRowMatchFilter(r) ? '' : 'none';
+                        }
                     });
                 });
             });
@@ -1395,8 +1512,9 @@
             const groupRows = document.querySelectorAll('.pallet-group-row');
             if (!groupRows.length) return;
             const btn = document.getElementById('btnCollapseAll');
-            const anyExpanded = Array.from(groupRows).some(r => !r.classList.contains('collapsed'));
+            const anyExpanded = Array.from(groupRows).some(r => !r.classList.contains('collapsed') && r.style.display !== 'none');
             groupRows.forEach(groupRow => {
+                if (groupRow.style.display === 'none') return; // skip hidden groups
                 const key = groupRow.dataset.palletGroup;
                 const itemRows = document.querySelectorAll(`tr.pallet-item[data-pallet="${key}"]`);
                 if (anyExpanded) {
@@ -1404,7 +1522,10 @@
                     itemRows.forEach(r => r.style.display = 'none');
                 } else {
                     groupRow.classList.remove('collapsed');
-                    itemRows.forEach(r => r.style.display = '');
+                    // Only show rows matching the current filter
+                    itemRows.forEach(r => {
+                        r.style.display = doesRowMatchFilter(r) ? '' : 'none';
+                    });
                 }
             });
             if (anyExpanded) {
@@ -1422,7 +1543,12 @@
             const isCollapsed = header.classList.toggle('collapsed');
             const cards = document.querySelectorAll(`.pallet-item-mobile[data-mobile-pallet="${key}"]`);
             cards.forEach(card => {
-                card.style.display = isCollapsed ? 'none' : '';
+                if (isCollapsed) {
+                    card.style.display = 'none';
+                } else {
+                    // Only show cards matching the current filter
+                    card.style.display = doesRowMatchFilter(card) ? '' : 'none';
+                }
             });
         }
 
