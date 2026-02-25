@@ -1,5 +1,6 @@
 """
 Django settings for qr_inventory_project project.
+Secured: Feb 2026
 """
 
 from pathlib import Path
