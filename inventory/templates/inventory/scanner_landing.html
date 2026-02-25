@@ -4,445 +4,517 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fire &amp; Risk Alliance - Inventory</title>
+    <title>FRATrack - Item Details</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         :root {
-            --md-sys-color-primary: #8b1a1a;
-            --md-sys-color-on-primary: #ffffff;
-            --md-sys-color-primary-container: #ffdad5;
-            --md-sys-color-on-primary-container: #410001;
-            --md-sys-color-secondary: #775652;
-            --md-sys-color-on-secondary: #ffffff;
-            --md-sys-color-secondary-container: #ffdad5;
-            --md-sys-color-on-secondary-container: #2c1512;
-            --md-sys-color-tertiary: #705c2e;
-            --md-sys-color-on-tertiary: #ffffff;
-            --md-sys-color-tertiary-container: #fcdfa6;
-            --md-sys-color-on-tertiary-container: #261a00;
-            --md-sys-color-error: #ba1a1a;
-            --md-sys-color-on-error: #ffffff;
-            --md-sys-color-error-container: #ffdad6;
-            --md-sys-color-on-error-container: #410002;
-            --md-sys-color-background: #fff8f6;
-            --md-sys-color-on-background: #201a19;
-            --md-sys-color-surface: #fff8f6;
-            --md-sys-color-on-surface: #201a19;
-            --md-sys-color-on-surface-variant: #534341;
-            --md-sys-color-surface-container-lowest: #ffffff;
-            --md-sys-color-surface-container-low: #fef1ef;
-            --md-sys-color-surface-container: #f8ebe9;
-            --md-sys-color-surface-container-high: #f3e5e2;
-            --md-sys-color-surface-container-highest: #ede0dd;
-            --md-sys-color-surface-dim: #e6d9d6;
-            --md-sys-color-outline: #857371;
-            --md-sys-color-outline-variant: #d8c2bf;
-            --md-sys-color-inverse-surface: #362f2e;
-            --md-sys-color-inverse-on-surface: #fbeeeb;
-            --md-sys-color-inverse-primary: #ffb4ab;
+            --bg: #ffffff;
+            --bg-secondary: #f5f5f7;
+            --bg-tertiary: #fafafa;
+            --text-primary: #1d1d1f;
+            --text-secondary: #6e6e73;
+            --text-tertiary: #86868b;
+            --accent: #8b1a1a;
+            --accent-light: rgba(139,26,26,0.08);
+            --accent-hover: #a02020;
+            --border: #d2d2d7;
+            --border-light: #e8e8ed;
+            --input-bg: #ffffff;
+            --card-bg: #ffffff;
+            --nav-bg: rgba(255,255,255,0.72);
+            --shadow: 0 2px 12px rgba(0,0,0,0.06);
+            --green: #34c759;
+            --green-bg: #f0fdf4;
+            --green-text: #166534;
+            --amber: #ff9f0a;
+            --amber-bg: #fffbeb;
+            --amber-text: #92400e;
+            --red: #ff3b30;
+            --red-bg: #fef2f2;
+            --red-text: #991b1b;
+            --purple: #af52de;
+            --purple-bg: #faf5ff;
+            --purple-text: #6b21a8;
+            --blue: #007aff;
+            --blue-bg: #eff6ff;
+            --blue-text: #1e40af;
         }
         body.dark-mode {
-            --md-sys-color-primary: #ffb4ab;
-            --md-sys-color-on-primary: #690005;
-            --md-sys-color-primary-container: #930006;
-            --md-sys-color-on-primary-container: #ffdad5;
-            --md-sys-color-secondary: #e7bdb7;
-            --md-sys-color-on-secondary: #442926;
-            --md-sys-color-secondary-container: #5d3f3b;
-            --md-sys-color-on-secondary-container: #ffdad5;
-            --md-sys-color-tertiary: #dfc38c;
-            --md-sys-color-on-tertiary: #3e2e04;
-            --md-sys-color-tertiary-container: #574419;
-            --md-sys-color-on-tertiary-container: #fcdfa6;
-            --md-sys-color-error: #ffb4ab;
-            --md-sys-color-on-error: #690005;
-            --md-sys-color-error-container: #93000a;
-            --md-sys-color-on-error-container: #ffdad6;
-            --md-sys-color-background: #1a1110;
-            --md-sys-color-on-background: #ede0dd;
-            --md-sys-color-surface: #1a1110;
-            --md-sys-color-on-surface: #ede0dd;
-            --md-sys-color-on-surface-variant: #d8c2bf;
-            --md-sys-color-surface-container-lowest: #120d0c;
-            --md-sys-color-surface-container-low: #201a19;
-            --md-sys-color-surface-container: #251e1d;
-            --md-sys-color-surface-container-high: #2f2827;
-            --md-sys-color-surface-container-highest: #3b3332;
-            --md-sys-color-surface-dim: #1a1110;
-            --md-sys-color-outline: #a08c8a;
-            --md-sys-color-outline-variant: #534341;
-            --md-sys-color-inverse-surface: #ede0dd;
-            --md-sys-color-inverse-on-surface: #362f2e;
-            --md-sys-color-inverse-primary: #8b1a1a;
+            --bg: #000000;
+            --bg-secondary: #1c1c1e;
+            --bg-tertiary: #0d0d0d;
+            --text-primary: #f5f5f7;
+            --text-secondary: #a1a1a6;
+            --text-tertiary: #6e6e73;
+            --accent: #ff6b6b;
+            --accent-light: rgba(255,107,107,0.1);
+            --accent-hover: #ff8585;
+            --border: #38383a;
+            --border-light: #2c2c2e;
+            --input-bg: #1c1c1e;
+            --card-bg: #1c1c1e;
+            --nav-bg: rgba(0,0,0,0.72);
+            --shadow: 0 2px 12px rgba(0,0,0,0.3);
+            --green: #30d158;
+            --green-bg: #0a2613;
+            --green-text: #4ade80;
+            --amber: #ffd60a;
+            --amber-bg: #2c2510;
+            --amber-text: #fbbf24;
+            --red: #ff453a;
+            --red-bg: #2c1515;
+            --red-text: #ff6b6b;
+            --purple: #bf5af2;
+            --purple-bg: #1f1528;
+            --purple-text: #c084fc;
+            --blue: #0a84ff;
+            --blue-bg: #0d1f3c;
+            --blue-text: #60a5fa;
         }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: var(--md-sys-color-background);
-            color: var(--md-sys-color-on-surface);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
             min-height: 100vh;
         }
-        .header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #2d1518 100%);
-            color: #fff;
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 3px solid #b8860b;
-        }
-        .header-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .header-brand img {
-            height: 44px;
-            width: auto;
-            border-radius: 4px;
-        }
-        .header-brand-text h1 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #fff;
-            line-height: 1.2;
-        }
-        .header-brand-text .subtitle {
-            font-size: 0.7rem;
-            color: #b8860b;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-        .header a { color: #d4a84b; text-decoration: none; font-size: 0.875rem; font-weight: 500; }
-        .header a:hover { color: #fff; }
-        .container { max-width: 700px; margin: 24px auto; padding: 0 16px; }
 
-        .error-card {
-            background: var(--md-sys-color-surface-container-low); border-radius: 12px; padding: 40px 24px;
-            text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        /* ---- Frosted glass nav ---- */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: var(--nav-bg);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 0.5px solid var(--border);
+            height: 48px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 16px;
         }
-        .error-card h2 { color: var(--md-sys-color-error); margin-bottom: 8px; }
-        .error-card p { color: var(--md-sys-color-on-surface-variant); }
-
-        .item-card {
-            background: var(--md-sys-color-surface-container-low); border-radius: 12px; overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .item-card-header {
-            background: linear-gradient(135deg, #8b1a1a 0%, #a02020 100%); color: #fff; padding: 20px 24px;
-        }
-        .item-card-header h2 { font-size: 1.125rem; margin-bottom: 4px; }
-        .item-card-header .subtitle { color: var(--md-sys-color-outline); font-size: 0.875rem; }
-
-        .status-badge {
-            display: inline-block; padding: 4px 12px; border-radius: 999px;
-            font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
-        }
-        .status-checked_in { background: #dcfce7; color: #166534; }
-        .status-checked_out { background: #fef3c7; color: #92400e; }
-        .status-tested { background: #dbeafe; color: #1e40af; }
-        .status-will_be_reused { background: #e0e7ff; color: #3730a3; }
-        .status-recycling { background: #fce7f3; color: #9d174d; }
-
-        .overdue-alert {
-            background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;
-            padding: 10px 16px; margin: 16px 20px 0; font-size: 0.85rem; color: #92400e;
-        }
-
-        .detail-grid {
-            display: grid; grid-template-columns: 1fr 1fr;
-            gap: 1px; background: var(--md-sys-color-outline-variant);
-        }
-        .detail-cell { background: var(--md-sys-color-surface-container-low); padding: 14px 20px; }
-        .detail-cell label {
-            display: block; font-size: 0.7rem; text-transform: uppercase;
-            letter-spacing: 0.05em; color: var(--md-sys-color-on-surface-variant); margin-bottom: 4px;
-        }
-        .detail-cell .value { font-size: 0.95rem; font-weight: 500; }
-        .damage-yes { color: #dc2626; font-weight: 700; }
-        .damage-no { color: #16a34a; }
-
-        .description-section {
-            padding: 16px 20px; border-top: 1px solid var(--md-sys-color-outline-variant);
-        }
-        .description-section label {
-            display: block; font-size: 0.7rem; text-transform: uppercase;
-            letter-spacing: 0.05em; color: var(--md-sys-color-on-surface-variant); margin-bottom: 6px;
-        }
-        .description-section p { font-size: 0.95rem; line-height: 1.5; color: var(--md-sys-color-on-surface); }
-
-        /* Edit Details */
-        .edit-section { padding: 20px; border-top: 1px solid var(--md-sys-color-outline-variant); }
-        .edit-section h3 { font-size: 0.875rem; margin-bottom: 12px; color: var(--md-sys-color-on-surface); }
-        .edit-row {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;
-        }
-        .edit-group label {
-            display: block; font-size: 0.7rem; text-transform: uppercase;
-            letter-spacing: 0.05em; color: var(--md-sys-color-on-surface-variant); margin-bottom: 4px;
-        }
-        .edit-input {
-            width: 100%; padding: 8px 12px; border: 1px solid var(--md-sys-color-outline-variant);
-            border-radius: 8px; font-size: 0.875rem; font-family: inherit;
-            background: var(--md-sys-color-surface-container-lowest);
-        }
-        .edit-input:focus { outline: none; border-color: var(--md-sys-color-primary); box-shadow: 0 0 0 2px rgba(139,26,26,0.15); }
-        textarea.edit-input { resize: vertical; min-height: 50px; }
-        .btn-save-edit {
-            padding: 10px 24px; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); border: none;
-            border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;
-        }
-        .btn-save-edit:hover { opacity: 0.85; }
-        .btn-save-edit:disabled { opacity: 0.4; cursor: not-allowed; }
-        .edit-message {
-            margin-top: 10px; padding: 8px 12px; border-radius: 8px;
-            font-size: 0.85rem; display: none;
-        }
-        .edit-message.success { display: block; background: #dcfce7; color: #166534; }
-        .edit-message.error { display: block; background: #fee2e2; color: #991b1b; }
-
-        .actions { padding: 20px; border-top: 1px solid var(--md-sys-color-outline-variant); }
-        .actions h3 { font-size: 0.875rem; margin-bottom: 8px; color: var(--md-sys-color-on-surface); }
-        .action-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-        .action-input {
-            flex: 1; min-width: 150px; padding: 8px 12px; border: 1px solid var(--md-sys-color-outline-variant);
-            border-radius: 8px; font-size: 0.875rem; font-family: inherit;
-        }
-        .action-input:focus { outline: none; border-color: var(--md-sys-color-primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
-        .notes-input {
-            width: 100%; padding: 8px 12px; border: 1px solid var(--md-sys-color-outline-variant);
-            border-radius: 8px; font-size: 0.875rem; margin-bottom: 12px;
-            font-family: inherit; resize: vertical; min-height: 36px;
-        }
-        .notes-input:focus { outline: none; border-color: var(--md-sys-color-primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
-        .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
-        .btn {
-            padding: 10px 20px; border: none; border-radius: 8px;
-            font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
-        }
-        .btn:hover { opacity: 0.85; }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .btn-checkout { background: #f59e0b; color: #fff; }
-        .btn-checkin { background: #16a34a; color: #fff; }
-        .btn-tested { background: #2563eb; color: #fff; }
-        .btn-reuse { background: #6366f1; color: #fff; }
-        .btn-recycle { background: #ec4899; color: #fff; }
-
-        .status-message {
-            margin-top: 12px; padding: 10px 14px; border-radius: 8px;
-            font-size: 0.875rem; display: none;
-        }
-        .status-message.success { display: block; background: #dcfce7; color: #166534; }
-        .status-message.error { display: block; background: #fee2e2; color: #991b1b; }
-
-        .last-updated {
-            padding: 12px 20px; border-top: 1px solid var(--md-sys-color-outline-variant);
-            font-size: 0.75rem; color: var(--md-sys-color-outline); text-align: right;
-        }
-
-        /* Archive bar */
-        .archive-bar {
-            padding: 12px 20px; border-top: 1px solid var(--md-sys-color-outline-variant);
+        .nav-inner {
+            max-width: 700px; width: 100%;
             display: flex; align-items: center; justify-content: space-between;
         }
-        .btn-archive {
-            padding: 8px 16px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;
-            font-size: 0.8rem; font-weight: 600; cursor: pointer;
-            background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant);
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px; text-decoration: none;
         }
-        .btn-archive:hover { background: var(--md-sys-color-surface-container-highest); }
-        .btn-archive.active { background: #f59e0b; color: #1a1a2e; border-color: #f59e0b; }
+        .nav-logo {
+            width: 28px; height: 28px;
+            background: linear-gradient(135deg, #8b1a1a 0%, #b82e2e 100%);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 0.65rem;
+        }
+        body.dark-mode .nav-logo {
+            background: linear-gradient(135deg, #ff6b6b 0%, #8b1a1a 100%);
+        }
+        .nav-title { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .dark-toggle-btn {
+            background: none; border: none; color: var(--text-tertiary); cursor: pointer;
+            display: flex; align-items: center; padding: 4px; transition: color 0.2s;
+        }
+        .dark-toggle-btn:hover { color: var(--text-primary); }
+        .nav-back {
+            font-size: 0.8rem; color: var(--text-secondary); text-decoration: none;
+            font-weight: 500; transition: color 0.2s;
+        }
+        .nav-back:hover { color: var(--text-primary); }
 
-        /* Status Log */
-        .log-section {
-            background: var(--md-sys-color-surface-container-low); border-radius: 12px; margin-top: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;
+        /* ---- Main content ---- */
+        .container { max-width: 700px; margin: 0 auto; padding: 64px 16px 40px; }
+
+        /* ---- Error card ---- */
+        .error-card {
+            background: var(--red-bg); border: 0.5px solid var(--red);
+            border-radius: 14px; padding: 40px 24px;
+            text-align: center;
         }
-        .log-section-header {
-            padding: 16px 20px; border-bottom: 1px solid var(--md-sys-color-outline-variant);
-            font-size: 0.875rem; font-weight: 600; color: var(--md-sys-color-on-surface);
+        .error-card h2 { color: var(--red-text); font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em; }
+        .error-card p { color: var(--red-text); font-size: 0.875rem; opacity: 0.8; }
+
+        /* ---- Item card ---- */
+        .item-card {
+            background: var(--card-bg); border: 0.5px solid var(--border-light);
+            border-radius: 14px; overflow: hidden;
+            box-shadow: var(--shadow);
         }
-        .log-entry {
-            padding: 14px 20px; border-bottom: 1px solid var(--md-sys-color-outline-variant);
+        .item-card-header {
+            padding: 20px 24px;
+            border-bottom: 0.5px solid var(--border-light);
         }
-        .log-entry:last-child { border-bottom: none; }
-        .log-entry-top {
-            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        .item-card-header-inner {
+            display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
         }
-        .log-arrow { color: var(--md-sys-color-outline); font-size: 0.8rem; }
-        .log-date { color: var(--md-sys-color-outline); font-size: 0.75rem; margin-left: auto; }
-        .log-changed-by { font-size: 0.75rem; color: #6366f1; font-weight: 500; }
-        .log-notes {
-            margin-top: 8px; font-size: 0.85rem; color: var(--md-sys-color-on-surface-variant);
-            line-height: 1.4;
+        .item-card-header h2 {
+            font-size: 1.1rem; font-weight: 700; color: var(--text-primary);
+            letter-spacing: -0.02em; margin-bottom: 2px;
         }
-        .log-notes-empty {
-            margin-top: 6px; font-size: 0.8rem; color: var(--md-sys-color-outline); font-style: italic;
+        .item-card-header .subtitle {
+            font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;
         }
-        .log-notes-edit {
-            margin-top: 8px; display: flex; gap: 8px; align-items: flex-start;
-        }
-        .log-notes-input {
-            flex: 1; padding: 6px 10px; border: 1px solid var(--md-sys-color-outline-variant);
-            border-radius: 6px; font-size: 0.8rem; font-family: inherit;
-            resize: vertical; min-height: 32px;
-        }
-        .log-notes-input:focus { outline: none; border-color: var(--md-sys-color-primary); }
-        .btn-save-note {
-            padding: 6px 14px; background: #2563eb; color: #fff;
-            border: none; border-radius: 6px; font-size: 0.75rem;
-            font-weight: 600; cursor: pointer; white-space: nowrap;
-        }
-        .btn-save-note:hover { opacity: 0.85; }
-        .btn-edit-note {
-            padding: 4px 10px; background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant);
-            border: 1px solid var(--md-sys-color-outline-variant); border-radius: 6px; font-size: 0.7rem;
-            cursor: pointer; margin-left: 8px;
-        }
-        .btn-edit-note:hover { background: var(--md-sys-color-surface-container-highest); }
-        .log-empty {
-            padding: 30px 20px; text-align: center; color: var(--md-sys-color-outline); font-size: 0.875rem;
+        .item-card-header-right {
+            text-align: right; flex-shrink: 0;
         }
 
-        /* Field change log entries */
-        .log-field-change {
-            display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+        /* ---- Status badges ---- */
+        .status-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 999px;
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
         }
-        .log-field-name {
-            font-size: 0.75rem; font-weight: 600; color: var(--md-sys-color-on-surface);
-            text-transform: uppercase; letter-spacing: 0.03em;
-            background: var(--md-sys-color-surface-container-high); padding: 2px 8px; border-radius: 4px;
-        }
-        .log-old-value {
-            font-size: 0.8rem; color: var(--md-sys-color-outline); text-decoration: line-through;
-        }
-        .log-new-value {
-            font-size: 0.8rem; color: #166534; font-weight: 500;
-        }
-        .log-type-badge {
-            font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.05em; padding: 2px 8px; border-radius: 4px;
-        }
-        .log-type-status { background: #dbeafe; color: #1e40af; }
-        .log-type-field { background: #fef3c7; color: #92400e; }
-        .log-type-created { background: #dcfce7; color: #166534; }
+        .status-checked_in { background: var(--green-bg); color: var(--green-text); }
+        .status-checked_out { background: var(--amber-bg); color: var(--amber-text); }
+        .status-tested { background: var(--blue-bg); color: var(--blue-text); }
+        .status-will_be_reused { background: var(--purple-bg); color: var(--purple-text); }
+        .status-recycling { background: var(--red-bg); color: var(--red-text); }
 
-        /* QR Code section */
+        /* ---- Scan count ---- */
+        .scan-count {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 12px; background: var(--bg-secondary); border-radius: 999px;
+            font-size: 0.7rem; color: var(--text-secondary); margin-top: 6px;
+            font-weight: 500;
+        }
+
+        /* ---- Overdue alert ---- */
+        .overdue-alert {
+            background: var(--amber-bg); border: 0.5px solid var(--amber); border-radius: 10px;
+            padding: 10px 16px; margin: 16px 20px 0; font-size: 0.8rem; color: var(--amber-text);
+            font-weight: 500;
+        }
+
+        /* ---- Detail grid ---- */
+        .detail-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 0; border-top: 0.5px solid var(--border-light);
+        }
+        .detail-cell {
+            padding: 14px 20px;
+            border-bottom: 0.5px solid var(--border-light);
+        }
+        .detail-cell:nth-child(odd) {
+            border-right: 0.5px solid var(--border-light);
+        }
+        .detail-cell label {
+            display: block; font-size: 0.65rem; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--text-tertiary); margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .detail-cell .value {
+            font-size: 0.9rem; font-weight: 500; color: var(--text-primary);
+        }
+        .damage-yes { color: var(--red-text); font-weight: 700; }
+        .damage-no { color: var(--green-text); }
+
+        /* ---- Description section ---- */
+        .description-section {
+            padding: 16px 20px; border-top: 0.5px solid var(--border-light);
+        }
+        .description-section label {
+            display: block; font-size: 0.65rem; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--text-tertiary); margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .description-section p {
+            font-size: 0.9rem; line-height: 1.5; color: var(--text-primary);
+        }
+
+        /* ---- Tags ---- */
+        .tag-display-chip {
+            display: inline-block; padding: 4px 12px; border-radius: 999px;
+            font-size: 0.7rem; font-weight: 600;
+            background: var(--accent-light); color: var(--accent);
+        }
+
+        /* ---- QR Code ---- */
         .qr-section {
-            padding: 20px; border-top: 1px solid var(--md-sys-color-outline-variant); text-align: center;
+            padding: 20px; border-top: 0.5px solid var(--border-light); text-align: center;
         }
         .qr-section h3 {
-            font-size: 0.875rem; margin-bottom: 12px; color: var(--md-sys-color-on-surface);
+            font-size: 0.8rem; font-weight: 600; margin-bottom: 12px;
+            color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em;
         }
         .qr-code-img {
-            border: 2px solid var(--md-sys-color-outline-variant); border-radius: 8px; padding: 8px;
-            background: var(--md-sys-color-surface-container-lowest); cursor: pointer;
-            max-width: 100%; height: auto;
+            border: 0.5px solid var(--border-light); border-radius: 10px; padding: 8px;
+            background: var(--card-bg); cursor: pointer;
+            max-width: 100%; height: auto; transition: border-color 0.2s;
         }
-        .qr-code-img:hover { border-color: var(--md-sys-color-primary); }
+        .qr-code-img:hover { border-color: var(--accent); }
+        .qr-caption {
+            margin-top: 8px; font-size: 0.8rem; font-weight: 500;
+            color: var(--text-secondary); line-height: 1.5;
+        }
 
-        /* Photos section */
+        /* ---- Photos section ---- */
         .photos-section {
-            padding: 20px; border-top: 1px solid var(--md-sys-color-outline-variant);
+            padding: 20px; border-top: 0.5px solid var(--border-light);
         }
         .photos-section h3 {
-            font-size: 0.875rem; margin-bottom: 12px; color: var(--md-sys-color-on-surface);
+            font-size: 0.8rem; font-weight: 600; margin-bottom: 12px;
+            color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em;
         }
         .photos-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             gap: 10px; margin-bottom: 16px;
         }
         .photo-card {
-            position: relative; border-radius: 8px; overflow: hidden;
-            border: 1px solid var(--md-sys-color-outline-variant); aspect-ratio: 1;
+            position: relative; border-radius: 10px; overflow: hidden;
+            border: 0.5px solid var(--border-light); aspect-ratio: 1;
+            transition: border-color 0.2s;
         }
+        .photo-card:hover { border-color: var(--border); }
         .photo-card img {
             width: 100%; height: 100%; object-fit: cover; cursor: pointer;
         }
         .photo-card .photo-delete {
-            position: absolute; top: 4px; right: 4px; background: rgba(220,38,38,0.9);
+            position: absolute; top: 6px; right: 6px; background: rgba(255,59,48,0.9);
             color: #fff; border: none; border-radius: 50%; width: 24px; height: 24px;
             font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s; backdrop-filter: blur(4px);
         }
+        .photo-card .photo-delete:hover { background: var(--red); }
         .photo-card .photo-caption {
             position: absolute; bottom: 0; left: 0; right: 0;
             background: rgba(0,0,0,0.6); color: #fff; padding: 4px 8px;
-            font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            font-size: 0.65rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            backdrop-filter: blur(4px);
         }
         .photo-upload-inline {
-            border: 2px dashed var(--md-sys-color-outline-variant); border-radius: 8px; padding: 16px;
-            text-align: center; cursor: pointer; transition: border-color 0.2s;
+            border: 1.5px dashed var(--border); border-radius: 10px; padding: 20px;
+            text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
         }
-        .photo-upload-inline:hover { border-color: var(--md-sys-color-primary); }
-        .photo-upload-inline p { color: var(--md-sys-color-on-surface-variant); font-size: 0.8rem; }
+        .photo-upload-inline:hover { border-color: var(--accent); background: var(--accent-light); }
+        .photo-upload-inline p { color: var(--text-tertiary); font-size: 0.8rem; font-weight: 500; }
         .photo-upload-inline .icon { font-size: 1.5rem; margin-bottom: 4px; }
         .upload-progress {
-            margin-top: 8px; font-size: 0.8rem; color: var(--md-sys-color-on-surface-variant); display: none;
+            margin-top: 8px; font-size: 0.8rem; color: var(--text-secondary); display: none;
+            font-weight: 500;
         }
+        .no-photos-msg { color: var(--text-tertiary); font-size: 0.8rem; grid-column: 1 / -1; }
 
+        /* ---- Edit section ---- */
+        .edit-section {
+            padding: 20px; border-top: 0.5px solid var(--border-light);
+        }
+        .edit-section h3 {
+            font-size: 0.85rem; font-weight: 700; margin-bottom: 16px;
+            color: var(--text-primary); letter-spacing: -0.01em;
+        }
+        .edit-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;
+        }
+        .edit-group label {
+            display: block; font-size: 0.65rem; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--text-tertiary); margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .edit-group label span {
+            text-transform: none; letter-spacing: normal; font-weight: 400;
+        }
+        .edit-input {
+            width: 100%; padding: 9px 12px; border: 0.5px solid var(--border);
+            border-radius: 10px; font-size: 0.85rem; font-family: inherit;
+            background: var(--input-bg); color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .edit-input:focus {
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+        textarea.edit-input { resize: vertical; min-height: 50px; }
+
+        /* ---- Tag chips (edit mode) ---- */
         .tag-chips { display: flex; flex-wrap: wrap; gap: 8px; }
         .tag-chip {
             display: inline-block; padding: 6px 14px; border-radius: 999px;
-            font-size: 0.8rem; font-weight: 600; cursor: pointer;
-            background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant); border: 2px solid var(--md-sys-color-outline-variant);
-            transition: all 0.15s; user-select: none;
+            font-size: 0.75rem; font-weight: 600; cursor: pointer;
+            background: var(--bg-secondary); color: var(--text-secondary);
+            border: 0.5px solid var(--border-light);
+            transition: all 0.2s; user-select: none;
         }
-        .tag-chip:hover { border-color: var(--md-sys-color-primary); }
-        .tag-chip.active { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); border-color: var(--md-sys-color-primary); }
+        .tag-chip:hover { border-color: var(--accent); color: var(--accent); }
+        .tag-chip.active {
+            background: var(--accent-light); color: var(--accent);
+            border-color: var(--accent);
+        }
         .tag-chip .remove-tag {
             margin-left: 6px; font-weight: 700; font-size: 0.9rem;
         }
+        .custom-tag-row {
+            display: flex; gap: 8px; margin-top: 8px;
+        }
+        .btn-add-tag {
+            padding: 7px 14px; background: var(--accent); color: #fff;
+            border: none; border-radius: 10px; font-size: 0.75rem; font-weight: 600;
+            cursor: pointer; white-space: nowrap; transition: background 0.2s;
+        }
+        .btn-add-tag:hover { background: var(--accent-hover); }
 
+        /* ---- Status divider ---- */
+        .status-divider {
+            border-top: 0.5px solid var(--border-light); margin-top: 16px; padding-top: 16px;
+        }
+
+        /* ---- Buttons ---- */
+        .btn-save-edit {
+            padding: 11px 28px; background: var(--accent); color: #fff; border: none;
+            border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: background 0.2s; margin-top: 12px;
+        }
+        .btn-save-edit:hover { background: var(--accent-hover); }
+        .btn-save-edit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .edit-message {
+            margin-top: 10px; padding: 10px 14px; border-radius: 10px;
+            font-size: 0.8rem; display: none; font-weight: 500;
+        }
+        .edit-message.success { display: block; background: var(--green-bg); color: var(--green-text); }
+        .edit-message.error { display: block; background: var(--red-bg); color: var(--red-text); }
+
+        /* ---- Archive bar ---- */
+        .archive-bar {
+            padding: 14px 20px; border-top: 0.5px solid var(--border-light);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .archive-bar span { font-size: 0.8rem; color: var(--text-tertiary); }
+        .btn-archive {
+            padding: 8px 16px; border: 0.5px solid var(--border); border-radius: 10px;
+            font-size: 0.75rem; font-weight: 600; cursor: pointer;
+            background: var(--bg-secondary); color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        .btn-archive:hover { background: var(--border-light); }
+        .btn-archive.active { background: var(--amber); color: #fff; border-color: var(--amber); }
+
+        /* ---- Last updated ---- */
+        .last-updated {
+            padding: 12px 20px; border-top: 0.5px solid var(--border-light);
+            font-size: 0.7rem; color: var(--text-tertiary); text-align: right;
+            font-weight: 500;
+        }
+
+        /* ---- Location custom wrap ---- */
         .location-custom-wrap { margin-top: 8px; display: none; }
 
-        .nav-links { margin-top: 16px; text-align: center; }
-        .nav-links a { color: var(--md-sys-color-primary); text-decoration: none; font-size: 0.875rem; margin: 0 12px; }
-        .nav-links a:hover { text-decoration: underline; }
+        /* ---- Audit Trail ---- */
+        .log-section {
+            background: var(--card-bg); border: 0.5px solid var(--border-light);
+            border-radius: 14px; margin-top: 16px;
+            box-shadow: var(--shadow); overflow: hidden;
+        }
+        .log-section-header {
+            padding: 16px 20px; border-bottom: 0.5px solid var(--border-light);
+            font-size: 0.8rem; font-weight: 700; color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+        .log-entry {
+            padding: 14px 20px; border-bottom: 0.5px solid var(--border-light);
+        }
+        .log-entry:last-child { border-bottom: none; }
+        .log-entry-top {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .log-arrow { color: var(--text-tertiary); font-size: 0.8rem; }
+        .log-date { color: var(--text-tertiary); font-size: 0.7rem; margin-left: auto; font-weight: 500; }
+        .log-changed-by { font-size: 0.7rem; color: var(--purple); font-weight: 600; }
+        .log-notes {
+            margin-top: 8px; font-size: 0.8rem; color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .log-notes-empty {
+            margin-top: 6px; font-size: 0.75rem; color: var(--text-tertiary); font-style: italic;
+        }
+        .log-notes-edit {
+            margin-top: 8px; display: flex; gap: 8px; align-items: flex-start;
+        }
+        .log-notes-input {
+            flex: 1; padding: 7px 10px; border: 0.5px solid var(--border);
+            border-radius: 8px; font-size: 0.8rem; font-family: inherit;
+            resize: vertical; min-height: 32px; background: var(--input-bg);
+            color: var(--text-primary);
+        }
+        .log-notes-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+        .btn-save-note {
+            padding: 7px 14px; background: var(--blue); color: #fff;
+            border: none; border-radius: 8px; font-size: 0.7rem;
+            font-weight: 600; cursor: pointer; white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+        .btn-save-note:hover { opacity: 0.85; }
+        .btn-edit-note {
+            padding: 4px 10px; background: var(--bg-secondary); color: var(--text-secondary);
+            border: 0.5px solid var(--border-light); border-radius: 6px; font-size: 0.65rem;
+            cursor: pointer; margin-left: 8px; font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-edit-note:hover { background: var(--border-light); color: var(--text-primary); }
+        .log-empty {
+            padding: 30px 20px; text-align: center; color: var(--text-tertiary); font-size: 0.85rem;
+        }
 
+        /* ---- Field change log ---- */
+        .log-field-change {
+            display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+        }
+        .log-field-name {
+            font-size: 0.65rem; font-weight: 700; color: var(--text-primary);
+            text-transform: uppercase; letter-spacing: 0.04em;
+            background: var(--bg-secondary); padding: 2px 8px; border-radius: 6px;
+        }
+        .log-old-value {
+            font-size: 0.8rem; color: var(--text-tertiary); text-decoration: line-through;
+        }
+        .log-new-value {
+            font-size: 0.8rem; color: var(--green-text); font-weight: 600;
+        }
+        .log-type-badge {
+            font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; padding: 2px 8px; border-radius: 6px;
+        }
+        .log-type-status { background: var(--blue-bg); color: var(--blue-text); }
+        .log-type-field { background: var(--amber-bg); color: var(--amber-text); }
+        .log-type-created { background: var(--green-bg); color: var(--green-text); }
+
+        /* ---- Nav links ---- */
+        .nav-links { margin-top: 20px; text-align: center; }
+        .nav-links a {
+            color: var(--accent); text-decoration: none; font-size: 0.8rem;
+            margin: 0 12px; font-weight: 600; transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--accent-hover); }
+
+        /* ---- Responsive ---- */
         @media (max-width: 600px) {
             .detail-grid { grid-template-columns: 1fr; }
+            .detail-cell:nth-child(odd) { border-right: none; }
             .edit-row { grid-template-columns: 1fr; }
-            .action-row { flex-direction: column; }
-            .btn-group { flex-direction: column; }
-            .btn-group .btn { width: 100%; text-align: center; }
-            .header { flex-direction: column; gap: 8px; text-align: center; }
-            .photos-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+            .item-card-header-inner { flex-direction: column; gap: 8px; }
+            .item-card-header-right { text-align: left; }
+            .btn-save-edit { width: 100%; text-align: center; }
+            .archive-bar { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .photos-grid { grid-template-columns: repeat(2, 1fr); }
         }
-
-        /* Dark mode toggle */
-        .dark-toggle {
-            background: none; border: 1px solid #b8860b; color: #b8860b;
-            padding: 4px 10px; border-radius: 6px; font-size: 0.75rem;
-            cursor: pointer; font-weight: 600; margin-right: 12px;
-        }
-        .dark-toggle:hover { background: rgba(184,134,11,0.2); }
-
-        /* Dark mode semantic overrides */
-        body.dark-mode .damage-no { color: #4ade80; }
-        body.dark-mode .overdue-alert { background: #451a03; border-color: #b45309; color: #fde68a; }
-
-        /* Scan count badge */
-        .scan-count {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 4px 12px; background: var(--md-sys-color-surface-container-high); border-radius: 999px;
-            font-size: 0.75rem; color: var(--md-sys-color-on-surface-variant); margin-top: 8px;
-        }
-
     </style>
 </head>
 <body>
-    <div class="header">
-        <a href="/dashboard/" class="header-brand" style="text-decoration:none;">
-            <img src="{% static 'inventory/img/logo.png' %}" alt="Fire &amp; Risk Alliance">
-            <div class="header-brand-text">
-                <h1>Fire &amp; Risk Alliance</h1>
-                <div class="subtitle">Inventory Management System</div>
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="/dashboard/" class="nav-brand">
+                <div class="nav-logo">FR</div>
+                <span class="nav-title">FRATrack</span>
+            </a>
+            <div class="nav-right">
+                <a href="/dashboard/" class="nav-back">Dashboard</a>
+                <button class="dark-toggle-btn" onclick="toggleDarkMode()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
             </div>
-        </a>
-        <div style="display:flex; align-items:center; gap:8px;">
-            <button class="dark-toggle" onclick="toggleDarkMode()" id="darkToggle">Dark Mode</button>
-            <a href="/dashboard/">View Full Inventory</a>
         </div>
-    </div>
+    </nav>
 
     <div class="container">
         {% if error %}
@@ -457,12 +529,12 @@
         {% elif item %}
         <div class="item-card">
             <div class="item-card-header">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="item-card-header-inner">
                     <div>
                         <h2>{{ item.manufacturer }} - Box {{ item.box_id }}</h2>
                         <div class="subtitle">Pallet: {{ item.pallet_id }}</div>
                     </div>
-                    <div style="text-align:right;">
+                    <div class="item-card-header-right">
                         <span class="status-badge status-{{ item.status }}" id="statusBadge">
                             {{ item.get_status_display }}
                         </span>
@@ -495,7 +567,7 @@
                 </div>
                 <div class="detail-cell">
                     <label>Tag ID</label>
-                    <div class="value" style="font-weight:700; color:#8b1a1a;">{{ item.tag_id }}</div>
+                    <div class="value" style="font-weight:700; color:var(--accent);">{{ item.tag_id }}</div>
                 </div>
                 <div class="detail-cell">
                     <label>Contents (qty)</label>
@@ -539,7 +611,7 @@
                 <label>Tags</label>
                 <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
                     {% for tag in item.tags_list %}
-                    <span style="display:inline-block; padding:4px 12px; border-radius:999px; font-size:0.75rem; font-weight:600; background:#e0e7ff; color:#3730a3;">{{ tag }}</span>
+                    <span class="tag-display-chip">{{ tag }}</span>
                     {% endfor %}
                 </div>
             </div>
@@ -548,7 +620,7 @@
             <div class="qr-section">
                 <h3>QR Code</h3>
                 <img class="qr-code-img" src="{{ item.short_qr_url }}" alt="QR Code for {{ item.manufacturer }} Box #{{ item.box_id }}">
-                <div style="margin-top:8px; font-size:0.85rem; font-weight:600; color:#374151; line-height:1.5;">
+                <div class="qr-caption">
                     {{ item.manufacturer }}<br>
                     Pallet {{ item.pallet_id }} &bull; Box #{{ item.box_id }}
                 </div>
@@ -566,7 +638,7 @@
                         {% if photo.caption %}<div class="photo-caption">{{ photo.caption }}</div>{% endif %}
                     </div>
                     {% empty %}
-                    <p style="color:#94a3b8; font-size:0.85rem; grid-column:1/-1;">No photos yet.</p>
+                    <p class="no-photos-msg">No photos yet.</p>
                     {% endfor %}
                 </div>
                 <div class="photo-upload-inline" onclick="document.getElementById('itemPhotoInput').click();">
@@ -632,16 +704,16 @@
                         <span class="tag-chip" data-tag="{{ tag }}" onclick="toggleTag(this)">{{ tag }}</span>
                         {% endfor %}
                     </div>
-                    <div style="display:flex; gap:8px; margin-top:8px;">
+                    <div class="custom-tag-row">
                         <input type="text" class="edit-input" id="customTagInput" placeholder="Add custom tag..." style="flex:1;">
-                        <button type="button" onclick="addCustomTag()" style="padding:6px 14px; background:#8b1a1a; color:#fff; border:none; border-radius:6px; font-size:0.8rem; cursor:pointer;">Add</button>
+                        <button type="button" class="btn-add-tag" onclick="addCustomTag()">Add</button>
                     </div>
                     <input type="hidden" id="tagsHidden" value="{{ item.tags }}">
                 </div>
 
                 <!-- Status Update (integrated into Edit Details) -->
-                <div style="border-top:1px solid #e5e7eb; margin-top:16px; padding-top:16px;">
-                    <label style="display:block; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:#64748b; margin-bottom:6px;">Status</label>
+                <div class="status-divider">
+                    <label style="display:block; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:6px; font-weight:600;">Status</label>
                     <select class="edit-input" id="editStatus" style="margin-bottom:12px;">
                         <option value="checked_in" {% if item.status == 'checked_in' %}selected{% endif %}>Checked In</option>
                         <option value="checked_out" {% if item.status == 'checked_out' %}selected{% endif %}>Checked Out</option>
@@ -651,23 +723,23 @@
                     </select>
                     <div class="edit-row">
                         <div class="edit-group">
-                            <label>Your Name <span style="text-transform:none; letter-spacing:normal; font-weight:400;">(optional, for audit trail)</span></label>
+                            <label>Your Name <span>(optional, for audit trail)</span></label>
                             <input type="text" class="edit-input" id="changedByInput" placeholder="Your name">
                         </div>
                         <div class="edit-group">
-                            <label>Notes <span style="text-transform:none; letter-spacing:normal; font-weight:400;">(optional)</span></label>
+                            <label>Notes <span>(optional)</span></label>
                             <input type="text" class="edit-input" id="statusNotes" placeholder="Add notes...">
                         </div>
                     </div>
                 </div>
 
-                <button class="btn-save-edit" id="btnSaveEdit" onclick="saveEdit({{ item.id }})" style="margin-top:12px;">Save Changes</button>
+                <button class="btn-save-edit" id="btnSaveEdit" onclick="saveEdit({{ item.id }})">Save Changes</button>
                 <div class="edit-message" id="editMessage"></div>
             </div>
 
             <!-- Archive -->
             <div class="archive-bar">
-                <span style="font-size:0.8rem; color:#64748b;">
+                <span>
                     {% if item.archived %}This item is archived.{% else %}Move to archive when no longer needed.{% endif %}
                 </span>
                 <button class="btn-archive {% if item.archived %}active{% endif %}" id="archiveBtn"
@@ -708,7 +780,7 @@
                     <div class="log-entry-top">
                         {% if entry.change_type == 'created' %}
                         <span class="log-type-badge log-type-created">Created</span>
-                        <span style="font-size:0.85rem; color:#374151;">Item checked in</span>
+                        <span style="font-size:0.8rem; color:var(--text-secondary);">Item checked in</span>
                         {% else %}
                         <span class="log-type-badge log-type-field">Edit</span>
                         <div class="log-field-change">
@@ -1055,13 +1127,11 @@
     <script>
     // Dark mode toggle
     function toggleDarkMode() {
-        const isDark = document.body.classList.toggle('dark-mode');
+        var isDark = document.body.classList.toggle('dark-mode');
         localStorage.setItem('darkMode', isDark ? '1' : '0');
-        document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
     }
     if (localStorage.getItem('darkMode') === '1') {
         document.body.classList.add('dark-mode');
-        document.getElementById('darkToggle').textContent = 'Light Mode';
     }
     </script>
 </body>
