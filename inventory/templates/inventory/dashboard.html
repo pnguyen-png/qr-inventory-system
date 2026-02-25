@@ -4,746 +4,699 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fire &amp; Risk Alliance - Inventory Dashboard</title>
+    <title>FRATrack - Inventory Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         :root {
-            --md-sys-color-primary: #8b1a1a;
-            --md-sys-color-on-primary: #ffffff;
-            --md-sys-color-primary-container: #ffdad5;
-            --md-sys-color-on-primary-container: #410001;
-            --md-sys-color-secondary: #775652;
-            --md-sys-color-on-secondary: #ffffff;
-            --md-sys-color-secondary-container: #ffdad5;
-            --md-sys-color-on-secondary-container: #2c1512;
-            --md-sys-color-tertiary: #705c2e;
-            --md-sys-color-on-tertiary: #ffffff;
-            --md-sys-color-tertiary-container: #fcdfa6;
-            --md-sys-color-on-tertiary-container: #261a00;
-            --md-sys-color-error: #ba1a1a;
-            --md-sys-color-on-error: #ffffff;
-            --md-sys-color-error-container: #ffdad6;
-            --md-sys-color-on-error-container: #410002;
-            --md-sys-color-background: #fff8f6;
-            --md-sys-color-on-background: #201a19;
-            --md-sys-color-surface: #fff8f6;
-            --md-sys-color-on-surface: #201a19;
-            --md-sys-color-on-surface-variant: #534341;
-            --md-sys-color-surface-container-lowest: #ffffff;
-            --md-sys-color-surface-container-low: #fef1ef;
-            --md-sys-color-surface-container: #f8ebe9;
-            --md-sys-color-surface-container-high: #f3e5e2;
-            --md-sys-color-surface-container-highest: #ede0dd;
-            --md-sys-color-surface-dim: #e6d9d6;
-            --md-sys-color-outline: #857371;
-            --md-sys-color-outline-variant: #d8c2bf;
-            --md-sys-color-inverse-surface: #362f2e;
-            --md-sys-color-inverse-on-surface: #fbeeeb;
-            --md-sys-color-inverse-primary: #ffb4ab;
+            --bg: #ffffff;
+            --bg-secondary: #f5f5f7;
+            --bg-tertiary: #fafafa;
+            --text-primary: #1d1d1f;
+            --text-secondary: #6e6e73;
+            --text-tertiary: #86868b;
+            --accent: #8b1a1a;
+            --accent-light: rgba(139,26,26,0.08);
+            --accent-hover: #a02020;
+            --border: #d2d2d7;
+            --border-light: #e8e8ed;
+            --input-bg: #ffffff;
+            --card-bg: #ffffff;
+            --nav-bg: rgba(255,255,255,0.72);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+            --shadow: 0 2px 12px rgba(0,0,0,0.06);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
+            --green: #34c759;
+            --green-bg: #f0fdf4;
+            --green-text: #166534;
+            --amber: #ff9f0a;
+            --amber-bg: #fffbeb;
+            --amber-text: #92400e;
+            --red: #ff3b30;
+            --red-bg: #fef2f2;
+            --red-text: #991b1b;
+            --purple: #af52de;
+            --purple-bg: #faf5ff;
+            --purple-text: #6b21a8;
+            --blue: #007aff;
+            --blue-bg: #eff6ff;
+            --blue-text: #1e40af;
+            --gray: #8e8e93;
+            --row-hover: #f5f5f7;
         }
         body.dark-mode {
-            --md-sys-color-primary: #ffb4ab;
-            --md-sys-color-on-primary: #690005;
-            --md-sys-color-primary-container: #930006;
-            --md-sys-color-on-primary-container: #ffdad5;
-            --md-sys-color-secondary: #e7bdb7;
-            --md-sys-color-on-secondary: #442926;
-            --md-sys-color-secondary-container: #5d3f3b;
-            --md-sys-color-on-secondary-container: #ffdad5;
-            --md-sys-color-tertiary: #dfc38c;
-            --md-sys-color-on-tertiary: #3e2e04;
-            --md-sys-color-tertiary-container: #574419;
-            --md-sys-color-on-tertiary-container: #fcdfa6;
-            --md-sys-color-error: #ffb4ab;
-            --md-sys-color-on-error: #690005;
-            --md-sys-color-error-container: #93000a;
-            --md-sys-color-on-error-container: #ffdad6;
-            --md-sys-color-background: #1a1110;
-            --md-sys-color-on-background: #ede0dd;
-            --md-sys-color-surface: #1a1110;
-            --md-sys-color-on-surface: #ede0dd;
-            --md-sys-color-on-surface-variant: #d8c2bf;
-            --md-sys-color-surface-container-lowest: #120d0c;
-            --md-sys-color-surface-container-low: #201a19;
-            --md-sys-color-surface-container: #251e1d;
-            --md-sys-color-surface-container-high: #2f2827;
-            --md-sys-color-surface-container-highest: #3b3332;
-            --md-sys-color-surface-dim: #1a1110;
-            --md-sys-color-outline: #a08c8a;
-            --md-sys-color-outline-variant: #534341;
-            --md-sys-color-inverse-surface: #ede0dd;
-            --md-sys-color-inverse-on-surface: #362f2e;
-            --md-sys-color-inverse-primary: #8b1a1a;
+            --bg: #000000;
+            --bg-secondary: #1c1c1e;
+            --bg-tertiary: #0d0d0d;
+            --text-primary: #f5f5f7;
+            --text-secondary: #a1a1a6;
+            --text-tertiary: #6e6e73;
+            --accent: #ff6b6b;
+            --accent-light: rgba(255,107,107,0.1);
+            --accent-hover: #ff8585;
+            --border: #38383a;
+            --border-light: #2c2c2e;
+            --input-bg: #1c1c1e;
+            --card-bg: #1c1c1e;
+            --nav-bg: rgba(0,0,0,0.72);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+            --shadow: 0 2px 12px rgba(0,0,0,0.3);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.4);
+            --green: #30d158;
+            --green-bg: #0a2613;
+            --green-text: #4ade80;
+            --amber: #ffd60a;
+            --amber-bg: #2c2510;
+            --amber-text: #fbbf24;
+            --red: #ff453a;
+            --red-bg: #2c1515;
+            --red-text: #ff6b6b;
+            --purple: #bf5af2;
+            --purple-bg: #1f1528;
+            --purple-text: #c084fc;
+            --blue: #0a84ff;
+            --blue-bg: #0d1f3c;
+            --blue-text: #60a5fa;
+            --gray: #636366;
+            --row-hover: #1c1c1e;
         }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: var(--md-sys-color-background);
-            color: var(--md-sys-color-on-surface);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
             min-height: 100vh;
         }
-        .header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #2d1518 100%);
-            color: #fff;
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 3px solid #b8860b;
-        }
-        .header-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .header-brand img {
-            height: 44px;
-            width: auto;
-        }
-        .header-brand-text h1 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #fff;
-            line-height: 1.2;
-        }
-        .header-brand-text .subtitle {
-            font-size: 0.7rem;
-            color: #b8860b;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .header-right p { color: var(--md-sys-color-outline); font-size: 0.8rem; }
 
-        .container { max-width: 1800px; margin: 0 auto; padding: 24px 32px; }
+        /* ---- Frosted glass nav ---- */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: var(--nav-bg);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 0.5px solid var(--border);
+            height: 48px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 24px;
+        }
+        .nav-inner {
+            max-width: 1200px; width: 100%;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px; text-decoration: none;
+        }
+        .nav-logo {
+            width: 28px; height: 28px;
+            background: linear-gradient(135deg, #8b1a1a 0%, #b82e2e 100%);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 0.65rem;
+        }
+        body.dark-mode .nav-logo {
+            background: linear-gradient(135deg, #ff6b6b 0%, #8b1a1a 100%);
+        }
+        .nav-title { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
+        .nav-links { display: flex; align-items: center; gap: 24px; }
+        .nav-link {
+            font-size: 0.8rem; color: var(--text-secondary); text-decoration: none;
+            font-weight: 500; transition: color 0.2s; letter-spacing: -0.01em;
+        }
+        .nav-link:hover { color: var(--text-primary); }
+        .nav-link.active { color: var(--text-primary); font-weight: 600; }
+        .nav-right { display: flex; align-items: center; gap: 16px; }
+        .nav-item-count { font-size: 0.75rem; color: var(--text-tertiary); }
+        .dark-toggle-btn {
+            background: none; border: none; color: var(--text-tertiary); cursor: pointer;
+            display: flex; align-items: center; padding: 4px; transition: color 0.2s;
+        }
+        .dark-toggle-btn:hover { color: var(--text-primary); }
+        .nav-logout {
+            font-size: 0.8rem; color: var(--text-secondary); text-decoration: none;
+            font-weight: 500; transition: color 0.2s;
+        }
+        .nav-logout:hover { color: var(--red); }
 
-        /* Summary cards */
-        .summary-row {
+        /* ---- Main content ---- */
+        .main { max-width: 1200px; margin: 0 auto; padding: 72px 24px 60px; }
+
+        /* ---- Summary cards ---- */
+        .summary-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 16px;
-            margin-bottom: 28px;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            margin-bottom: 32px;
         }
-        .summary-card {
-            background: var(--md-sys-color-surface-container-low);
-            border-radius: 10px;
-            padding: 20px 20px 20px 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+        .stat-card {
+            background: var(--card-bg);
+            border: 0.5px solid var(--border-light);
+            border-radius: 14px;
+            padding: 18px 16px;
             text-align: center;
-            border-left: 4px solid transparent;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .summary-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
         }
-        .summary-card .number { font-size: 2.2rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
-        .summary-card .label { font-size: 0.7rem; color: var(--md-sys-color-on-surface-variant); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; font-weight: 500; }
-        .summary-card .card-icon { font-size: 1.6rem; margin-bottom: 6px; opacity: 0.7; }
-        .c-total { border-left-color: var(--md-sys-color-on-surface); }
-        .c-total .number { color: var(--md-sys-color-on-surface); }
-        .c-total .card-icon { color: var(--md-sys-color-on-surface); }
-        .c-in { border-left-color: #16a34a; }
-        .c-in .number { color: #16a34a; }
-        .c-in .card-icon { color: #16a34a; }
-        .c-out { border-left-color: #f59e0b; }
-        .c-out .number { color: #f59e0b; }
-        .c-out .card-icon { color: #f59e0b; }
-        .c-damaged { border-left-color: var(--md-sys-color-error); }
-        .c-damaged .number { color: var(--md-sys-color-error); }
-        .c-damaged .card-icon { color: var(--md-sys-color-error); }
-        .c-overdue { border-left-color: #9333ea; }
-        .c-overdue .number { color: #9333ea; }
-        .c-overdue .card-icon { color: #9333ea; }
-        .c-archived { border-left-color: var(--md-sys-color-outline); }
-        .c-archived .number { color: var(--md-sys-color-outline); }
-        .c-archived .card-icon { color: var(--md-sys-color-outline); }
+        .stat-number {
+            font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em;
+            line-height: 1.1; margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 0.65rem; font-weight: 500; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--text-tertiary);
+        }
+        .stat-icon {
+            font-size: 1.2rem; margin-bottom: 6px; opacity: 0.6;
+        }
+        .stat-total .stat-number { color: var(--text-primary); }
+        .stat-total .stat-icon { color: var(--text-primary); }
+        .stat-in .stat-number { color: var(--green); }
+        .stat-in .stat-icon { color: var(--green); }
+        .stat-out .stat-number { color: var(--amber); }
+        .stat-out .stat-icon { color: var(--amber); }
+        .stat-damaged .stat-number { color: var(--red); }
+        .stat-damaged .stat-icon { color: var(--red); }
+        .stat-overdue .stat-number { color: var(--purple); }
+        .stat-overdue .stat-icon { color: var(--purple); }
+        .stat-archived .stat-number { color: var(--gray); }
+        .stat-archived .stat-icon { color: var(--gray); }
 
-        /* Toolbar */
+        /* ---- Toolbar ---- */
         .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-            align-items: center;
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 20px; flex-wrap: wrap;
         }
         .toolbar-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
+            display: flex; gap: 8px; align-items: center;
         }
-        .toolbar .btn-tool {
-            padding: 8px 16px;
-            border: 1.5px solid var(--md-sys-color-outline-variant);
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            background: var(--md-sys-color-surface-container-low);
-            color: var(--md-sys-color-on-surface);
-            white-space: nowrap;
-            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        .btn {
+            padding: 8px 16px; border-radius: 8px; font-size: 0.8rem;
+            font-weight: 600; font-family: inherit; cursor: pointer;
+            border: 0.5px solid var(--border); background: var(--card-bg);
+            color: var(--text-primary); transition: all 0.15s; letter-spacing: -0.01em;
+            text-decoration: none; white-space: nowrap;
         }
-        .toolbar .btn-tool:hover { background: var(--md-sys-color-surface-container); border-color: var(--md-sys-color-outline); box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
-        .toolbar .btn-tool.primary { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); border-color: var(--md-sys-color-primary); box-shadow: 0 2px 4px rgba(139,26,26,0.25); }
-        .toolbar .btn-tool.primary:hover { background: #7a1717; box-shadow: 0 3px 8px rgba(139,26,26,0.3); opacity: 1; }
-        .toolbar .btn-tool.danger { background: #dc2626; color: #fff; border-color: #dc2626; }
-        .toolbar .btn-tool.success { background: #16a34a; color: #fff; border-color: #16a34a; box-shadow: 0 2px 4px rgba(22,163,74,0.25); }
-        .toolbar .btn-tool.success:hover { background: #15803d; box-shadow: 0 3px 8px rgba(22,163,74,0.3); }
-        .toolbar .btn-tool:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn:hover { background: var(--bg-secondary); }
+        .btn-primary {
+            background: var(--accent); color: #fff; border-color: var(--accent);
+        }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-teal { background: #0d9488; color: #fff; border-color: #0d9488; }
+        .btn-teal:hover { background: #0f766e; }
+        .btn-purple { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+        .btn-purple:hover { background: #6d28d9; }
+        .btn-amber { background: #f59e0b; color: #fff; border-color: #f59e0b; }
+        .btn-amber:hover { background: #d97706; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .toolbar-spacer { flex: 1; }
 
         /* More dropdown */
-        .more-dropdown {
-            position: relative;
-        }
+        .more-dropdown { position: relative; }
         .more-menu {
             display: none;
-            position: absolute;
-            right: 0;
-            top: calc(100% + 4px);
-            background: var(--md-sys-color-surface-container-low);
-            border: 1.5px solid var(--md-sys-color-outline-variant);
-            border-radius: 10px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06);
-            min-width: 180px;
-            z-index: 100;
-            overflow: hidden;
-            padding: 4px 0;
+            position: absolute; right: 0; top: calc(100% + 4px);
+            background: var(--card-bg);
+            border: 0.5px solid var(--border);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            min-width: 200px; z-index: 100;
+            overflow: hidden; padding: 4px 0;
         }
-        .more-menu.open {
-            display: block;
-        }
+        .more-menu.open { display: block; }
         .more-menu a {
-            display: block;
-            padding: 10px 16px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface);
-            text-decoration: none;
-            transition: background 0.12s ease;
+            display: block; padding: 10px 16px;
+            font-size: 0.82rem; font-weight: 500;
+            color: var(--text-primary); text-decoration: none;
+            transition: background 0.12s;
         }
-        .more-menu a:hover {
-            background: var(--md-sys-color-surface-container);
-        }
+        .more-menu a:hover { background: var(--bg-secondary); }
 
-        /* Tabs */
+        /* ---- Tabs ---- */
         .tabs {
-            display: flex;
-            gap: 4px;
-            border-bottom: 2px solid var(--md-sys-color-outline-variant);
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            padding: 0 4px;
+            display: flex; gap: 2px; margin-bottom: 16px;
+            border-bottom: 0.5px solid var(--border);
         }
         .tab {
-            padding: 10px 20px;
-            background: none;
-            border: none;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--md-sys-color-on-surface-variant);
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -2px;
-            border-radius: 8px 8px 0 0;
-            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+            padding: 10px 18px; background: none; border: none;
+            font-size: 0.8rem; font-weight: 500; color: var(--text-tertiary);
+            cursor: pointer; border-bottom: 2px solid transparent;
+            margin-bottom: -0.5px; font-family: inherit;
+            transition: color 0.15s, border-color 0.15s; letter-spacing: -0.01em;
         }
-        .tab.active { color: var(--md-sys-color-primary); border-bottom-color: var(--md-sys-color-primary); background: rgba(139, 26, 26, 0.06); font-weight: 700; }
-        .tab:hover { color: var(--md-sys-color-on-surface); background: rgba(0, 0, 0, 0.03); }
+        .tab:hover { color: var(--text-primary); }
+        .tab.active {
+            color: var(--accent); border-bottom-color: var(--accent); font-weight: 600;
+        }
 
-        /* Filters */
-        .filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 8px;
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            background: var(--md-sys-color-background);
-            padding: 12px 32px;
-            margin-left: -32px;
-            margin-right: -32px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+        /* ---- Search/filter bar ---- */
+        .filter-bar {
+            display: flex; gap: 10px; margin-bottom: 16px; align-items: center;
+            position: sticky; top: 48px; z-index: 20;
+            background: var(--bg); padding: 12px 0;
         }
-        .filters input, .filters select {
-            padding: 10px 14px;
-            border: 1.5px solid var(--md-sys-color-outline-variant);
-            border-radius: 8px;
-            font-size: 0.875rem;
-            background: var(--md-sys-color-surface-container-lowest);
-            color: var(--md-sys-color-on-surface);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        .search-input {
+            flex: 1; padding: 10px 16px; padding-left: 40px;
+            border: 0.5px solid var(--border); border-radius: 10px;
+            font-size: 0.85rem; font-family: inherit;
+            background: var(--input-bg); color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s; outline: none;
         }
-        .filters input:focus, .filters select:focus {
-            outline: none;
-            border-color: var(--md-sys-color-primary);
-            box-shadow: 0 0 0 3px rgba(139, 26, 26, 0.1), 0 1px 3px rgba(0,0,0,0.04);
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
         }
-        .filters input::placeholder { color: var(--md-sys-color-outline); }
-        .filters input { min-width: 200px; max-width: 750px; flex: 1 1 600px; }
+        .search-input::placeholder { color: var(--text-tertiary); }
+        .search-wrap { position: relative; flex: 1; }
+        .search-wrap .material-icons {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            font-size: 1.1rem; color: var(--text-tertiary);
+        }
+        .filter-select {
+            padding: 10px 14px; border: 0.5px solid var(--border); border-radius: 10px;
+            font-size: 0.8rem; font-family: inherit; background: var(--input-bg);
+            color: var(--text-primary); cursor: pointer; outline: none;
+            transition: border-color 0.2s;
+        }
+        .filter-select:focus { border-color: var(--accent); }
 
-        /* Table */
-        .table-wrap {
-            background: var(--md-sys-color-surface-container-low);
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+        /* ---- Table ---- */
+        .table-container {
+            background: var(--card-bg);
+            border: 0.5px solid var(--border-light);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .table-scroll {
             overflow: auto;
-            max-height: calc(100vh - var(--sticky-total-height, 70px));
+            max-height: calc(100vh - 300px);
         }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        thead {
-            background: var(--md-sys-color-surface-container-high);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        thead { background: var(--bg-secondary); }
         th {
-            padding: 14px 18px;
-            text-align: left;
-            font-weight: 700;
-            color: var(--md-sys-color-on-surface-variant);
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            border-bottom: 2px solid var(--md-sys-color-outline-variant);
+            padding: 10px 16px; text-align: left; font-weight: 600;
+            color: var(--text-tertiary); font-size: 0.7rem;
+            text-transform: uppercase; letter-spacing: 0.04em;
+            border-bottom: 0.5px solid var(--border);
             white-space: nowrap;
-            background: var(--md-sys-color-surface-container-high);
+            background: var(--bg-secondary);
+            position: sticky; top: 0; z-index: 10;
         }
         td {
-            padding: 14px 18px;
-            border-bottom: 1px solid var(--md-sys-color-outline-variant);
-            vertical-align: middle;
-            transition: background 0.12s ease;
+            padding: 12px 16px; border-bottom: 0.5px solid var(--border-light);
+            vertical-align: middle; color: var(--text-primary);
         }
-        tbody tr.pallet-item:nth-child(even) td { background: var(--md-sys-color-surface-container-low); }
-        tr:hover td { background: var(--md-sys-color-surface-container); }
-        tr.selected td { background: #eff6ff; }
-        tr.overdue-row td { background: #fef2f2; }
+        tbody tr { transition: background 0.12s; }
+        tbody tr:hover td { background: var(--row-hover); }
+        tbody tr:last-child td { border-bottom: none; }
+        tr.selected td { background: var(--blue-bg); }
+        tr.overdue-row td { background: var(--red-bg); }
 
         .status-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 999px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
+            display: inline-block; padding: 3px 10px; border-radius: 999px;
+            font-size: 0.68rem; font-weight: 600; letter-spacing: 0.01em;
             white-space: nowrap;
         }
-        .status-checked_in { background: #dcfce7; color: #166534; }
-        .status-checked_out { background: #fef3c7; color: #92400e; }
-        .status-tested { background: #dbeafe; color: #1e40af; }
-        .status-will_be_reused { background: #e0e7ff; color: #3730a3; }
-        .status-recycling { background: #fce7f3; color: #9d174d; }
+        .status-checked_in { background: var(--green-bg); color: var(--green-text); }
+        .status-checked_out { background: var(--amber-bg); color: var(--amber-text); }
+        .status-tested { background: var(--blue-bg); color: var(--blue-text); }
+        .status-will_be_reused { background: var(--purple-bg); color: var(--purple-text); }
+        .status-recycling { background: #fdf2f8; color: #9d174d; }
+        body.dark-mode .status-recycling { background: #2c1525; color: #f472b6; }
 
         .overdue-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 999px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            background: #fbbf24;
-            color: #92400e;
+            display: inline-block; padding: 2px 8px; border-radius: 999px;
+            font-size: 0.65rem; font-weight: 700;
+            background: var(--amber); color: var(--amber-text);
             margin-left: 6px;
         }
 
-        .damage-yes { color: #dc2626; font-weight: 700; }
-        .damage-no { color: #16a34a; }
+        .damage-yes { color: var(--red); font-weight: 600; }
+        .damage-no { color: var(--green); }
 
         .desc-cell { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .desc-cell:hover { white-space: normal; overflow: visible; }
 
         .tag-badge {
             display: inline-block; padding: 2px 8px; border-radius: 999px;
-            font-size: 0.65rem; font-weight: 600; background: #e0e7ff;
-            color: #3730a3; margin: 1px 2px; white-space: nowrap;
+            font-size: 0.65rem; font-weight: 500; background: var(--accent-light);
+            color: var(--accent); margin: 1px 2px; white-space: nowrap;
         }
 
-        /* Multi-scan modal */
-        .multiscan-list { margin: 16px 0; max-height: 250px; overflow-y: auto; }
-        .multiscan-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 8px 12px; border-bottom: 1px solid var(--md-sys-color-outline-variant);
-            font-size: 0.85rem;
-        }
-        .multiscan-item .item-info { font-weight: 500; }
-        .multiscan-item .item-tag-id { color: var(--md-sys-color-on-surface-variant); font-size: 0.75rem; }
-        .multiscan-item .remove-btn {
-            background: var(--md-sys-color-error-container); color: var(--md-sys-color-error); border: none; border-radius: 6px;
-            padding: 4px 10px; font-size: 0.75rem; cursor: pointer;
-        }
-        .multiscan-actions {
-            border-top: 1px solid var(--md-sys-color-outline-variant); padding-top: 16px; margin-top: 8px;
-        }
-        .multiscan-actions select, .multiscan-actions input {
-            padding: 8px 12px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;
-            font-size: 0.85rem; width: 100%; margin-bottom: 8px;
-        }
-        .multiscan-actions .btn-apply {
-            width: 100%; padding: 12px; background: #16a34a; color: #fff;
-            border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 700;
-            cursor: pointer;
-        }
-        .multiscan-actions .btn-apply:hover { opacity: 0.9; }
-        .multiscan-actions .btn-apply:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        /* Pallet group toggle */
+        /* Pallet group row */
         .pallet-group-row td {
-            background: var(--md-sys-color-surface-container-high) !important;
-            padding: 8px 14px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--md-sys-color-on-surface);
-            cursor: pointer;
-            user-select: none;
-            border-bottom: 2px solid var(--md-sys-color-outline-variant);
+            background: var(--bg-secondary) !important; padding: 8px 16px;
+            font-weight: 600; font-size: 0.82rem; cursor: pointer;
+            border-bottom: 0.5px solid var(--border);
         }
-        .pallet-group-row:hover td { background: var(--md-sys-color-surface-container-highest) !important; }
+        .pallet-group-row:hover td { background: var(--bg-tertiary) !important; }
         .pallet-group-row .toggle-arrow {
-            display: inline-block;
-            transition: transform 0.2s;
-            margin-right: 8px;
-            font-size: 0.75rem;
+            display: inline-block; transition: transform 0.2s;
+            margin-right: 8px; font-size: 0.75rem;
         }
-        .pallet-group-row.collapsed .toggle-arrow {
-            transform: rotate(-90deg);
-        }
+        .pallet-group-row.collapsed .toggle-arrow { transform: rotate(-90deg); }
         .pallet-group-row .group-count {
-            color: var(--md-sys-color-on-surface-variant);
-            font-weight: 400;
-            font-size: 0.8rem;
-            margin-left: 8px;
+            color: var(--text-tertiary); font-weight: 400; font-size: 0.75rem; margin-left: 8px;
         }
+
         .view-link {
-            color: var(--md-sys-color-primary);
-            text-decoration: none;
-            font-weight: 500;
+            color: var(--accent); text-decoration: none; font-weight: 500; font-size: 0.8rem;
         }
         .view-link:hover { text-decoration: underline; }
-        .view-col { position: sticky; right: 0; background: var(--md-sys-color-surface-container-low); }
-        thead .view-col { background: var(--md-sys-color-surface-container-high); z-index: 11; }
-        tr:hover .view-col { background: var(--md-sys-color-surface-container); }
-        tr.selected .view-col { background: #eff6ff; }
-        tr.overdue-row .view-col { background: #fef2f2; }
+        .view-col { position: sticky; right: 0; background: var(--card-bg); }
+        thead .view-col { background: var(--bg-secondary); z-index: 11; }
+        tr:hover .view-col { background: var(--row-hover); }
+        tr.selected .view-col { background: var(--blue-bg); }
+        tr.overdue-row .view-col { background: var(--red-bg); }
 
         .empty-state {
-            padding: 60px 24px;
-            text-align: center;
-            color: var(--md-sys-color-outline);
+            padding: 60px 24px; text-align: center; color: var(--text-tertiary);
         }
-        .empty-state h3 { margin-bottom: 8px; color: var(--md-sys-color-on-surface-variant); }
+        .empty-state h3 { margin-bottom: 8px; color: var(--text-secondary); }
+        .empty-state a { color: var(--accent); }
 
         .checkbox-col { width: 40px; text-align: center; }
-        .checkbox-col input { width: 16px; height: 16px; cursor: pointer; }
+        .checkbox-col input { width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent); }
 
-        /* Collapse All toggle button */
+        /* Collapse All toggle */
         .collapse-all-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 2px;
-            margin-left: 4px;
-            color: var(--md-sys-color-on-surface-variant);
-            display: inline-flex;
-            align-items: center;
-            transition: transform 0.2s;
-            vertical-align: middle;
+            background: none; border: none; cursor: pointer; padding: 2px;
+            margin-left: 4px; color: var(--text-tertiary);
+            display: inline-flex; align-items: center;
+            transition: transform 0.2s; vertical-align: middle;
         }
-        .collapse-all-btn:hover { color: var(--md-sys-color-on-surface); }
+        .collapse-all-btn:hover { color: var(--text-primary); }
         .collapse-all-btn.collapsed { transform: rotate(-90deg); }
 
-        /* Bulk action bar */
+        /* ---- Bulk action bar ---- */
         .bulk-bar {
             display: none;
-            background: #1e3a5f;
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 10px;
-            margin-bottom: 16px;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            position: sticky;
-            top: var(--filters-height, 54px);
-            z-index: 19;
+            background: #1e3a5f; color: #fff;
+            padding: 12px 20px; border-radius: 12px;
+            margin-bottom: 16px; align-items: center;
+            gap: 12px; flex-wrap: wrap;
+            position: sticky; top: 100px; z-index: 19;
         }
         .bulk-bar.active { display: flex; }
-        .bulk-bar span { font-size: 0.875rem; font-weight: 600; }
+        .bulk-bar span { font-size: 0.82rem; font-weight: 600; }
         .bulk-bar select, .bulk-bar input {
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid var(--md-sys-color-outline);
-            font-size: 0.8rem;
-            background: var(--md-sys-color-surface-container-lowest);
-            color: var(--md-sys-color-on-surface);
+            padding: 6px 10px; border-radius: 8px;
+            border: 0.5px solid var(--border); font-size: 0.8rem;
+            background: var(--input-bg); color: var(--text-primary);
+            font-family: inherit;
         }
         .bulk-bar .btn-bulk {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            color: #fff;
+            padding: 8px 16px; border: none; border-radius: 8px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer; color: #fff;
         }
         .bulk-bar .btn-bulk.apply { background: #16a34a; }
         .bulk-bar .btn-bulk.archive { background: #f59e0b; color: #1a1a2e; }
         .bulk-bar .btn-bulk.cancel { background: #64748b; }
 
-        /* QR Scanner Modal */
+        /* ---- Modal ---- */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(4px);
         }
         .modal-overlay.active { display: flex; }
         .modal {
-            background: var(--md-sys-color-surface-container-low);
+            background: var(--card-bg);
+            border: 0.5px solid var(--border);
             border-radius: 16px;
-            max-width: 480px;
-            width: 90%;
+            max-width: 480px; width: 90%;
             overflow: hidden;
+            box-shadow: var(--shadow-lg);
         }
         .modal-header {
             padding: 16px 20px;
-            background: #1a1a2e;
-            color: #fff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: var(--bg-secondary);
+            border-bottom: 0.5px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .modal-header h3 { font-size: 1rem; }
+        .modal-header h3 { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); }
         .modal-close {
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 1.5rem;
-            cursor: pointer;
+            background: none; border: none;
+            color: var(--text-tertiary); font-size: 1.5rem; cursor: pointer;
         }
+        .modal-close:hover { color: var(--text-primary); }
         .modal-body { padding: 20px; text-align: center; }
-        #qr-video {
-            width: 100%;
-            max-height: 300px;
-            border-radius: 8px;
-            background: #000;
-        }
-        .scanner-status {
-            margin-top: 12px;
-            font-size: 0.875rem;
-            color: var(--md-sys-color-on-surface-variant);
-        }
-        #qr-reader {
-            width: 100%;
-            border: none !important;
-        }
+        #qr-reader { width: 100%; border: none !important; }
         #qr-reader video { border-radius: 8px; }
         #qr-reader__scan_region { border: none !important; }
         #qr-reader__dashboard { margin-top: 10px; }
         #qr-reader__dashboard button {
-            padding: 8px 14px; border-radius: 6px; font-size: 0.8rem;
-            cursor: pointer;
+            padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;
+        }
+        .scanner-status {
+            margin-top: 12px; font-size: 0.85rem; color: var(--text-secondary);
         }
 
-        /* Overdue alert banner */
+        /* Multi-scan */
+        .multiscan-list { margin: 16px 0; max-height: 250px; overflow-y: auto; }
+        .multiscan-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 12px; border-bottom: 0.5px solid var(--border-light);
+            font-size: 0.85rem;
+        }
+        .multiscan-item .item-info { font-weight: 500; }
+        .multiscan-item .item-tag-id { color: var(--text-tertiary); font-size: 0.75rem; }
+        .multiscan-item .remove-btn {
+            background: var(--red-bg); color: var(--red-text); border: none; border-radius: 8px;
+            padding: 4px 10px; font-size: 0.75rem; cursor: pointer;
+        }
+        .multiscan-actions {
+            border-top: 0.5px solid var(--border); padding-top: 16px; margin-top: 8px;
+        }
+        .multiscan-actions select, .multiscan-actions input {
+            padding: 8px 12px; border: 0.5px solid var(--border); border-radius: 10px;
+            font-size: 0.85rem; width: 100%; margin-bottom: 8px;
+            background: var(--input-bg); color: var(--text-primary); font-family: inherit;
+        }
+        .multiscan-actions .btn-apply {
+            width: 100%; padding: 12px; background: #16a34a; color: #fff;
+            border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; font-family: inherit;
+        }
+        .multiscan-actions .btn-apply:hover { opacity: 0.9; }
+        .multiscan-actions .btn-apply:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ---- Overdue banner ---- */
         .overdue-banner {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            border: 1px solid #f59e0b;
-            border-radius: 10px;
-            padding: 14px 20px;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            background: var(--amber-bg); border: 0.5px solid var(--amber);
+            border-radius: 12px; padding: 12px 18px; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem;
         }
-        .overdue-banner .icon { font-size: 1.5rem; }
-        .overdue-banner .text { font-size: 0.875rem; color: #92400e; }
-        .overdue-banner .text strong { color: #78350f; }
+        .overdue-banner .material-icons { color: var(--amber); font-size: 1.3rem; }
+        .overdue-banner .text { color: var(--amber-text); }
+        .overdue-banner .text strong { font-weight: 700; }
+        .overdue-banner .text a { color: var(--accent); text-decoration: underline; }
 
+        /* ---- Activity feed ---- */
+        .activity-section {
+            margin-top: 32px;
+            background: var(--card-bg);
+            border: 0.5px solid var(--border-light);
+            border-radius: 14px;
+            padding: 24px;
+        }
+        .activity-section h3 {
+            font-size: 0.8rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--text-tertiary);
+            margin-bottom: 16px; padding-bottom: 12px;
+            border-bottom: 0.5px solid var(--border-light);
+        }
+        .activity-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0; border-bottom: 0.5px solid var(--border-light);
+            font-size: 0.8rem;
+        }
+        .activity-row:last-child { border-bottom: none; }
+        .activity-badge {
+            padding: 3px 8px; border-radius: 6px; font-size: 0.65rem;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em;
+            flex-shrink: 0; min-width: 50px; text-align: center; white-space: nowrap;
+        }
+        .badge-status { background: var(--blue-bg); color: var(--blue-text); }
+        .badge-edit { background: var(--amber-bg); color: var(--amber-text); }
+        .badge-created { background: var(--green-bg); color: var(--green-text); }
+        .activity-text { flex: 1; color: var(--text-primary); }
+        .activity-text strong { font-weight: 600; }
+        .activity-text em { color: var(--purple); font-style: normal; font-weight: 500; }
+        .activity-time { color: var(--text-tertiary); font-size: 0.7rem; flex-shrink: 0; }
+
+        /* ---- Mobile card view ---- */
+        .mobile-cards { display: none; }
+        .mobile-card {
+            background: var(--card-bg);
+            border: 0.5px solid var(--border-light);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        .mobile-card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px;
+        }
+        .mobile-card-title { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); }
+        .mobile-card-subtitle { font-size: 0.78rem; color: var(--text-tertiary); margin-top: 2px; }
+        .mobile-card-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px;
+            font-size: 0.78rem;
+        }
+        .mobile-card-field { display: flex; flex-direction: column; gap: 2px; }
+        .mobile-card-label {
+            font-size: 0.65rem; font-weight: 500; text-transform: uppercase;
+            letter-spacing: 0.04em; color: var(--text-tertiary);
+        }
+        .mobile-card-value {
+            font-weight: 500; color: var(--text-primary);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .mobile-card-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 12px; padding-top: 10px;
+            border-top: 0.5px solid var(--border-light);
+        }
+        .mobile-card-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+        .mobile-group-header {
+            font-weight: 600; font-size: 0.85rem; padding: 10px 0 6px;
+            color: var(--text-primary); border-bottom: 0.5px solid var(--border-light);
+            margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+        }
+        .mobile-group-header .group-count {
+            color: var(--text-tertiary); font-weight: 400; font-size: 0.75rem;
+        }
+
+        /* ---- Responsive ---- */
         @media (max-width: 768px) {
-            .header { flex-direction: column; gap: 8px; text-align: center; padding: 10px 12px; }
-            .header-brand img { height: 36px; }
-            .header-brand-text h1 { font-size: 0.95rem; }
-            .container { padding: 12px 8px; max-width: 100%; }
-            .summary-row { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
-            .summary-card { padding: 10px 6px 10px 10px; }
-            .summary-card:hover { transform: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06); }
-            .summary-card .number { font-size: 1.4rem; }
-            .summary-card .label { font-size: 0.6rem; }
-            .summary-card .card-icon { font-size: 1.2rem; margin-bottom: 4px; }
-
+            .summary-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .nav-links { display: none; }
+            .nav-item-count { display: none; }
+            .stat-number { font-size: 1.4rem; }
+            .stat-card { padding: 14px 10px; }
             .toolbar {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 6px;
+                display: grid; grid-template-columns: 1fr 1fr;
+                gap: 8px;
             }
             .toolbar-group {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 6px;
-                width: 100%;
+                display: contents;
             }
-            .toolbar-group:last-child { margin-left: 0; }
-            .toolbar .btn-tool {
-                padding: 10px 8px;
-                font-size: 0.75rem;
-                text-align: center;
-                white-space: normal;
-            }
-
-            .tabs {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                flex-wrap: nowrap;
-            }
-            .tab { padding: 8px 12px; font-size: 0.75rem; white-space: nowrap; }
-
-            .filters { flex-direction: column; margin-left: -8px; margin-right: -8px; padding-left: 8px; padding-right: 8px; }
-            .filters input { min-width: unset; max-width: unset; width: 100%; flex: unset; }
-
-            .table-wrap { border-radius: 8px; }
-            table { font-size: 0.75rem; }
-            th { padding: 8px 6px; font-size: 0.65rem; }
-            td { padding: 8px 6px; }
-            .desc-cell { max-width: 120px; }
-            .checkbox-col { width: 30px; }
-            .checkbox-col input { width: 14px; height: 14px; }
-
-            .bulk-bar { padding: 10px 12px; gap: 8px; }
-            .bulk-bar select, .bulk-bar input { font-size: 0.75rem; }
-
-            .overdue-banner { padding: 10px 14px; }
-            .overdue-banner .icon { font-size: 1.2rem; }
-            .overdue-banner .text { font-size: 0.8rem; }
+            .toolbar-spacer { display: none; }
+            .btn { text-align: center; padding: 10px 12px; font-size: 0.78rem; }
+            .tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+            .tab { white-space: nowrap; padding: 10px 14px; font-size: 0.78rem; }
+            .filter-bar { flex-direction: column; top: 48px; }
+            .table-container { display: none; }
+            .mobile-cards { display: block; }
+            .overdue-banner { font-size: 0.8rem; padding: 10px 14px; }
+            .activity-section { padding: 18px; }
+            .activity-row { flex-wrap: wrap; gap: 6px; }
+            .activity-time { width: 100%; text-align: right; }
+            .bulk-bar { padding: 10px 12px; gap: 8px; flex-direction: column; align-items: stretch; }
+            .bulk-bar select, .bulk-bar input { width: 100%; }
         }
-
         @media (max-width: 480px) {
-            .summary-row { grid-template-columns: repeat(2, 1fr); }
-            .toolbar-group { grid-template-columns: 1fr; }
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-number { font-size: 1.2rem; }
+            .stat-label { font-size: 0.6rem; }
+            .stat-icon { font-size: 1rem; }
+            .main { padding: 60px 14px 40px; }
         }
-
-        /* Dark mode toggle button */
-        .dark-toggle {
-            background: none; border: 1px solid #b8860b; color: #b8860b;
-            padding: 4px 10px; border-radius: 6px; font-size: 0.75rem;
-            cursor: pointer; font-weight: 600;
-        }
-        .dark-toggle:hover { background: rgba(184,134,11,0.2); }
-
-        /* Semantic dark mode overrides (not covered by M3 variables) */
-        body.dark-mode .damage-no { color: #4ade80; }
-        body.dark-mode .overdue-banner { background: linear-gradient(135deg, #78350f, #451a03); border-color: #b45309; }
-        body.dark-mode .overdue-banner .text { color: #fde68a; }
-
-        /* Activity Feed */
-        .activity-feed {
-            background: var(--md-sys-color-surface-container-low); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-            padding: 28px; margin-top: 28px;
-        }
-        .activity-feed h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 20px; color: var(--md-sys-color-on-surface); text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 12px; border-bottom: 2px solid var(--md-sys-color-outline-variant); }
-        .activity-item {
-            display: flex; align-items: flex-start; gap: 14px;
-            padding: 12px 8px; border-bottom: 1px solid var(--md-sys-color-outline-variant); font-size: 0.8rem;
-            border-radius: 6px; transition: background 0.12s ease; margin: 0 -8px;
-        }
-        .activity-item:last-child { border-bottom: none; }
-        .activity-item:hover { background: var(--md-sys-color-surface-container); }
-        .activity-badge {
-            display: inline-block; padding: 3px 10px; border-radius: 6px;
-            font-size: 0.65rem; font-weight: 700; text-transform: uppercase; white-space: nowrap;
-            flex-shrink: 0; letter-spacing: 0.03em; min-width: 52px; text-align: center;
-        }
-        .activity-badge.status { background: #dbeafe; color: #1e40af; }
-        .activity-badge.edit { background: #fef3c7; color: #92400e; }
-        .activity-badge.created { background: #dcfce7; color: #166534; }
-        .activity-text { flex: 1; color: var(--md-sys-color-on-surface); }
-        .activity-time { color: var(--md-sys-color-outline); font-size: 0.7rem; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
-
     </style>
 </head>
 <body>
-    <div class="header">
-        <a href="/dashboard/" class="header-brand" style="text-decoration:none;">
-            <img src="{% static 'inventory/img/logo.png' %}" alt="Fire &amp; Risk Alliance">
-            <div class="header-brand-text">
-                <h1>Fire &amp; Risk Alliance</h1>
-                <div class="subtitle">Inventory Management System</div>
+    <!-- Frosted glass nav -->
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="/dashboard/" class="nav-brand">
+                <div class="nav-logo">FR</div>
+                <span class="nav-title">FRATrack</span>
+            </a>
+            <div class="nav-links">
+                <a href="/dashboard/" class="nav-link active">Dashboard</a>
+                <a href="/shipments/" class="nav-link">Shipments</a>
+                <a href="/tags/" class="nav-link">Tags</a>
             </div>
-        </a>
-        <div class="header-right">
-            <button class="dark-toggle" onclick="toggleDarkMode()" id="darkToggle">Dark Mode</button>
-            <p>{{ items|length }} item{{ items|length|pluralize }} {% if show_archived %}in archive{% else %}in inventory{% endif %}</p>
+            <div class="nav-right">
+                <span class="nav-item-count">{{ items|length }} item{{ items|length|pluralize }} {% if show_archived %}in archive{% else %}in inventory{% endif %}</span>
+                <button class="dark-toggle-btn" onclick="toggleDarkMode()" id="darkToggle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+                <a href="/accounts/logout/" class="nav-logout">Sign Out</a>
+            </div>
         </div>
-    </div>
+    </nav>
 
-    <div class="container">
+    <div class="main">
         <!-- Overdue Alert Banner -->
         {% if overdue_count > 0 and not show_archived %}
         <div class="overdue-banner">
-            <div class="icon">&#9888;</div>
+            <span class="material-icons">warning_amber</span>
             <div class="text">
-                <strong>{{ overdue_count }} item{{ overdue_count|pluralize }} overdue!</strong>
-                Items checked out for more than 7 days.
-                <a href="#" onclick="switchTab('overdue'); return false;" style="color:#78350f; text-decoration:underline;">View overdue items</a>
+                <strong>{{ overdue_count }} item{{ overdue_count|pluralize }} overdue</strong> — checked out for more than 7 days.
+                <a href="#" onclick="switchTab('overdue'); return false;">View overdue items</a>
             </div>
         </div>
         {% endif %}
 
-        <!-- Summary -->
-        <div class="summary-row">
-            <div class="summary-card c-total">
-                <span class="material-icons card-icon">inventory_2</span>
-                <div class="number">{{ items|length }}</div>
-                <div class="label">{% if show_archived %}Archived{% else %}Total Items{% endif %}</div>
+        <!-- Summary cards -->
+        <div class="summary-grid">
+            <div class="stat-card stat-total">
+                <span class="material-icons stat-icon">inventory_2</span>
+                <div class="stat-number">{{ items|length }}</div>
+                <div class="stat-label">{% if show_archived %}Archived{% else %}Total Items{% endif %}</div>
             </div>
-            <div class="summary-card c-in">
-                <span class="material-icons card-icon">check_circle</span>
-                <div class="number">{{ checked_in_count }}</div>
-                <div class="label">Checked In</div>
+            <div class="stat-card stat-in">
+                <span class="material-icons stat-icon">check_circle</span>
+                <div class="stat-number">{{ checked_in_count }}</div>
+                <div class="stat-label">Checked In</div>
             </div>
-            <div class="summary-card c-out">
-                <span class="material-icons card-icon">local_shipping</span>
-                <div class="number">{{ checked_out_count }}</div>
-                <div class="label">Checked Out</div>
+            <div class="stat-card stat-out">
+                <span class="material-icons stat-icon">local_shipping</span>
+                <div class="stat-number">{{ checked_out_count }}</div>
+                <div class="stat-label">Checked Out</div>
             </div>
-            <div class="summary-card c-damaged">
-                <span class="material-icons card-icon">warning</span>
-                <div class="number">{{ damaged_count }}</div>
-                <div class="label">Damaged</div>
+            <div class="stat-card stat-damaged">
+                <span class="material-icons stat-icon">warning</span>
+                <div class="stat-number">{{ damaged_count }}</div>
+                <div class="stat-label">Damaged</div>
             </div>
-            <div class="summary-card c-overdue">
-                <span class="material-icons card-icon">schedule</span>
-                <div class="number">{{ overdue_count }}</div>
-                <div class="label">Overdue</div>
+            <div class="stat-card stat-overdue">
+                <span class="material-icons stat-icon">schedule</span>
+                <div class="stat-number">{{ overdue_count }}</div>
+                <div class="stat-label">Overdue</div>
             </div>
-            <div class="summary-card c-archived">
-                <span class="material-icons card-icon">archive</span>
-                <div class="number">{{ archived_count }}</div>
-                <div class="label">Archived</div>
+            <div class="stat-card stat-archived">
+                <span class="material-icons stat-icon">archive</span>
+                <div class="stat-number">{{ archived_count }}</div>
+                <div class="stat-label">Archived</div>
             </div>
         </div>
 
         <!-- Toolbar -->
         <div class="toolbar">
             <div class="toolbar-group">
-                <a class="btn-tool primary" href="/add-shipment/">Add Shipment</a>
-                <button class="btn-tool" style="background:#0d9488; color:#fff; border-color:#0d9488;" onclick="openScanner()">Scan QR Code</button>
-                <button class="btn-tool" style="background:#7c3aed; color:#fff; border-color:#7c3aed;" onclick="openMultiScan()">Multi-Scan</button>
-                <a class="btn-tool" style="background:#f59e0b; color:#fff; border-color:#f59e0b;" href="/test-print/" target="_blank">Test Print</a>
+                <a class="btn btn-primary" href="/add-shipment/">Add Shipment</a>
+                <button class="btn btn-teal" onclick="openScanner()">
+                    <span class="material-icons" style="font-size:14px;vertical-align:middle;margin-right:4px;">qr_code_scanner</span>
+                    Scan QR
+                </button>
+                <button class="btn btn-purple" onclick="openMultiScan()">Multi-Scan</button>
+                <a class="btn btn-amber" href="/test-print/" target="_blank">Test Print</a>
             </div>
-            <div class="toolbar-group" style="margin-left:auto;">
+            <div class="toolbar-spacer"></div>
+            <div class="toolbar-group">
                 <div class="more-dropdown">
-                    <button class="btn-tool" onclick="toggleMoreMenu()">
-                        <span class="material-icons" style="font-size:18px; vertical-align:middle;">more_horiz</span> More
+                    <button class="btn" onclick="toggleMoreMenu()">
+                        <span class="material-icons" style="font-size:16px;vertical-align:middle;">more_horiz</span>
                     </button>
                     <div class="more-menu" id="moreMenu">
                         <a href="/shipments/">Shipments</a>
@@ -776,9 +729,12 @@
 
         <div class="inventory-section">
         <!-- Filters -->
-        <div class="filters">
-            <input type="text" id="searchInput" placeholder="Search by manufacturer, pallet, project, location, description, checked out by, tag ID, or tags" oninput="debouncedFilter()">
-            <select id="statusFilter" onchange="filterTable()">
+        <div class="filter-bar">
+            <div class="search-wrap">
+                <span class="material-icons">search</span>
+                <input class="search-input" type="text" id="searchInput" placeholder="Search by manufacturer, pallet, project, location, tags..." oninput="debouncedFilter()">
+            </div>
+            <select class="filter-select" id="statusFilter" onchange="filterTable()">
                 <option value="">All Statuses</option>
                 <option value="checked_in">Checked In</option>
                 <option value="checked_out">Checked Out</option>
@@ -786,7 +742,7 @@
                 <option value="will_be_reused">Will Be Reused</option>
                 <option value="recycling">Recycling</option>
             </select>
-            <select id="sortFilter" onchange="sortPalletGroups()">
+            <select class="filter-select" id="sortFilter" onchange="sortPalletGroups()">
                 <option value="recent">Date Added (Newest)</option>
                 <option value="oldest">Date Added (Oldest)</option>
                 <option value="updated">Last Updated (Newest)</option>
@@ -830,9 +786,10 @@
             <button class="btn-bulk cancel" onclick="clearSelection()">Cancel</button>
         </div>
 
-        <!-- Inventory Table -->
+        <!-- Desktop Table -->
         {% if items %}
-        <div class="table-wrap">
+        <div class="table-container">
+            <div class="table-scroll">
             <table id="inventoryTable">
                 <thead>
                     <tr>
@@ -865,7 +822,7 @@
                         data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.project_number|lower }} {{ item.location|lower }} {{ item.description|lower }} {{ item.checked_out_by|lower }} {{ item.tag_id|lower }} {{ item.tags|lower }}"
                         class="{% if item.is_overdue %}overdue-row{% endif %} pallet-item">
                         <td class="checkbox-col"><input type="checkbox" class="row-check" value="{{ item.id }}" onchange="updateSelection()"></td>
-                        <td>{{ item.manufacturer }}</td>
+                        <td style="font-weight:500;">{{ item.manufacturer }}</td>
                         <td>{{ item.pallet_id }}</td>
                         <td>{{ item.project_number|default:"-" }}</td>
                         <td>#{{ item.box_id }}</td>
@@ -875,7 +832,7 @@
                         </td>
                         <td>{{ item.location }}</td>
                         <td class="desc-cell" title="{{ item.description }}">{{ item.description|truncatewords:8 }}</td>
-                        <td style="font-weight:600; font-size:0.8rem; white-space:nowrap;">{{ item.tag_id }}</td>
+                        <td style="font-weight:600; font-size:0.78rem; white-space:nowrap;">{{ item.tag_id }}</td>
                         <td>
                             {% for tag in item.tags_list %}
                             <span class="tag-badge">{{ tag }}</span>
@@ -888,45 +845,93 @@
                         {% if not show_archived %}
                         <td>{{ item.checked_out_by|default:"-" }}</td>
                         {% endif %}
-                        <td>{{ item.updated_at|date:"M d, H:i" }}</td>
+                        <td style="color:var(--text-tertiary); font-size:0.78rem;">{{ item.updated_at|date:"M d, H:i" }}</td>
                         <td class="view-col"><a class="view-link" href="/scan/?id={{ item.id }}">View</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
+        </div>
+
+        <!-- Mobile Card View -->
+        <div class="mobile-cards">
+            {% for item in items %}
+            <div class="mobile-card pallet-item-mobile"
+                 data-id="{{ item.id }}" data-status="{{ item.status }}"
+                 data-damaged="{{ item.damaged|yesno:'true,false' }}"
+                 data-overdue="{{ item.is_overdue|yesno:'true,false' }}"
+                 data-pallet="{{ item.pallet_id|lower }}"
+                 data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.project_number|lower }} {{ item.location|lower }} {{ item.description|lower }} {{ item.checked_out_by|lower }} {{ item.tag_id|lower }} {{ item.tags|lower }}">
+                <div class="mobile-card-header">
+                    <div>
+                        <div class="mobile-card-title">{{ item.manufacturer }} — Box #{{ item.box_id }}</div>
+                        <div class="mobile-card-subtitle">Pallet {{ item.pallet_id }} · Project {{ item.project_number|default:"-" }}</div>
+                    </div>
+                    <span class="status-badge status-{{ item.status }}">{{ item.get_status_display }}</span>
+                </div>
+                <div class="mobile-card-grid">
+                    <div class="mobile-card-field">
+                        <span class="mobile-card-label">Contents</span>
+                        <span class="mobile-card-value">{{ item.content }}</span>
+                    </div>
+                    <div class="mobile-card-field">
+                        <span class="mobile-card-label">Location</span>
+                        <span class="mobile-card-value">{{ item.location }}</span>
+                    </div>
+                    <div class="mobile-card-field">
+                        <span class="mobile-card-label">Damage</span>
+                        <span class="mobile-card-value {% if item.damaged %}damage-yes{% else %}damage-no{% endif %}">{{ item.get_damaged_display }}</span>
+                    </div>
+                    <div class="mobile-card-field">
+                        <span class="mobile-card-label">Updated</span>
+                        <span class="mobile-card-value" style="color:var(--text-tertiary);">{{ item.updated_at|date:"M d, H:i" }}</span>
+                    </div>
+                </div>
+                <div class="mobile-card-footer">
+                    <div class="mobile-card-tags">
+                        {% for tag in item.tags_list %}
+                        <span class="tag-badge">{{ tag }}</span>
+                        {% endfor %}
+                        {% if item.is_overdue %}<span class="tag-badge" style="background:var(--red-bg);color:var(--red-text);">{{ item.days_checked_out }}d overdue</span>{% endif %}
+                    </div>
+                    <a class="view-link" href="/scan/?id={{ item.id }}">View Details &rarr;</a>
+                </div>
+            </div>
+            {% endfor %}
         </div>
         {% else %}
         <div class="empty-state">
             <h3>{% if show_archived %}No archived items{% else %}No inventory items yet{% endif %}</h3>
-            <p>{% if show_archived %}Archive items from the main inventory view.{% else %}<a href="/add-shipment/" style="color:#2563eb;">Add a shipment</a> to create inventory items and generate QR codes.{% endif %}</p>
+            <p>{% if show_archived %}Archive items from the main inventory view.{% else %}<a href="/add-shipment/">Add a shipment</a> to create inventory items and generate QR codes.{% endif %}</p>
         </div>
         {% endif %}
         </div>
 
-    <!-- Activity Feed (#19) -->
+        <!-- Activity Feed -->
         {% if recent_activity %}
-        <div class="activity-feed">
+        <div class="activity-section">
             <h3>Recent Activity</h3>
             {% for entry in recent_activity %}
-            <div class="activity-item">
+            <div class="activity-row">
                 {% if entry.entry_type == 'status' %}
-                <span class="activity-badge status">Status</span>
+                <span class="activity-badge badge-status">Status</span>
                 <span class="activity-text">
                     <strong>{{ entry.item.manufacturer }}</strong> Box #{{ entry.item.box_id }}:
                     {{ entry.old_status_label }} &rarr; {{ entry.new_status_label }}
-                    {% if entry.changed_by %}<em style="color:#7c3aed;"> by {{ entry.changed_by }}</em>{% endif %}
+                    {% if entry.changed_by %}<em> by {{ entry.changed_by }}</em>{% endif %}
                 </span>
                 {% elif entry.change_type == 'created' %}
-                <span class="activity-badge created">Created</span>
+                <span class="activity-badge badge-created">Created</span>
                 <span class="activity-text">
                     <strong>{{ entry.item.manufacturer }}</strong> Box #{{ entry.item.box_id }} checked in
                 </span>
                 {% else %}
-                <span class="activity-badge edit">Edit</span>
+                <span class="activity-badge badge-edit">Edit</span>
                 <span class="activity-text">
                     <strong>{{ entry.item.manufacturer }}</strong> Box #{{ entry.item.box_id }}:
                     {{ entry.field_label }} changed
-                    {% if entry.changed_by %}<em style="color:#7c3aed;"> by {{ entry.changed_by }}</em>{% endif %}
+                    {% if entry.changed_by %}<em> by {{ entry.changed_by }}</em>{% endif %}
                 </span>
                 {% endif %}
                 <span class="activity-time">{{ entry.changed_at|timesince }} ago</span>
@@ -953,20 +958,20 @@
     <!-- Multi-Scan Modal -->
     <div class="modal-overlay" id="multiScanModal">
         <div class="modal" style="max-width:520px;">
-            <div class="modal-header" style="background:#7c3aed;">
+            <div class="modal-header">
                 <h3>Multi-Scan</h3>
                 <button class="modal-close" onclick="closeMultiScan()">&times;</button>
             </div>
             <div class="modal-body" style="text-align:left;">
-                <p style="font-size:0.85rem; color:#64748b; margin-bottom:12px;">Scan multiple QR codes, then set their status at once.</p>
+                <p style="font-size:0.85rem; color:var(--text-tertiary); margin-bottom:12px;">Scan multiple QR codes, then set their status at once.</p>
                 <div id="multi-qr-reader"></div>
                 <div class="scanner-status" id="multiScannerStatus">Click scan to start camera</div>
                 <div style="text-align:center; margin:8px 0;">
-                    <button id="multiScanStartBtn" onclick="startMultiScanner()" style="padding:8px 20px; background:#7c3aed; color:#fff; border:none; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer;">Start Scanning</button>
-                    <button id="multiScanStopBtn" onclick="stopMultiScanner()" style="padding:8px 20px; background:#64748b; color:#fff; border:none; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer; display:none;">Pause</button>
+                    <button id="multiScanStartBtn" onclick="startMultiScanner()" class="btn btn-purple" style="display:inline-block;">Start Scanning</button>
+                    <button id="multiScanStopBtn" onclick="stopMultiScanner()" class="btn" style="display:none;">Pause</button>
                 </div>
                 <div class="multiscan-list" id="multiScanList">
-                    <p style="color:#94a3b8; text-align:center; font-size:0.85rem;" id="multiScanEmpty">No items scanned yet.</p>
+                    <p style="color:var(--text-tertiary); text-align:center; font-size:0.85rem;" id="multiScanEmpty">No items scanned yet.</p>
                 </div>
                 <div class="multiscan-actions" id="multiScanActions" style="display:none;">
                     <select id="multiScanStatus">
@@ -1043,10 +1048,22 @@
                 const anyVisible = Array.from(childRows).some(r => r.style.display !== 'none');
                 groupRow.style.display = anyVisible ? '' : 'none';
 
-                // Respect collapsed state — hide child rows if group is collapsed
+                // Respect collapsed state
                 if (groupRow.classList.contains('collapsed')) {
                     childRows.forEach(r => r.style.display = 'none');
                 }
+            });
+
+            // Also filter mobile cards
+            document.querySelectorAll('.mobile-card.pallet-item-mobile').forEach(card => {
+                const matchSearch = !search || (card.dataset.search && card.dataset.search.includes(search));
+                let matchStatus = !status || card.dataset.status === status;
+                let matchTab = true;
+
+                if (currentTab === 'damaged') matchTab = card.dataset.damaged === 'true';
+                if (currentTab === 'overdue') matchTab = card.dataset.overdue === 'true';
+
+                card.style.display = (matchSearch && matchStatus && matchTab) ? '' : 'none';
             });
         }
 
@@ -1068,7 +1085,6 @@
             const count = checked.length;
             document.getElementById('selectedCount').textContent = count + ' selected';
             document.getElementById('bulkBar').classList.toggle('active', count > 0);
-            requestAnimationFrame(updateStickyOffsets);
 
             document.querySelectorAll('.row-check').forEach(cb => {
                 cb.closest('tr').classList.toggle('selected', cb.checked);
@@ -1140,13 +1156,12 @@
             }
         }
 
-        // Toast notification instead of alert
         function showToast(message, isError) {
             let toast = document.getElementById('toastNotif');
             if (!toast) {
                 toast = document.createElement('div');
                 toast.id = 'toastNotif';
-                toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:10px;font-size:0.875rem;font-weight:600;color:#fff;z-index:9999;transition:opacity 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+                toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:12px;font-size:0.85rem;font-weight:600;color:#fff;z-index:9999;transition:opacity 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.2);font-family:Inter,sans-serif;';
                 document.body.appendChild(toast);
             }
             toast.style.background = isError ? '#dc2626' : '#16a34a';
@@ -1184,13 +1199,10 @@
                     { facingMode: "environment" },
                     config,
                     (decodedText) => {
-                        // QR code scanned successfully
                         stopScanner();
                         handleScanResult(decodedText);
                     },
-                    (errorMessage) => {
-                        // Scan error (just means no QR found yet, ignore)
-                    }
+                    (errorMessage) => {}
                 );
                 statusEl.textContent = 'Point your camera at a QR code...';
             } catch (err) {
@@ -1212,13 +1224,10 @@
         function handleScanResult(text) {
             closeScanner();
             if (text.includes('/scan/')) {
-                // QR code with full URL
                 window.location.href = text;
             } else if (/^\d+$/.test(text)) {
-                // Barcode with item ID
                 window.location.href = '/scan/?id=' + text;
             } else {
-                // Raw barcode payload
                 window.location.href = '/scan/?data=' + encodeURIComponent(text);
             }
         }
@@ -1231,7 +1240,6 @@
             const rows = Array.from(tbody.querySelectorAll('tr.pallet-item'));
             if (!rows.length) return;
 
-            // Find unique pallets in order of appearance
             const seen = new Set();
             const palletOrder = [];
             rows.forEach(row => {
@@ -1246,24 +1254,17 @@
 
             palletOrder.forEach(key => {
                 const groupRows = rows.filter(r => r.dataset.pallet === key);
-
-                // Extract display info from first row
                 const firstRow = groupRows[0];
                 const palletId = firstRow.children[2].textContent.trim();
 
-                // Create group header row
                 const groupRow = document.createElement('tr');
                 groupRow.className = 'pallet-group-row collapsed';
                 groupRow.dataset.palletGroup = key;
                 groupRow.innerHTML = `<td colspan="${colCount}"><span class="toggle-arrow">&#9660;</span>Pallet ${escapeHtml(palletId)}<span class="group-count">(${groupRows.length} item${groupRows.length === 1 ? '' : 's'})</span></td>`;
 
-                // Insert before the first row of this group
                 firstRow.parentNode.insertBefore(groupRow, firstRow);
-
-                // Default collapsed — hide child rows
                 groupRows.forEach(r => r.style.display = 'none');
 
-                // Click to toggle
                 groupRow.addEventListener('click', () => {
                     const isCollapsed = groupRow.classList.toggle('collapsed');
                     groupRows.forEach(r => {
@@ -1272,14 +1273,12 @@
                 });
             });
 
-            // Set collapse-all button to reflect collapsed state
             const btn = document.getElementById('btnCollapseAll');
             if (btn) {
                 btn.classList.add('collapsed');
                 btn.title = 'Expand All';
             }
 
-            // Apply default sort (most recently added)
             sortPalletGroups();
         }
 
@@ -1292,7 +1291,6 @@
             const groupRows = Array.from(document.querySelectorAll('.pallet-group-row'));
             if (!groupRows.length) return;
 
-            // Build group data: { headerRow, itemRows, sortValue }
             const groups = groupRows.map(header => {
                 const key = header.dataset.palletGroup;
                 const itemRows = Array.from(document.querySelectorAll(`tr.pallet-item[data-pallet="${key}"]`));
@@ -1313,26 +1311,22 @@
                 return { header, itemRows, sortValue };
             });
 
-            // Sort
             if (sortBy === 'smallest' || sortBy === 'oldest') {
                 groups.sort((a, b) => a.sortValue - b.sortValue);
             } else {
                 groups.sort((a, b) => b.sortValue - a.sortValue);
             }
 
-            // Reorder DOM
             groups.forEach(group => {
                 tbody.appendChild(group.header);
                 group.itemRows.forEach(row => tbody.appendChild(row));
             });
         }
 
-        // Collapse All / Expand All toggle
         function toggleAllGroups() {
             const groupRows = document.querySelectorAll('.pallet-group-row');
             if (!groupRows.length) return;
             const btn = document.getElementById('btnCollapseAll');
-            // If any group is expanded, collapse all; otherwise expand all
             const anyExpanded = Array.from(groupRows).some(r => !r.classList.contains('collapsed'));
             groupRows.forEach(groupRow => {
                 const key = groupRow.dataset.palletGroup;
@@ -1354,32 +1348,14 @@
             }
         }
 
-        // Sticky offset calculation for freeze-rows
-        function updateStickyOffsets() {
-            var filters = document.querySelector('.filters');
-            var bulkBar = document.getElementById('bulkBar');
-            if (!filters) return;
-
-            var filtersHeight = filters.offsetHeight;
-            document.documentElement.style.setProperty('--filters-height', filtersHeight + 'px');
-
-            var totalStickyHeight = filtersHeight;
-            if (bulkBar && bulkBar.classList.contains('active')) {
-                totalStickyHeight += bulkBar.offsetHeight + 8;
-            }
-            document.documentElement.style.setProperty('--sticky-total-height', totalStickyHeight + 'px');
-        }
-        window.addEventListener('resize', updateStickyOffsets);
-
         // Run on page load
         document.addEventListener('DOMContentLoaded', function() {
             initPalletGroups();
-            updateStickyOffsets();
         });
 
         // ---- Multi-Scan ----
         let multiScanner = null;
-        const scannedItems = new Map(); // id -> item info
+        const scannedItems = new Map();
 
         function openMultiScan() {
             document.getElementById('multiScanModal').classList.add('active');
@@ -1422,7 +1398,6 @@
         }
 
         function handleMultiScanResult(text) {
-            // Check if it's a pure numeric barcode scan (item DB ID)
             if (/^\d+$/.test(text)) {
                 const itemId = text;
                 if (scannedItems.has('id-' + itemId)) return;
@@ -1441,12 +1416,10 @@
                 return;
             }
 
-            // QR code scan — check for ?id= parameter first (new short URL format)
             try {
                 const u = new URL(text);
                 const idParam = u.searchParams.get('id');
                 if (idParam) {
-                    // Short QR code URL — treat as numeric ID
                     if (scannedItems.has('id-' + idParam)) return;
                     const row = document.querySelector(`#inventoryTable tbody tr.pallet-item[data-id="${idParam}"]`);
                     if (row) {
@@ -1463,7 +1436,6 @@
                 }
             } catch(e) {}
 
-            // Legacy QR code scan — extract data param from URL
             let dataParam = '';
             try {
                 const u = new URL(text);
@@ -1473,7 +1445,6 @@
             }
             if (!dataParam) return;
 
-            // Parse barcode payload
             const decoded = decodeURIComponent(dataParam);
             const parts = decoded.split(' | ');
             const dict = {};
@@ -1487,9 +1458,8 @@
             const box = dict['BOX'] || '';
             const key = `${mfr}-${pallet}-${box}`;
 
-            if (scannedItems.has(key)) return; // Already scanned
+            if (scannedItems.has(key)) return;
 
-            // Find matching row in table to get item ID
             const rows = document.querySelectorAll('#inventoryTable tbody tr.pallet-item');
             let itemId = null;
             let tagId = '';
@@ -1507,7 +1477,6 @@
             }
 
             if (!itemId) {
-                // Try fetching from API
                 fetch(`/api/items/?mfr=${encodeURIComponent(mfr)}&pallet=${encodeURIComponent(pallet)}&box=${box}`)
                     .then(r => r.json())
                     .then(data => {
@@ -1521,7 +1490,6 @@
                 renderMultiScanList();
             }
 
-            // Beep/vibrate feedback
             if (navigator.vibrate) navigator.vibrate(100);
         }
 
@@ -1530,7 +1498,6 @@
             const empty = document.getElementById('multiScanEmpty');
             if (empty) empty.style.display = scannedItems.size ? 'none' : 'block';
 
-            // Remove existing items
             list.querySelectorAll('.multiscan-item').forEach(el => el.remove());
 
             scannedItems.forEach((info, key) => {
@@ -1594,14 +1561,14 @@
             return d.innerHTML;
         }
 
-        // ---- #4: Debounced search ----
+        // ---- Debounced search ----
         let debounceTimer = null;
         function debouncedFilter() {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(filterTable, 200);
         }
 
-        // ---- #7: Bulk edit (location, damage) ----
+        // ---- Bulk edit (location, damage) ----
         async function applyBulkEdit() {
             const ids = getSelectedIds();
             if (!ids.length) return showToast('No items selected', true);
@@ -1638,16 +1605,13 @@
             }
         }
 
-        // ---- #15: Dark mode ----
+        // ---- Dark mode ----
         function toggleDarkMode() {
             const isDark = document.body.classList.toggle('dark-mode');
             localStorage.setItem('darkMode', isDark ? '1' : '0');
-            document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
         }
-        // Apply on load
         if (localStorage.getItem('darkMode') === '1') {
             document.body.classList.add('dark-mode');
-            document.getElementById('darkToggle').textContent = 'Light Mode';
         }
     </script>
 </body>
