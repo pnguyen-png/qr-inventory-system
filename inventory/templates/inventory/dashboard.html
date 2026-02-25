@@ -859,6 +859,7 @@
                  data-overdue="{{ item.is_overdue|yesno:'true,false' }}"
                  data-mobile-pallet="{{ item.pallet_id|lower }}"
                  data-pallet="{{ item.pallet_id|lower }}"
+                 data-created="{{ item.created_at|date:'U' }}" data-updated="{{ item.updated_at|date:'U' }}"
                  data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.project_number|lower }} {{ item.location|lower }} {{ item.description|lower }} {{ item.checked_out_by|lower }} {{ item.tag_id|lower }} {{ item.tags|lower }}"
                  style="display:none;">
                 <div class="mobile-card-header">
@@ -1293,33 +1294,74 @@
             sortPalletGroups();
         }
 
-        // ---- Sort Pallet Groups ----
+        // ---- Sort Pallet Groups (desktop + mobile) ----
         function sortPalletGroups() {
-            const tbody = document.querySelector('#inventoryTable tbody');
-            if (!tbody) return;
             const sortBy = document.getElementById('sortFilter').value;
 
-            const groupRows = Array.from(document.querySelectorAll('.pallet-group-row'));
-            if (!groupRows.length) return;
+            // --- Desktop table sorting ---
+            const tbody = document.querySelector('#inventoryTable tbody');
+            if (tbody) {
+                const groupRows = Array.from(document.querySelectorAll('.pallet-group-row'));
+                if (groupRows.length) {
+                    const groups = groupRows.map(header => {
+                        const key = header.dataset.palletGroup;
+                        const itemRows = Array.from(document.querySelectorAll(`tr.pallet-item[data-pallet="${key}"]`));
 
-            const groups = groupRows.map(header => {
-                const key = header.dataset.palletGroup;
-                const itemRows = Array.from(document.querySelectorAll(`tr.pallet-item[data-pallet="${key}"]`));
+                        let sortValue = 0;
+                        if (sortBy === 'recent' || sortBy === 'oldest') {
+                            sortValue = sortBy === 'recent'
+                                ? Math.max(...itemRows.map(r => parseInt(r.dataset.created) || 0))
+                                : Math.min(...itemRows.map(r => parseInt(r.dataset.created) || 0));
+                        } else if (sortBy === 'updated') {
+                            sortValue = Math.max(...itemRows.map(r => parseInt(r.dataset.updated) || 0));
+                        } else if (sortBy === 'largest' || sortBy === 'smallest') {
+                            sortValue = itemRows.length;
+                        }
+
+                        return { header, itemRows, sortValue };
+                    });
+
+                    if (sortBy === 'smallest' || sortBy === 'oldest') {
+                        groups.sort((a, b) => a.sortValue - b.sortValue);
+                    } else {
+                        groups.sort((a, b) => b.sortValue - a.sortValue);
+                    }
+
+                    groups.forEach(group => {
+                        tbody.appendChild(group.header);
+                        group.itemRows.forEach(row => tbody.appendChild(row));
+                    });
+                }
+            }
+
+            // --- Mobile cards sorting ---
+            sortMobileGroups(sortBy);
+        }
+
+        function sortMobileGroups(sortBy) {
+            const container = document.getElementById('mobileCards');
+            if (!container) return;
+
+            const headers = Array.from(container.querySelectorAll('.mobile-group-header'));
+            if (!headers.length) return;
+
+            // Build group data: each header + its cards
+            const groups = headers.map(header => {
+                const key = header.dataset.mobileGroup;
+                const cards = Array.from(container.querySelectorAll(`.pallet-item-mobile[data-mobile-pallet="${key}"]`));
 
                 let sortValue = 0;
                 if (sortBy === 'recent' || sortBy === 'oldest') {
                     sortValue = sortBy === 'recent'
-                        ? Math.max(...itemRows.map(r => parseInt(r.dataset.created) || 0))
-                        : Math.min(...itemRows.map(r => parseInt(r.dataset.created) || 0));
+                        ? Math.max(...cards.map(c => parseInt(c.dataset.created) || 0))
+                        : Math.min(...cards.map(c => parseInt(c.dataset.created) || 0));
                 } else if (sortBy === 'updated') {
-                    sortValue = Math.max(...itemRows.map(r => parseInt(r.dataset.updated) || 0));
-                } else if (sortBy === 'largest') {
-                    sortValue = itemRows.length;
-                } else if (sortBy === 'smallest') {
-                    sortValue = itemRows.length;
+                    sortValue = Math.max(...cards.map(c => parseInt(c.dataset.updated) || 0));
+                } else if (sortBy === 'largest' || sortBy === 'smallest') {
+                    sortValue = cards.length;
                 }
 
-                return { header, itemRows, sortValue };
+                return { header, cards, sortValue };
             });
 
             if (sortBy === 'smallest' || sortBy === 'oldest') {
@@ -1328,9 +1370,10 @@
                 groups.sort((a, b) => b.sortValue - a.sortValue);
             }
 
+            // Re-append in sorted order
             groups.forEach(group => {
-                tbody.appendChild(group.header);
-                group.itemRows.forEach(row => tbody.appendChild(row));
+                container.appendChild(group.header);
+                group.cards.forEach(card => container.appendChild(card));
             });
         }
 
@@ -1385,6 +1428,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             initPalletGroups();
             initMobileGroups();
+            // Sort mobile groups to match desktop (newest first by default)
+            sortMobileGroups(document.getElementById('sortFilter').value);
         });
 
         // ---- Multi-Scan ----
