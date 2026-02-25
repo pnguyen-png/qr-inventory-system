@@ -302,6 +302,7 @@
     </style>
 </head>
 <body>
+    <div style="display:none">{% csrf_token %}</div>
     <nav class="nav">
         <div class="nav-inner">
             <a href="/dashboard/" class="nav-brand">
@@ -436,6 +437,19 @@
     </div>
 
     <script>
+        // ---- CSRF token helper ----
+        function getCookie(name) {
+            let v = null;
+            if (document.cookie && document.cookie !== '') {
+                document.cookie.split(';').forEach(function(c) {
+                    c = c.trim();
+                    if (c.substring(0, name.length + 1) === (name + '='))
+                        v = decodeURIComponent(c.substring(name.length + 1));
+                });
+            }
+            return v;
+        }
+
         function toggleDarkMode() {
             var isDark = document.body.classList.toggle('dark-mode');
             localStorage.setItem('darkMode', isDark ? '1' : '0');
@@ -456,7 +470,7 @@
 
             fetch('/api/print-jobs/create/', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
                 body: JSON.stringify({item_ids: itemIds})
             })
             .then(function(r) { return r.json(); })

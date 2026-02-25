@@ -148,10 +148,14 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # -----------------------------------------------------------------------------
-# CORS / CSRF (Excel calls your API)
+# CORS / CSRF
 # -----------------------------------------------------------------------------
-# For production you should restrict this; leaving permissive to unblock your integration.
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "https://fratrack.com",
+    "https://www.fratrack.com",
+    "https://web-production-57c20.up.railway.app",
+]
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
@@ -161,6 +165,12 @@ CSRF_TRUSTED_ORIGINS = [
     "https://www.fratrack.com",
 ]
 
+if DEBUG:
+    CORS_ALLOWED_ORIGINS += [
+        "http://localhost:8091",
+        "http://127.0.0.1:8091",
+    ]
+
 # -----------------------------------------------------------------------------
 # Proxy / HTTPS hardening for Railway
 # -----------------------------------------------------------------------------
@@ -169,7 +179,17 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_SSL_REDIRECT = False  # Railway already terminates TLS; leaving False avoids redirect loops
+    SECURE_SSL_REDIRECT = False  # Railway + Cloudflare terminate TLS; avoids redirect loops
+    SECURE_HSTS_SECONDS = 31536000  # 1 year — browsers remember to use HTTPS
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = False  # Enable after confirming HSTS works
+
+# Security headers (apply in all environments)
+SECURE_CONTENT_TYPE_NOSNIFF = True  # X-Content-Type-Options: nosniff
+X_FRAME_OPTIONS = "DENY"  # Prevent clickjacking
+SESSION_COOKIE_HTTPONLY = True  # JS cannot read session cookie
+SESSION_COOKIE_SAMESITE = "Lax"  # Prevent CSRF via cross-site requests
+CSRF_COOKIE_SAMESITE = "Lax"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

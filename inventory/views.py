@@ -1,5 +1,6 @@
 import json
 import csv
+import logging
 import time
 import urllib.parse
 import os
@@ -10,7 +11,7 @@ from itertools import chain
 from django.contrib.auth.views import LoginView
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from django.db.models import Max, IntegerField, Count, Min
@@ -21,6 +22,8 @@ from .models import (
     InventoryItem, StatusHistory, NotificationLog, ItemPhoto,
     ChangeLog, ScanLog, Tag, PrintJob, LoginAttempt,
 )
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Secure Login View
@@ -171,7 +174,6 @@ def scanner_landing(request):
         })
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def update_status(request):
     """Endpoint to update item status with checkout attribution and audit trail"""
@@ -226,7 +228,8 @@ def update_status(request):
         })
 
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
 
 
 def _send_notification(item, old_status, new_status, changed_by):
@@ -300,7 +303,8 @@ def item_api(request):
         })
 
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'error': 'An unexpected error occurred.'}, status=500)
 
 
 def dashboard(request):
@@ -361,7 +365,6 @@ def item_history(request, item_id):
     return render(request, 'inventory/item_history.html', {'item': item, 'history': history})
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def update_history_notes(request):
     """Update notes on a status history entry"""
@@ -375,10 +378,10 @@ def update_history_notes(request):
 
         return JsonResponse({'success': True, 'notes': entry.notes})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def bulk_update_status(request):
     """Bulk update status for multiple items"""
@@ -422,7 +425,8 @@ def bulk_update_status(request):
 
         return JsonResponse({'success': True, 'updated_count': updated})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
 
 
 def export_csv(request):
@@ -696,7 +700,6 @@ def export_pdf(request):
     })
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def archive_item(request):
     """Archive or unarchive an item"""
@@ -724,10 +727,10 @@ def archive_item(request):
 
         return JsonResponse({'success': True, 'archived': item.archived})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def bulk_archive(request):
     """Archive multiple items at once"""
@@ -753,7 +756,8 @@ def bulk_archive(request):
 
         return JsonResponse({'success': True, 'updated_count': len(changed_ids)})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
 
 
 def overdue_items_api(request):
@@ -1084,7 +1088,6 @@ def download_shipment_excel(request, shipment_key):
     return response
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def edit_item(request):
     """Edit individual item fields (content, damaged, location, description, manufacturer)"""
@@ -1195,10 +1198,10 @@ def edit_item(request):
             'status_changed': status_changed,
         })
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def upload_photo(request):
     """Upload a photo for an individual item"""
@@ -1234,10 +1237,10 @@ def upload_photo(request):
             'uploaded_at': photo.uploaded_at.strftime('%b %d, %Y %H:%M'),
         })
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def delete_photo(request):
     """Delete a photo"""
@@ -1249,7 +1252,8 @@ def delete_photo(request):
         photo.delete()
         return JsonResponse({'success': True})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
 
 
 def next_pallet_api(request):
@@ -1401,7 +1405,6 @@ def download_shipment_csv(request, shipment_key):
 
 # ---- Bulk Edit (#7) ----
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def bulk_edit(request):
     """Bulk edit location, damage, or tags for multiple items."""
@@ -1449,7 +1452,8 @@ def bulk_edit(request):
 
         return JsonResponse({'success': True, 'updated_count': updated})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
 
 
 # ---- Shipment History (#10) ----
@@ -1530,7 +1534,6 @@ def tag_management(request):
     })
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def rename_tag(request):
     """Rename a tag across all items."""
@@ -1552,10 +1555,10 @@ def rename_tag(request):
                 updated += 1
         return JsonResponse({'success': True, 'updated_count': updated})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def delete_tag(request):
     """Remove a tag from all items."""
@@ -1578,10 +1581,10 @@ def delete_tag(request):
         Tag.objects.filter(name=tag_name).delete()
         return JsonResponse({'success': True, 'updated_count': updated})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def create_tag(request):
     """Create a new standalone tag."""
@@ -1599,7 +1602,8 @@ def create_tag(request):
         Tag.objects.create(name=tag_name)
         return JsonResponse({'success': True})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
 
 
 # ---- Wireless Printing API ----
@@ -1616,7 +1620,6 @@ def _check_print_api_auth(request):
     return None
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def create_print_jobs(request):
     """Create one PrintJob per item. Called by the web UI 'Send to Printer' button."""
@@ -1638,7 +1641,8 @@ def create_print_jobs(request):
 
         return JsonResponse({'success': True, 'jobs_created': len(created), 'jobs': created})
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
 
 
 @csrf_exempt
@@ -1687,7 +1691,8 @@ def update_print_job_status(request, job_id):
 
         return JsonResponse({'success': True, 'id': job.id, 'status': job.status})
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        logger.exception("Unexpected error")
+        return JsonResponse({'error': 'An unexpected error occurred.'}, status=500)
 
 
 @require_http_methods(["GET"])
