@@ -46,8 +46,9 @@ urlpatterns = [
     # Next pallet ID
     path('api/next-pallet/', views.next_pallet_api, name='next_pallet'),
 
-    # Archive
+    # Archive & delete
     path('api/archive-item/', views.archive_item, name='archive_item'),
+    path('api/delete-pallet/', views.delete_pallet, name='delete_pallet'),
 
     # Print jobs (wireless printing to Brother QL-820NWB)
     path('api/print-jobs/create/', views.create_print_jobs, name='create_print_jobs'),

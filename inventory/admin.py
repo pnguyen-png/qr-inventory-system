@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import InventoryItem, StatusHistory, ItemPhoto, NotificationLog, ChangeLog, ScanLog
+from .models import InventoryItem, StatusHistory, ItemPhoto, NotificationLog, ChangeLog, ScanLog, DeletionLog
 
 @admin.register(InventoryItem)
 class InventoryItemAdmin(admin.ModelAdmin):
@@ -32,3 +32,10 @@ class ChangeLogAdmin(admin.ModelAdmin):
 class ScanLogAdmin(admin.ModelAdmin):
     list_display = ['item', 'scanned_at']
     list_filter = ['scanned_at']
+
+@admin.register(DeletionLog)
+class DeletionLogAdmin(admin.ModelAdmin):
+    list_display = ['manufacturer', 'pallet_id', 'item_count', 'deleted_by', 'deleted_at']
+    list_filter = ['deleted_by', 'deleted_at']
+    search_fields = ['manufacturer', 'pallet_id', 'deleted_by']
+    readonly_fields = ['manufacturer', 'pallet_id', 'item_count', 'item_ids', 'deleted_by', 'deleted_at', 'details']

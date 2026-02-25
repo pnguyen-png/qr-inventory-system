@@ -285,6 +285,167 @@
         }
         .btn-green:hover { background: #15803d; }
 
+        /* Danger zone */
+        .danger-zone {
+            margin-bottom: 24px;
+            padding: 20px;
+            border: 1.5px solid var(--red);
+            border-radius: 14px;
+            text-align: center;
+            background: var(--card-bg);
+        }
+        .danger-zone h3 {
+            color: var(--red);
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            letter-spacing: -0.01em;
+        }
+        .danger-zone p {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .btn-delete-pallet {
+            display: inline-block;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            font-family: inherit;
+            color: #fff;
+            background: var(--red);
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .btn-delete-pallet:hover { opacity: 0.85; }
+
+        /* Re-auth modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: var(--card-bg);
+            border: 0.5px solid var(--border);
+            border-radius: 16px;
+            max-width: 420px;
+            width: 90%;
+            overflow: hidden;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+        }
+        .modal-header {
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border-bottom: 0.5px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--red);
+            margin: 0;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+        }
+        .modal-close:hover { color: var(--text-primary); }
+        .modal-body-inner { padding: 20px; }
+        .modal-warning {
+            background: rgba(255,59,48,0.08);
+            border: 0.5px solid var(--red);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 18px;
+            font-size: 0.78rem;
+            color: var(--red-text);
+            line-height: 1.5;
+        }
+        body.dark-mode .modal-warning {
+            background: rgba(255,69,58,0.12);
+        }
+        .modal-warning strong { font-weight: 700; }
+        .modal-field { margin-bottom: 14px; }
+        .modal-field label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
+        }
+        .modal-field input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 0.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            background: var(--bg);
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .modal-field input:focus {
+            border-color: var(--accent);
+        }
+        .modal-error {
+            color: var(--red);
+            font-size: 0.78rem;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding-top: 4px;
+        }
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            border: 0.5px solid var(--border);
+            transition: all 0.15s;
+        }
+        .modal-btn-cancel {
+            background: var(--card-bg);
+            color: var(--text-primary);
+        }
+        .modal-btn-cancel:hover { background: var(--bg-secondary); }
+        .modal-btn-delete {
+            background: var(--red);
+            color: #fff;
+            border-color: var(--red);
+        }
+        .modal-btn-delete:hover { opacity: 0.85; }
+        .modal-btn-delete:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         /* Responsive */
         @media (max-width: 600px) {
             .action-buttons { grid-template-columns: 1fr; gap: 8px; }
@@ -425,6 +586,18 @@
             </div>
         </div>
 
+        {% if is_history %}
+        <!-- Danger zone: Delete pallet -->
+        <div class="danger-zone">
+            <h3><span class="material-icons" style="font-size:1rem; vertical-align:-2px;">warning</span> Danger Zone</h3>
+            <p>Permanently delete this pallet and all {{ items|length }} item{{ items|length|pluralize }}.<br>This action cannot be undone.</p>
+            <button class="btn-delete-pallet" onclick="openDeleteModal()">
+                <span class="material-icons" style="font-size:0.9rem; vertical-align:-2px;">delete_forever</span>
+                Delete Pallet
+            </button>
+        </div>
+        {% endif %}
+
         <!-- Bottom actions -->
         <div class="bottom-actions">
             {% if is_history %}
@@ -435,6 +608,40 @@
             <a class="btn" href="/dashboard/">View Dashboard</a>
         </div>
     </div>
+
+    {% if is_history %}
+    <!-- Delete Pallet Re-Auth Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><span class="material-icons" style="font-size:1rem; vertical-align:-2px;">lock</span> Confirm Deletion</h3>
+                <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body-inner">
+                <div class="modal-warning">
+                    You are about to permanently delete <strong>{{ manufacturer }} &mdash; Pallet {{ pallet_id }}</strong>
+                    and all <strong>{{ items|length }}</strong> item{{ items|length|pluralize }}.
+                    All items, status history, photos, and logs will be permanently removed.
+                    <br><br>
+                    <strong>Re-enter your login credentials to confirm.</strong>
+                </div>
+                <div class="modal-field">
+                    <label for="deleteUsername">Username</label>
+                    <input type="text" id="deleteUsername" placeholder="Username" autocomplete="username">
+                </div>
+                <div class="modal-field">
+                    <label for="deletePassword">Password</label>
+                    <input type="password" id="deletePassword" placeholder="Password" autocomplete="current-password">
+                </div>
+                <div class="modal-error" id="deleteError"></div>
+                <div class="modal-actions">
+                    <button class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+                    <button class="modal-btn modal-btn-delete" id="btnConfirmDelete" onclick="confirmDeletePallet()">Delete Pallet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <script>
         // ---- CSRF token helper ----
@@ -493,6 +700,100 @@
                 btn.querySelector('.action-title').textContent = 'Send to Printer';
             });
         }
+
+        // ---- Delete Pallet with Re-Auth ----
+        function openDeleteModal() {
+            var modal = document.getElementById('deleteModal');
+            if (!modal) return;
+            document.getElementById('deleteUsername').value = '';
+            document.getElementById('deletePassword').value = '';
+            document.getElementById('deleteError').style.display = 'none';
+            document.getElementById('deleteError').textContent = '';
+            var btn = document.getElementById('btnConfirmDelete');
+            btn.disabled = false;
+            btn.textContent = 'Delete Pallet';
+            modal.classList.add('active');
+            document.getElementById('deleteUsername').focus();
+        }
+
+        function closeDeleteModal() {
+            var modal = document.getElementById('deleteModal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function confirmDeletePallet() {
+            var username = document.getElementById('deleteUsername').value.trim();
+            var password = document.getElementById('deletePassword').value;
+            var errorDiv = document.getElementById('deleteError');
+            var btn = document.getElementById('btnConfirmDelete');
+
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Deleting...';
+            errorDiv.style.display = 'none';
+
+            fetch('/api/delete-pallet/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password,
+                    manufacturer: '{{ manufacturer|escapejs }}',
+                    pallet_id: '{{ pallet_id|escapejs }}'
+                })
+            })
+            .then(function(resp) {
+                return resp.json().then(function(d) {
+                    return { status: resp.status, data: d };
+                });
+            })
+            .then(function(result) {
+                if (result.data.success) {
+                    closeDeleteModal();
+                    window.location.href = '/shipments/';
+                } else {
+                    errorDiv.textContent = result.data.error || 'Deletion failed.';
+                    errorDiv.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = 'Delete Pallet';
+                    if (result.status === 403 || result.status === 429) {
+                        document.getElementById('deletePassword').value = '';
+                    }
+                }
+            })
+            .catch(function(err) {
+                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Delete Pallet';
+            });
+        }
+
+        // Keyboard support for modal
+        document.addEventListener('keydown', function(e) {
+            var modal = document.getElementById('deleteModal');
+            if (!modal || !modal.classList.contains('active')) return;
+            if (e.key === 'Escape') closeDeleteModal();
+            if (e.key === 'Enter') confirmDeletePallet();
+        });
+
+        // Close modal on overlay click
+        (function() {
+            var modal = document.getElementById('deleteModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) closeDeleteModal();
+                });
+            }
+        })();
     </script>
 </body>
 </html>

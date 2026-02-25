@@ -18,9 +18,12 @@ from django.db.models import Max, IntegerField, Count, Min
 from django.db.models.functions import Cast
 
 from .forms import SecureLoginForm
+from django.contrib.auth import authenticate
+from django.db import transaction
+
 from .models import (
     InventoryItem, StatusHistory, NotificationLog, ItemPhoto,
-    ChangeLog, ScanLog, Tag, PrintJob, LoginAttempt,
+    ChangeLog, ScanLog, Tag, PrintJob, LoginAttempt, DeletionLog,
 )
 
 logger = logging.getLogger(__name__)
@@ -758,6 +761,126 @@ def bulk_archive(request):
     except Exception as e:
         logger.exception("Unexpected error")
         return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
+
+
+@require_http_methods(["POST"])
+def delete_pallet(request):
+    """Hard-delete all items in a pallet after re-authentication."""
+    try:
+        data = json.loads(request.body)
+        username = data.get('username', '').strip()
+        password = data.get('password', '')
+        manufacturer = data.get('manufacturer', '').strip()
+        pallet_id = data.get('pallet_id', '').strip()
+
+        if not all([username, password, manufacturer, pallet_id]):
+            return JsonResponse(
+                {'success': False, 'error': 'All fields are required.'}, status=400
+            )
+
+        # --- Rate limiting on re-auth attempts (session-based) ---
+        failures = request.session.get('delete_pallet_failures', 0)
+        lockout_until = request.session.get('delete_pallet_lockout_until')
+
+        if lockout_until and timezone.now().timestamp() < lockout_until:
+            return JsonResponse(
+                {'success': False, 'error': 'Too many failed attempts. Try again in 15 minutes.'},
+                status=429,
+            )
+        elif lockout_until:
+            # Lockout expired — reset
+            request.session['delete_pallet_failures'] = 0
+            failures = 0
+
+        # --- Re-authenticate ---
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            failures += 1
+            request.session['delete_pallet_failures'] = failures
+            if failures >= 5:
+                request.session['delete_pallet_lockout_until'] = (
+                    timezone.now() + timedelta(minutes=15)
+                ).timestamp()
+            return JsonResponse(
+                {'success': False, 'error': 'Invalid credentials.'}, status=403
+            )
+
+        # Reset failures on successful auth
+        request.session['delete_pallet_failures'] = 0
+        request.session.pop('delete_pallet_lockout_until', None)
+
+        # Verify the authenticated user matches the logged-in session user
+        if user.pk != request.user.pk:
+            return JsonResponse(
+                {'success': False, 'error': 'Credentials must match the logged-in user.'},
+                status=403,
+            )
+
+        # --- Find items to delete ---
+        items = InventoryItem.objects.filter(
+            manufacturer=manufacturer, pallet_id=pallet_id
+        )
+        item_count = items.count()
+
+        if item_count == 0:
+            return JsonResponse(
+                {'success': False, 'error': 'No items found for this pallet.'}, status=404
+            )
+
+        # Snapshot for audit log before deletion
+        item_ids = list(items.values_list('id', flat=True))
+        details = json.dumps({
+            'items': list(items.values(
+                'id', 'box_id', 'content', 'status', 'location',
+                'tags', 'damaged', 'project_number',
+            )),
+        }, default=str)
+
+        # --- Delete in a transaction ---
+        with transaction.atomic():
+            # Create audit log first (no FK dependency — survives deletion)
+            DeletionLog.objects.create(
+                manufacturer=manufacturer,
+                pallet_id=pallet_id,
+                item_count=item_count,
+                item_ids=','.join(str(i) for i in item_ids),
+                deleted_by=user.username,
+                details=details,
+            )
+
+            # Clean up photo files from disk before CASCADE removes DB rows
+            photos = ItemPhoto.objects.filter(item__in=items)
+            for photo in photos:
+                try:
+                    photo.image.delete(save=False)
+                except Exception:
+                    pass  # Don't block deletion if file cleanup fails
+
+            # CASCADE will handle StatusHistory, ChangeLog, ItemPhoto,
+            # ScanLog, NotificationLog, PrintJob
+            items.delete()
+
+        logger.warning(
+            'PALLET DELETED: %s / Pallet %s (%d items) by user %s',
+            manufacturer, pallet_id, item_count, user.username,
+        )
+
+        return JsonResponse({
+            'success': True,
+            'deleted_count': item_count,
+            'manufacturer': manufacturer,
+            'pallet_id': pallet_id,
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {'success': False, 'error': 'Invalid request.'}, status=400
+        )
+    except Exception:
+        logger.exception('Unexpected error in delete_pallet')
+        return JsonResponse(
+            {'success': False, 'error': 'An unexpected error occurred.'}, status=500
+        )
 
 
 def overdue_items_api(request):
