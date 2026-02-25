@@ -119,15 +119,7 @@
             background: linear-gradient(135deg, #ff6b6b 0%, #8b1a1a 100%);
         }
         .nav-title { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
-        .nav-links { display: flex; align-items: center; gap: 24px; }
-        .nav-link {
-            font-size: 0.8rem; color: var(--text-secondary); text-decoration: none;
-            font-weight: 500; transition: color 0.2s; letter-spacing: -0.01em;
-        }
-        .nav-link:hover { color: var(--text-primary); }
-        .nav-link.active { color: var(--text-primary); font-weight: 600; }
         .nav-right { display: flex; align-items: center; gap: 16px; }
-        .nav-item-count { font-size: 0.75rem; color: var(--text-tertiary); }
         .dark-toggle-btn {
             background: none; border: none; color: var(--text-tertiary); cursor: pointer;
             display: flex; align-items: center; padding: 4px; transition: color 0.2s;
@@ -568,16 +560,19 @@
             font-weight: 600; font-size: 0.85rem; padding: 10px 0 6px;
             color: var(--text-primary); border-bottom: 0.5px solid var(--border-light);
             margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+            cursor: pointer; user-select: none;
         }
         .mobile-group-header .group-count {
             color: var(--text-tertiary); font-weight: 400; font-size: 0.75rem;
         }
+        .mobile-group-header .toggle-arrow {
+            display: inline-block; transition: transform 0.2s; font-size: 0.75rem;
+        }
+        .mobile-group-header.collapsed .toggle-arrow { transform: rotate(-90deg); }
 
         /* ---- Responsive ---- */
         @media (max-width: 768px) {
             .summary-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-            .nav-links { display: none; }
-            .nav-item-count { display: none; }
             .stat-number { font-size: 1.4rem; }
             .stat-card { padding: 14px 10px; }
             .toolbar {
@@ -618,13 +613,7 @@
                 <div class="nav-logo">FR</div>
                 <span class="nav-title">FRATrack</span>
             </a>
-            <div class="nav-links">
-                <a href="/dashboard/" class="nav-link active">Dashboard</a>
-                <a href="/shipments/" class="nav-link">Shipments</a>
-                <a href="/tags/" class="nav-link">Tags</a>
-            </div>
             <div class="nav-right">
-                <span class="nav-item-count">{{ items|length }} item{{ items|length|pluralize }} {% if show_archived %}in archive{% else %}in inventory{% endif %}</span>
                 <button class="dark-toggle-btn" onclick="toggleDarkMode()" id="darkToggle">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
@@ -855,14 +844,23 @@
         </div>
 
         <!-- Mobile Card View -->
-        <div class="mobile-cards">
+        <div class="mobile-cards" id="mobileCards">
             {% for item in items %}
+            {% ifchanged item.pallet_id %}
+            <div class="mobile-group-header collapsed" data-mobile-group="{{ item.pallet_id|lower }}" onclick="toggleMobileGroup(this)">
+                <span class="toggle-arrow">&#9660;</span>
+                Pallet {{ item.pallet_id }}
+                <span class="group-count"></span>
+            </div>
+            {% endifchanged %}
             <div class="mobile-card pallet-item-mobile"
                  data-id="{{ item.id }}" data-status="{{ item.status }}"
                  data-damaged="{{ item.damaged|yesno:'true,false' }}"
                  data-overdue="{{ item.is_overdue|yesno:'true,false' }}"
+                 data-mobile-pallet="{{ item.pallet_id|lower }}"
                  data-pallet="{{ item.pallet_id|lower }}"
-                 data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.project_number|lower }} {{ item.location|lower }} {{ item.description|lower }} {{ item.checked_out_by|lower }} {{ item.tag_id|lower }} {{ item.tags|lower }}">
+                 data-search="{{ item.manufacturer|lower }} {{ item.pallet_id|lower }} {{ item.project_number|lower }} {{ item.location|lower }} {{ item.description|lower }} {{ item.checked_out_by|lower }} {{ item.tag_id|lower }} {{ item.tags|lower }}"
+                 style="display:none;">
                 <div class="mobile-card-header">
                     <div>
                         <div class="mobile-card-title">{{ item.manufacturer }} — Box #{{ item.box_id }}</div>
@@ -1055,15 +1053,28 @@
             });
 
             // Also filter mobile cards
-            document.querySelectorAll('.mobile-card.pallet-item-mobile').forEach(card => {
-                const matchSearch = !search || (card.dataset.search && card.dataset.search.includes(search));
-                let matchStatus = !status || card.dataset.status === status;
-                let matchTab = true;
+            document.querySelectorAll('.mobile-group-header').forEach(header => {
+                const key = header.dataset.mobileGroup;
+                const cards = document.querySelectorAll(`.pallet-item-mobile[data-mobile-pallet="${key}"]`);
+                let anyVisible = false;
 
-                if (currentTab === 'damaged') matchTab = card.dataset.damaged === 'true';
-                if (currentTab === 'overdue') matchTab = card.dataset.overdue === 'true';
+                cards.forEach(card => {
+                    const matchSearch = !search || (card.dataset.search && card.dataset.search.includes(search));
+                    let matchStatus = !status || card.dataset.status === status;
+                    let matchTab = true;
 
-                card.style.display = (matchSearch && matchStatus && matchTab) ? '' : 'none';
+                    if (currentTab === 'damaged') matchTab = card.dataset.damaged === 'true';
+                    if (currentTab === 'overdue') matchTab = card.dataset.overdue === 'true';
+
+                    const matchesFilter = matchSearch && matchStatus && matchTab;
+                    if (matchesFilter) anyVisible = true;
+
+                    // Show card only if it matches AND the group is expanded
+                    card.style.display = (matchesFilter && !header.classList.contains('collapsed')) ? '' : 'none';
+                });
+
+                // Show/hide the group header based on whether any cards match
+                header.style.display = anyVisible ? '' : 'none';
             });
         }
 
@@ -1348,9 +1359,32 @@
             }
         }
 
+        // ---- Mobile card group toggle ----
+        function toggleMobileGroup(header) {
+            const key = header.dataset.mobileGroup;
+            const isCollapsed = header.classList.toggle('collapsed');
+            const cards = document.querySelectorAll(`.pallet-item-mobile[data-mobile-pallet="${key}"]`);
+            cards.forEach(card => {
+                card.style.display = isCollapsed ? 'none' : '';
+            });
+        }
+
+        function initMobileGroups() {
+            // Set group counts
+            document.querySelectorAll('.mobile-group-header').forEach(header => {
+                const key = header.dataset.mobileGroup;
+                const cards = document.querySelectorAll(`.pallet-item-mobile[data-mobile-pallet="${key}"]`);
+                const countEl = header.querySelector('.group-count');
+                if (countEl) {
+                    countEl.textContent = `(${cards.length} item${cards.length === 1 ? '' : 's'})`;
+                }
+            });
+        }
+
         // Run on page load
         document.addEventListener('DOMContentLoaded', function() {
             initPalletGroups();
+            initMobileGroups();
         });
 
         // ---- Multi-Scan ----
