@@ -4,244 +4,451 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fire &amp; Risk Alliance - Shipment Created</title>
+    <title>FRATrack - {% if is_history %}Shipment Details{% else %}Shipment Created{% endif %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --md-sys-color-primary: #8b1a1a;
-            --md-sys-color-on-primary: #ffffff;
-            --md-sys-color-primary-container: #ffdad5;
-            --md-sys-color-on-primary-container: #410001;
-            --md-sys-color-secondary: #775652;
-            --md-sys-color-on-secondary: #ffffff;
-            --md-sys-color-secondary-container: #ffdad5;
-            --md-sys-color-on-secondary-container: #2c1512;
-            --md-sys-color-tertiary: #705c2e;
-            --md-sys-color-on-tertiary: #ffffff;
-            --md-sys-color-tertiary-container: #fcdfa6;
-            --md-sys-color-on-tertiary-container: #261a00;
-            --md-sys-color-error: #ba1a1a;
-            --md-sys-color-on-error: #ffffff;
-            --md-sys-color-error-container: #ffdad6;
-            --md-sys-color-on-error-container: #410002;
-            --md-sys-color-background: #fff8f6;
-            --md-sys-color-on-background: #201a19;
-            --md-sys-color-surface: #fff8f6;
-            --md-sys-color-on-surface: #201a19;
-            --md-sys-color-on-surface-variant: #534341;
-            --md-sys-color-surface-container-lowest: #ffffff;
-            --md-sys-color-surface-container-low: #fef1ef;
-            --md-sys-color-surface-container: #f8ebe9;
-            --md-sys-color-surface-container-high: #f3e5e2;
-            --md-sys-color-surface-container-highest: #ede0dd;
-            --md-sys-color-surface-dim: #e6d9d6;
-            --md-sys-color-outline: #857371;
-            --md-sys-color-outline-variant: #d8c2bf;
-            --md-sys-color-inverse-surface: #362f2e;
-            --md-sys-color-inverse-on-surface: #fbeeeb;
-            --md-sys-color-inverse-primary: #ffb4ab;
+            --bg: #ffffff;
+            --bg-secondary: #f5f5f7;
+            --text-primary: #1d1d1f;
+            --text-secondary: #6e6e73;
+            --text-tertiary: #86868b;
+            --accent: #8b1a1a;
+            --accent-light: rgba(139,26,26,0.08);
+            --accent-hover: #a02020;
+            --border: #d2d2d7;
+            --border-light: #e8e8ed;
+            --card-bg: #ffffff;
+            --nav-bg: rgba(255,255,255,0.72);
+            --shadow: 0 2px 12px rgba(0,0,0,0.06);
+            --green: #34c759;
+            --green-bg: #f0fdf4;
+            --green-text: #166534;
+            --red: #ff3b30;
+            --red-text: #991b1b;
+            --blue: #007aff;
+            --blue-bg: #eff6ff;
+            --blue-text: #1e40af;
         }
         body.dark-mode {
-            --md-sys-color-primary: #ffb4ab;
-            --md-sys-color-on-primary: #690005;
-            --md-sys-color-primary-container: #930006;
-            --md-sys-color-on-primary-container: #ffdad5;
-            --md-sys-color-secondary: #e7bdb7;
-            --md-sys-color-on-secondary: #442926;
-            --md-sys-color-secondary-container: #5d3f3b;
-            --md-sys-color-on-secondary-container: #ffdad5;
-            --md-sys-color-tertiary: #dfc38c;
-            --md-sys-color-on-tertiary: #3e2e04;
-            --md-sys-color-tertiary-container: #574419;
-            --md-sys-color-on-tertiary-container: #fcdfa6;
-            --md-sys-color-error: #ffb4ab;
-            --md-sys-color-on-error: #690005;
-            --md-sys-color-error-container: #93000a;
-            --md-sys-color-on-error-container: #ffdad6;
-            --md-sys-color-background: #1a1110;
-            --md-sys-color-on-background: #ede0dd;
-            --md-sys-color-surface: #1a1110;
-            --md-sys-color-on-surface: #ede0dd;
-            --md-sys-color-on-surface-variant: #d8c2bf;
-            --md-sys-color-surface-container-lowest: #120d0c;
-            --md-sys-color-surface-container-low: #201a19;
-            --md-sys-color-surface-container: #251e1d;
-            --md-sys-color-surface-container-high: #2f2827;
-            --md-sys-color-surface-container-highest: #3b3332;
-            --md-sys-color-surface-dim: #1a1110;
-            --md-sys-color-outline: #a08c8a;
-            --md-sys-color-outline-variant: #534341;
-            --md-sys-color-inverse-surface: #ede0dd;
-            --md-sys-color-inverse-on-surface: #362f2e;
-            --md-sys-color-inverse-primary: #8b1a1a;
+            --bg: #000000;
+            --bg-secondary: #1c1c1e;
+            --text-primary: #f5f5f7;
+            --text-secondary: #a1a1a6;
+            --text-tertiary: #6e6e73;
+            --accent: #ff6b6b;
+            --accent-light: rgba(255,107,107,0.1);
+            --accent-hover: #ff8585;
+            --border: #38383a;
+            --border-light: #2c2c2e;
+            --card-bg: #1c1c1e;
+            --nav-bg: rgba(0,0,0,0.72);
+            --shadow: 0 2px 12px rgba(0,0,0,0.3);
+            --green: #30d158;
+            --green-bg: #0a2613;
+            --green-text: #4ade80;
+            --red: #ff453a;
+            --red-text: #ff6b6b;
+            --blue: #0a84ff;
+            --blue-bg: #0d1f3c;
+            --blue-text: #60a5fa;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: var(--md-sys-color-background);
-            color: var(--md-sys-color-on-surface);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
             min-height: 100vh;
         }
-        .header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #2d1518 100%);
-            color: #fff;
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 3px solid #b8860b;
-        }
-        .header-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .header-brand img { height: 44px; width: auto; }
-        .header-brand-text h1 { font-size: 1.1rem; font-weight: 700; color: #fff; line-height: 1.2; }
-        .header-brand-text .subtitle { font-size: 0.7rem; color: #b8860b; text-transform: uppercase; letter-spacing: 0.1em; }
-        .header a { color: #d4a84b; text-decoration: none; font-size: 0.875rem; font-weight: 500; }
-        .header a:hover { color: #fff; }
-        .container { max-width: 800px; margin: 24px auto; padding: 0 16px; }
 
+        /* Frosted glass nav */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: var(--nav-bg);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 0.5px solid var(--border);
+            height: 48px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 16px;
+        }
+        .nav-inner {
+            max-width: 800px; width: 100%;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-brand {
+            display: flex; align-items: center; gap: 10px; text-decoration: none;
+        }
+        .nav-logo {
+            width: 28px; height: 28px;
+            background: linear-gradient(135deg, #8b1a1a 0%, #b82e2e 100%);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 0.65rem;
+        }
+        body.dark-mode .nav-logo {
+            background: linear-gradient(135deg, #ff6b6b 0%, #8b1a1a 100%);
+        }
+        .nav-title { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .dark-toggle-btn {
+            background: none; border: none; color: var(--text-tertiary); cursor: pointer;
+            display: flex; align-items: center; padding: 4px; transition: color 0.2s;
+        }
+        .dark-toggle-btn:hover { color: var(--text-primary); }
+        .nav-back {
+            font-size: 0.8rem; color: var(--text-secondary); text-decoration: none;
+            font-weight: 500; transition: color 0.2s;
+        }
+        .nav-back:hover { color: var(--text-primary); }
+
+        /* Main content */
+        .main { max-width: 800px; margin: 0 auto; padding: 64px 16px 40px; }
+
+        /* Success / info banner */
         .success-banner {
-            background: #dcfce7; border: 1px solid #86efac; border-radius: 12px;
-            padding: 20px 24px; margin-bottom: 20px; text-align: center;
+            background: var(--green-bg);
+            border: 0.5px solid var(--green);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
         }
-        .success-banner h2 { color: #166534; margin-bottom: 6px; }
-        .success-banner p { color: #15803d; font-size: 0.9rem; }
+        .success-banner .icon {
+            font-size: 2rem; color: var(--green); margin-bottom: 8px;
+        }
+        .success-banner h2 {
+            font-size: 1.2rem; font-weight: 700; color: var(--green-text);
+            letter-spacing: -0.02em; margin-bottom: 4px;
+        }
+        .success-banner p {
+            font-size: 0.85rem; color: var(--green-text); opacity: 0.8;
+        }
+        .info-banner {
+            background: var(--blue-bg);
+            border: 0.5px solid var(--blue);
+        }
+        .info-banner .icon { color: var(--blue); }
+        .info-banner h2 { color: var(--blue-text); }
+        .info-banner p { color: var(--blue-text); }
 
-        .download-cards {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;
+        /* Action buttons */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 24px;
         }
-        .download-card {
-            background: var(--md-sys-color-surface-container-low); border-radius: 12px; padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center;
+        .action-btn {
+            background: var(--card-bg);
+            border: 0.5px solid var(--border-light);
+            border-radius: 14px;
+            padding: 16px 12px;
+            text-align: center;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            font-family: inherit;
         }
-        .download-card h3 { font-size: 1rem; margin-bottom: 8px; color: var(--md-sys-color-on-surface); }
-        .download-card p { font-size: 0.8rem; color: var(--md-sys-color-on-surface-variant); margin-bottom: 16px; }
-        .btn-download {
-            display: inline-block; padding: 12px 24px; border-radius: 8px;
-            font-size: 0.9rem; font-weight: 600; text-decoration: none; color: #fff;
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
         }
-        .btn-excel { background: #16a34a; }
-        .btn-excel:hover { opacity: 0.9; }
-        .btn-csv { background: #2563eb; }
-        .btn-csv:hover { opacity: 0.9; }
-        .btn-send-printer {
-            background: #ea580c; display: inline-block; padding: 12px 24px;
-            border-radius: 8px; font-size: 0.9rem; font-weight: 600;
-            text-decoration: none; color: #fff; cursor: pointer; border: none;
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .action-btn .action-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 10px;
         }
-        .btn-send-printer:hover { opacity: 0.9; }
-        .btn-send-printer:disabled { opacity: 0.6; cursor: not-allowed; }
-        .summary-card {
-            background: var(--md-sys-color-surface-container-low); border-radius: 12px; overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;
+        .action-btn .action-icon .material-icons { color: #fff; font-size: 1.2rem; }
+        .action-btn .action-title {
+            font-size: 0.78rem; font-weight: 600; color: var(--text-primary);
+            letter-spacing: -0.01em; margin-bottom: 2px;
         }
-        .summary-header {
-            background: linear-gradient(135deg, #8b1a1a 0%, #a02020 100%);
-            color: #fff; padding: 16px 24px; font-size: 0.9rem; font-weight: 600;
+        .action-btn .action-desc {
+            font-size: 0.65rem; color: var(--text-tertiary);
         }
-        .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .summary-table th {
+        .action-printer .action-icon { background: #ea580c; }
+        .action-excel .action-icon { background: #16a34a; }
+        .action-csv .action-icon { background: #2563eb; }
+
+        .print-status {
+            text-align: center; font-size: 0.78rem; margin-top: -16px; margin-bottom: 16px;
+        }
+
+        /* Items section */
+        .items-section {
+            background: var(--card-bg);
+            border: 0.5px solid var(--border-light);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .items-header {
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border-bottom: 0.5px solid var(--border);
+            font-size: 0.8rem; font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        /* Desktop table */
+        .items-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        .items-table th {
             padding: 10px 14px; text-align: left; font-weight: 600;
-            color: var(--md-sys-color-on-surface-variant); font-size: 0.75rem; text-transform: uppercase;
-            border-bottom: 1px solid var(--md-sys-color-outline-variant); background: var(--md-sys-color-surface-container-high);
+            color: var(--text-tertiary); font-size: 0.7rem;
+            text-transform: uppercase; letter-spacing: 0.04em;
+            border-bottom: 0.5px solid var(--border);
+            background: var(--bg-secondary);
         }
-        .summary-table td {
-            padding: 10px 14px; border-bottom: 1px solid var(--md-sys-color-outline-variant); vertical-align: middle; color: var(--md-sys-color-on-surface);
+        .items-table td {
+            padding: 12px 14px; border-bottom: 0.5px solid var(--border-light);
+            vertical-align: middle;
         }
-        .damage-yes { color: #dc2626; font-weight: 700; }
-        .damage-no { color: #16a34a; }
-        .qr-thumb { width: 60px; height: 60px; border-radius: 4px; cursor: pointer; }
+        .items-table tbody tr:last-child td { border-bottom: none; }
+        .items-table tbody tr:hover td { background: var(--bg-secondary); }
+
+        .damage-yes { color: var(--red); font-weight: 600; }
+        .damage-no { color: var(--green); }
+        .qr-thumb {
+            width: 48px; height: 48px; border-radius: 8px;
+            border: 0.5px solid var(--border-light); cursor: pointer;
+        }
         .qr-thumb:hover { opacity: 0.8; }
-
-        .nav-links { text-align: center; margin-top: 20px; }
-        .nav-links a {
-            display: inline-block; margin: 0 8px; color: var(--md-sys-color-primary);
-            text-decoration: none; font-size: 0.875rem;
+        .view-link {
+            color: var(--accent); text-decoration: none; font-weight: 500; font-size: 0.8rem;
         }
-        .nav-links a:hover { text-decoration: underline; }
-        .btn-add-another {
-            display: inline-block; padding: 10px 20px; background: #16a34a;
-            color: #fff; border-radius: 8px; text-decoration: none;
-            font-size: 0.875rem; font-weight: 600;
-        }
-        .btn-add-another:hover { opacity: 0.9; }
+        .view-link:hover { text-decoration: underline; }
 
+        /* Mobile item cards */
+        .mobile-items { display: none; }
+        .mobile-item {
+            padding: 14px 16px;
+            border-bottom: 0.5px solid var(--border-light);
+        }
+        .mobile-item:last-child { border-bottom: none; }
+        .mobile-item-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px;
+        }
+        .mobile-item-title {
+            font-weight: 600; font-size: 0.9rem; color: var(--text-primary);
+        }
+        .mobile-item-tagid {
+            font-size: 0.72rem; color: var(--text-tertiary); margin-top: 2px;
+        }
+        .mobile-item-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px;
+            font-size: 0.78rem; margin-bottom: 10px;
+        }
+        .mobile-item-field { display: flex; flex-direction: column; gap: 2px; }
+        .mobile-item-label {
+            font-size: 0.65rem; font-weight: 500; text-transform: uppercase;
+            letter-spacing: 0.04em; color: var(--text-tertiary);
+        }
+        .mobile-item-value { font-weight: 500; color: var(--text-primary); }
+        .mobile-item-footer {
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .mobile-item-qr {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .mobile-item-qr img {
+            width: 40px; height: 40px; border-radius: 6px;
+            border: 0.5px solid var(--border-light);
+        }
+        .mobile-item-qr-info {
+            font-size: 0.65rem; color: var(--text-tertiary); line-height: 1.4;
+        }
+
+        /* Bottom nav */
+        .bottom-actions {
+            display: flex; gap: 10px; justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 20px; border-radius: 10px; font-size: 0.82rem;
+            font-weight: 600; font-family: inherit; cursor: pointer;
+            border: 0.5px solid var(--border); background: var(--card-bg);
+            color: var(--text-primary); transition: all 0.15s;
+            text-decoration: none; letter-spacing: -0.01em;
+        }
+        .btn:hover { background: var(--bg-secondary); }
+        .btn-green {
+            background: #16a34a; color: #fff; border-color: #16a34a;
+        }
+        .btn-green:hover { background: #15803d; }
+
+        /* Responsive */
         @media (max-width: 600px) {
-            .download-cards { grid-template-columns: 1fr; }
+            .action-buttons { grid-template-columns: 1fr; gap: 8px; }
+            .action-btn {
+                display: flex; align-items: center; gap: 12px;
+                padding: 14px 16px; text-align: left;
+            }
+            .action-btn .action-icon { margin: 0; flex-shrink: 0; }
+            .action-btn .action-text { text-align: left; }
+            .items-table-wrap { display: none; }
+            .mobile-items { display: block; }
+            .bottom-actions { flex-direction: column; }
+            .btn { text-align: center; }
         }
-
-        /* Dark mode */
-        .dark-toggle {
-            background: none; border: 1px solid #b8860b; color: #b8860b;
-            padding: 4px 10px; border-radius: 6px; font-size: 0.75rem;
-            cursor: pointer; font-weight: 600;
-        }
-        .dark-toggle:hover { background: rgba(184,134,11,0.2); }
-
-        body.dark-mode .success-banner { background: #064e3b; border-color: #16a34a; }
-        body.dark-mode .success-banner h2 { color: #6ee7b7; }
-        body.dark-mode .success-banner p { color: #34d399; }
-
     </style>
 </head>
 <body>
-    <div class="header">
-        <a href="/dashboard/" class="header-brand" style="text-decoration:none;">
-            <img src="{% static 'inventory/img/logo.png' %}" alt="Fire &amp; Risk Alliance">
-            <div class="header-brand-text">
-                <h1>Fire &amp; Risk Alliance</h1>
-                <div class="subtitle">Inventory Management System</div>
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="/dashboard/" class="nav-brand">
+                <div class="nav-logo">FR</div>
+                <span class="nav-title">FRATrack</span>
+            </a>
+            <div class="nav-right">
+                <a href="/dashboard/" class="nav-back">Dashboard</a>
+                <button class="dark-toggle-btn" onclick="toggleDarkMode()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
             </div>
-        </a>
-        <div style="display:flex; align-items:center; gap:12px;">
-            <button class="dark-toggle" onclick="toggleDarkMode()" id="darkToggle">Dark Mode</button>
-            <a href="/dashboard/">Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="main">
+
+        <!-- Success / Info banner -->
+        <div class="success-banner {% if is_history %}info-banner{% endif %}">
+            <div class="icon">
+                <span class="material-icons" style="font-size:2rem;">{% if is_history %}info{% else %}check_circle{% endif %}</span>
+            </div>
+            <h2>{% if is_history %}Shipment Details{% else %}Shipment Created Successfully!{% endif %}</h2>
+            <p>{{ items|length }} item{{ items|length|pluralize }} for {{ manufacturer }} - Pallet {{ pallet_id }}</p>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="action-buttons">
+            <button class="action-btn action-printer" onclick="sendToPrinter()" id="btnSendPrinter">
+                <div class="action-icon"><span class="material-icons">print</span></div>
+                <div class="action-text">
+                    <div class="action-title">Send to Printer</div>
+                    <div class="action-desc">Brother QL label printer</div>
+                </div>
+            </button>
+            <a class="action-btn action-excel" href="/shipment/{{ shipment_key }}/download/excel/">
+                <div class="action-icon"><span class="material-icons">table_chart</span></div>
+                <div class="action-text">
+                    <div class="action-title">Download Excel</div>
+                    <div class="action-desc">With embedded QR codes</div>
+                </div>
+            </a>
+            <a class="action-btn action-csv" href="/shipment/{{ shipment_key }}/download/csv/">
+                <div class="action-icon"><span class="material-icons">download</span></div>
+                <div class="action-text">
+                    <div class="action-title">Download CSV</div>
+                    <div class="action-desc">Alternative format</div>
+                </div>
+            </a>
+        </div>
+        <div class="print-status" id="printStatus"></div>
+
+        <!-- Items section -->
+        <div class="items-section">
+            <div class="items-header">Items Created ({{ items|length }})</div>
+
+            <!-- Desktop table -->
+            <div class="items-table-wrap">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Tag ID</th>
+                        <th>Box</th>
+                        <th>Qty</th>
+                        <th>Damage</th>
+                        <th>QR Code</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td style="font-weight:600; font-size:0.78rem;">{{ item.tag_id }}</td>
+                        <td>#{{ item.box_id }}</td>
+                        <td>{{ item.content }}</td>
+                        <td class="{% if item.damaged %}damage-yes{% else %}damage-no{% endif %}">
+                            {{ item.get_damaged_display }}
+                        </td>
+                        <td style="text-align:center;">
+                            <img class="qr-thumb" src="{{ item.short_qr_url }}" alt="QR #{{ item.box_id }}">
+                        </td>
+                        <td><a class="view-link" href="/scan/?id={{ item.id }}">View</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+
+            <!-- Mobile cards (shown on small screens) -->
+            <div class="mobile-items">
+                {% for item in items %}
+                <div class="mobile-item">
+                    <div class="mobile-item-header">
+                        <div>
+                            <div class="mobile-item-title">Box #{{ item.box_id }}</div>
+                            <div class="mobile-item-tagid">{{ item.tag_id }}</div>
+                        </div>
+                        <a class="view-link" href="/scan/?id={{ item.id }}">View &rarr;</a>
+                    </div>
+                    <div class="mobile-item-grid">
+                        <div class="mobile-item-field">
+                            <span class="mobile-item-label">Quantity</span>
+                            <span class="mobile-item-value">{{ item.content }}</span>
+                        </div>
+                        <div class="mobile-item-field">
+                            <span class="mobile-item-label">Damage</span>
+                            <span class="mobile-item-value {% if item.damaged %}damage-yes{% else %}damage-no{% endif %}">{{ item.get_damaged_display }}</span>
+                        </div>
+                    </div>
+                    <div class="mobile-item-footer">
+                        <div class="mobile-item-qr">
+                            <img src="{{ item.short_qr_url }}" alt="QR #{{ item.box_id }}">
+                            <div class="mobile-item-qr-info">{{ item.manufacturer }}<br>Pallet {{ item.pallet_id }} &bull; Box #{{ item.box_id }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Bottom actions -->
+        <div class="bottom-actions">
+            {% if is_history %}
+            <a class="btn btn-green" href="/shipments/">Back to Shipment History</a>
+            {% else %}
+            <a class="btn btn-green" href="/add-shipment/">Add Another Shipment</a>
+            {% endif %}
+            <a class="btn" href="/dashboard/">View Dashboard</a>
         </div>
     </div>
 
-    <div class="container">
-        <div class="success-banner" {% if is_history %}style="background:#dbeafe;border-color:#93c5fd;"{% endif %}>
-            <h2 {% if is_history %}style="color:#1e40af;"{% endif %}>{% if is_history %}Shipment Details{% else %}Shipment Created Successfully!{% endif %}</h2>
-            <p {% if is_history %}style="color:#1d4ed8;"{% endif %}>{{ items|length }} item{{ items|length|pluralize }} for {{ manufacturer }} - Pallet {{ pallet_id }}</p>
-        </div>
-
-        <div class="download-cards" style="grid-template-columns: repeat(3, 1fr);">
-            <div class="download-card">
-                <h3>Send to Printer</h3>
-                <p>Send to Brother QL printer</p>
-                <button onclick="sendToPrinter()" class="btn-send-printer" id="btnSendPrinter">Send to Printer</button>
-                <div id="printStatus" style="margin-top:8px; font-size:0.8rem;"></div>
-            </div>
-            <div class="download-card">
-                <h3>Excel File (.xlsx)</h3>
-                <p>Download with embedded QR codes</p>
-                <a href="/shipment/{{ shipment_key }}/download/excel/" class="btn-download btn-excel">Download Excel</a>
-            </div>
-            <div class="download-card">
-                <h3>CSV File (.csv)</h3>
-                <p>Alternative format for compatibility</p>
-                <a href="/shipment/{{ shipment_key }}/download/csv/" class="btn-download btn-csv">Download CSV</a>
-            </div>
-        </div>
-
-        <script>
+    <script>
         function toggleDarkMode() {
             var isDark = document.body.classList.toggle('dark-mode');
             localStorage.setItem('darkMode', isDark ? '1' : '0');
-            document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
         }
         if (localStorage.getItem('darkMode') === '1') {
             document.body.classList.add('dark-mode');
-            document.getElementById('darkToggle').textContent = 'Light Mode';
         }
 
         function sendToPrinter() {
             var btn = document.getElementById('btnSendPrinter');
             var status = document.getElementById('printStatus');
             btn.disabled = true;
-            btn.textContent = 'Sending...';
+            btn.querySelector('.action-title').textContent = 'Sending...';
             status.textContent = '';
             status.style.color = '';
 
@@ -257,66 +464,21 @@
                 if (data.success) {
                     status.textContent = data.jobs_created + ' label(s) queued for printing';
                     status.style.color = '#16a34a';
-                    btn.textContent = 'Sent!';
+                    btn.querySelector('.action-title').textContent = 'Sent!';
                 } else {
                     status.textContent = 'Error: ' + (data.error || 'Unknown error');
                     status.style.color = '#dc2626';
                     btn.disabled = false;
-                    btn.textContent = 'Send to Printer';
+                    btn.querySelector('.action-title').textContent = 'Send to Printer';
                 }
             })
             .catch(function(err) {
                 status.textContent = 'Network error: ' + err.message;
                 status.style.color = '#dc2626';
                 btn.disabled = false;
-                btn.textContent = 'Send to Printer';
+                btn.querySelector('.action-title').textContent = 'Send to Printer';
             });
         }
-        </script>
-
-        <div class="summary-card">
-            <div class="summary-header">Items Created ({{ items|length }})</div>
-            <table class="summary-table">
-                <thead>
-                    <tr>
-                        <th>Tag ID</th>
-                        <th>Box</th>
-                        <th>Qty</th>
-                        <th>Damaged</th>
-                        <th>QR Code</th>
-                        <th>View</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in items %}
-                    <tr>
-                        <td style="font-weight:600; font-size:0.8rem;">{{ item.tag_id }}</td>
-                        <td>#{{ item.box_id }}</td>
-                        <td>{{ item.content }}</td>
-                        <td class="{% if item.damaged %}damage-yes{% else %}damage-no{% endif %}">
-                            {{ item.get_damaged_display }}
-                        </td>
-                        <td style="text-align:center;">
-                            <img class="qr-thumb" src="{{ item.short_qr_url }}" alt="QR #{{ item.box_id }}">
-                            <div style="font-size:0.65rem; color:#374151; font-weight:600; line-height:1.3; margin-top:4px;">
-                                {{ item.manufacturer }}<br>Pallet {{ item.pallet_id }} &bull; Box #{{ item.box_id }}
-                            </div>
-                        </td>
-                        <td><a href="/scan/?id={{ item.id }}" style="color:#2563eb; font-size:0.85rem;">View</a></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="nav-links">
-            {% if is_history %}
-            <a href="/shipments/" class="btn-add-another">Back to Shipment History</a>
-            {% else %}
-            <a href="/add-shipment/" class="btn-add-another">Add Another Shipment</a>
-            {% endif %}
-            <a href="/dashboard/">View Dashboard</a>
-        </div>
-    </div>
+    </script>
 </body>
 </html>
