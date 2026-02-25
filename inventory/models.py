@@ -277,3 +277,23 @@ class LoginAttempt(models.Model):
         cls.objects.filter(
             ip_address=ip, success=False, timestamp__gte=cutoff
         ).delete()
+
+
+class DeletionLog(models.Model):
+    """Records hard-deletion of pallets for audit trail.
+
+    No foreign key to InventoryItem so the record survives the CASCADE delete.
+    """
+    manufacturer = models.CharField(max_length=255)
+    pallet_id = models.CharField(max_length=100)
+    item_count = models.IntegerField()
+    item_ids = models.TextField(blank=True, default='')
+    deleted_by = models.CharField(max_length=255)
+    deleted_at = models.DateTimeField(auto_now_add=True)
+    details = models.TextField(blank=True, default='')
+
+    class Meta:
+        ordering = ['-deleted_at']
+
+    def __str__(self):
+        return f"Deleted {self.manufacturer} Pallet {self.pallet_id} ({self.item_count} items) by {self.deleted_by}"
