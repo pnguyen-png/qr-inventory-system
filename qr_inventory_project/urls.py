@@ -7,7 +7,7 @@ from django.views.static import serve
 from inventory.views import SecureLoginView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('fra-panel/', admin.site.urls),
     path('accounts/login/', SecureLoginView.as_view(), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('', include('inventory.urls')),

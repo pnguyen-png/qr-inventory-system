@@ -499,6 +499,7 @@
     </style>
 </head>
 <body>
+    <div style="display:none">{% csrf_token %}</div>
     <nav class="nav">
         <div class="nav-inner">
             <a href="/dashboard/" class="nav-brand">
@@ -811,6 +812,19 @@
 
     {% if item %}
     <script>
+        // ---- CSRF token helper ----
+        function getCookie(name) {
+            let v = null;
+            if (document.cookie && document.cookie !== '') {
+                document.cookie.split(';').forEach(function(c) {
+                    c = c.trim();
+                    if (c.substring(0, name.length + 1) === (name + '='))
+                        v = decodeURIComponent(c.substring(name.length + 1));
+                });
+            }
+            return v;
+        }
+
         const STATUS_MAP = {
             'Checked In': 'checked_in',
             'Checked Out': 'checked_out',
@@ -866,6 +880,7 @@
 
                 const resp = await fetch('/api/update-notes/', {
                     method: 'POST',
+                    headers: {'X-CSRFToken': getCookie('csrftoken')},
                     body: formData
                 });
 
@@ -927,6 +942,7 @@
             try {
                 const resp = await fetch('/api/upload-photo/', {
                     method: 'POST',
+                    headers: {'X-CSRFToken': getCookie('csrftoken')},
                     body: formData
                 });
                 const data = await resp.json();
@@ -960,7 +976,7 @@
             try {
                 const resp = await fetch('/api/delete-photo/', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
                     body: JSON.stringify({photo_id: photoId})
                 });
                 const data = await resp.json();
@@ -1076,7 +1092,7 @@
             try {
                 const resp = await fetch('/api/edit-item/', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
                     body: JSON.stringify(payload)
                 });
                 const data = await resp.json();
@@ -1100,7 +1116,7 @@
             try {
                 const resp = await fetch('/api/archive-item/', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
                     body: JSON.stringify({item_id: itemId, archive: archive})
                 });
                 const data = await resp.json();

@@ -18,7 +18,7 @@ class LoginRequiredMiddleware:
     EXEMPT_PREFIXES = (
         '/accounts/login/',
         '/accounts/logout/',
-        '/admin/',
+        '/fra-panel/',
         '/static/',
         '/media/',
     )

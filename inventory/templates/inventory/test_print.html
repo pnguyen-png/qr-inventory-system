@@ -24,6 +24,7 @@
     </style>
 </head>
 <body>
+    <div style="display:none">{% csrf_token %}</div>
     <div class="card">
         <h1>Test Print</h1>
         <div class="subtitle">Send a QR label to the Brother QL-820NWB to verify printing works from this device.</div>
@@ -40,6 +41,19 @@
         <div class="status" id="status"></div>
 
         <script>
+            // ---- CSRF token helper ----
+            function getCookie(name) {
+                let v = null;
+                if (document.cookie && document.cookie !== '') {
+                    document.cookie.split(';').forEach(function(c) {
+                        c = c.trim();
+                        if (c.substring(0, name.length + 1) === (name + '='))
+                            v = decodeURIComponent(c.substring(name.length + 1));
+                    });
+                }
+                return v;
+            }
+
             var jobId = null;
             var pollTimer = null;
 
@@ -54,7 +68,7 @@
 
                 fetch('/api/print-jobs/create/', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
                     body: JSON.stringify({item_ids: [{{ item.id }}]})
                 })
                 .then(function(r) { return r.json(); })
