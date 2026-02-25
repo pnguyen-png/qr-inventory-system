@@ -25,7 +25,7 @@ class LoginRequiredMiddleware:
 
     # Print-worker endpoints that use Bearer token auth (not session auth)
     _PRINT_WORKER_RE = re.compile(
-        r'^/api/print-jobs/(?:pending/|\d+/(?:update-status|label\.png|status)/)$'
+        r'^/api/print-jobs/(?:pending/|\d+/(?:(?:update-status|status)/|label\.png))$'
     )
 
     def __init__(self, get_response):
