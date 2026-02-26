@@ -29,6 +29,84 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
+# Photo compression helper
+# ---------------------------------------------------------------------------
+
+MAX_PHOTO_DIMENSION = 1920
+JPEG_QUALITY = 85
+
+
+def _compress_photo(uploaded_file):
+    """Compress an uploaded photo: resize to max 1920px, convert to JPEG at 85%.
+
+    Handles EXIF orientation so photos aren't rotated incorrectly.
+    Returns a new InMemoryUploadedFile ready for saving.
+    """
+    from PIL import Image as PilImage, ExifTags
+    from io import BytesIO
+    from django.core.files.uploadedfile import InMemoryUploadedFile
+
+    try:
+        img = PilImage.open(uploaded_file)
+
+        # Handle EXIF orientation (phone photos often have rotation metadata)
+        try:
+            exif = img._getexif()
+            if exif:
+                for tag, value in exif.items():
+                    if ExifTags.TAGS.get(tag) == 'Orientation':
+                        if value == 3:
+                            img = img.rotate(180, expand=True)
+                        elif value == 6:
+                            img = img.rotate(270, expand=True)
+                        elif value == 8:
+                            img = img.rotate(90, expand=True)
+                        break
+        except (AttributeError, KeyError):
+            pass
+
+        # Convert RGBA/P to RGB for JPEG
+        if img.mode in ('RGBA', 'P', 'LA'):
+            background = PilImage.new('RGB', img.size, (255, 255, 255))
+            if img.mode == 'P':
+                img = img.convert('RGBA')
+            background.paste(img, mask=img.split()[-1] if 'A' in img.mode else None)
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+
+        # Resize if larger than max dimension
+        w, h = img.size
+        if max(w, h) > MAX_PHOTO_DIMENSION:
+            ratio = MAX_PHOTO_DIMENSION / max(w, h)
+            new_size = (int(w * ratio), int(h * ratio))
+            img = img.resize(new_size, PilImage.LANCZOS)
+
+        # Save as JPEG
+        buf = BytesIO()
+        img.save(buf, format='JPEG', quality=JPEG_QUALITY, optimize=True)
+        buf.seek(0)
+
+        # Build new filename with .jpg extension
+        original_name = getattr(uploaded_file, 'name', 'photo.jpg')
+        base_name = os.path.splitext(original_name)[0]
+        new_name = f"{base_name}.jpg"
+
+        return InMemoryUploadedFile(
+            file=buf,
+            field_name='image',
+            name=new_name,
+            content_type='image/jpeg',
+            size=buf.getbuffer().nbytes,
+            charset=None,
+        )
+    except Exception:
+        logger.exception("Photo compression failed, using original")
+        uploaded_file.seek(0)
+        return uploaded_file
+
+
+# ---------------------------------------------------------------------------
 # Secure Login View
 # ---------------------------------------------------------------------------
 
@@ -1133,13 +1211,16 @@ def add_shipment(request):
 
             created_items.append(item)
 
-    # Handle photo uploads — attach to all created items
+    # Handle photo uploads — compress and attach to all created items
     photos = request.FILES.getlist('photos')
     for photo_file in photos:
+        compressed = _compress_photo(photo_file)
         for item in created_items:
+            # Reset file position for each item save
+            compressed.seek(0)
             ItemPhoto.objects.create(
                 item=item,
-                image=photo_file,
+                image=compressed,
                 caption=f'Shipment photo - Pallet {pallet_id}',
             )
 
@@ -1372,6 +1453,9 @@ def upload_photo(request):
         allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
         if photo_file.content_type not in allowed_types:
             return JsonResponse({'success': False, 'error': 'Only JPEG, PNG, GIF, and WebP images are allowed.'}, status=400)
+
+        # Compress before saving
+        photo_file = _compress_photo(photo_file)
 
         photo = ItemPhoto.objects.create(
             item=item,
