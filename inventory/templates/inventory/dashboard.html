@@ -251,7 +251,7 @@
             background: var(--bg); padding: 12px 0;
         }
         .search-input {
-            flex: 1; padding: 10px 16px; padding-left: 40px;
+            width: 100%; padding: 10px 16px; padding-left: 40px;
             border: 0.5px solid var(--border); border-radius: 10px;
             font-size: 0.85rem; font-family: inherit;
             background: var(--input-bg); color: var(--text-primary);
@@ -262,7 +262,7 @@
             box-shadow: 0 0 0 3px var(--accent-light);
         }
         .search-input::placeholder { color: var(--text-tertiary); }
-        .search-wrap { position: relative; flex: 1; }
+        .search-wrap { position: relative; flex: 4; min-width: 400px; }
         .search-wrap .material-icons {
             position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
             font-size: 1.1rem; color: var(--text-tertiary);
@@ -618,6 +618,7 @@
             .tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
             .tab { white-space: nowrap; padding: 10px 14px; font-size: 0.78rem; }
             .filter-bar { flex-direction: column; top: 48px; }
+            .search-wrap { min-width: unset; width: 100%; }
             .table-container { display: none; }
             .mobile-cards { display: block; }
             .overdue-banner { font-size: 0.8rem; padding: 10px 14px; }
@@ -711,7 +712,6 @@
                     Scan QR
                 </button>
                 <button class="btn btn-purple" onclick="openMultiScan()">Multi-Scan</button>
-                <a class="btn btn-amber" href="/test-print/" target="_blank">Test Print</a>
             </div>
             <div class="toolbar-spacer"></div>
             <div class="toolbar-group">
