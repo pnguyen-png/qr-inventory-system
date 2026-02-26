@@ -963,8 +963,19 @@ def add_shipment(request):
     """Single-page form to create a new shipment (replaces Microsoft Form + Excel script)"""
     if request.method == 'GET':
         next_pallet = _next_pallet_id()
-        favorite_tags = list(Tag.objects.filter(favorite=True).values_list('name', flat=True))
-        other_tags = list(Tag.objects.filter(favorite=False).values_list('name', flat=True))
+        # Gather ALL known tags from both items and the Tag model
+        tag_favorites = {t.name: t.favorite for t in Tag.objects.all()}
+        # Also scan tags used on active items
+        all_tag_names = set(tag_favorites.keys())
+        for tags_str in InventoryItem.objects.filter(archived=False).values_list('tags', flat=True):
+            if tags_str:
+                for t in tags_str.split(','):
+                    t = t.strip()
+                    if t:
+                        all_tag_names.add(t)
+        # Split into favorites and others
+        favorite_tags = sorted([n for n in all_tag_names if tag_favorites.get(n, False)])
+        other_tags = sorted([n for n in all_tag_names if not tag_favorites.get(n, False)])
         return render(request, 'inventory/add_shipment.html', {
             'next_pallet_id': next_pallet,
             'location_choices': LOCATION_CHOICES,
