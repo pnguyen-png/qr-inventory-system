@@ -455,7 +455,7 @@ def export_csv(request):
 
     writer = csv.writer(response)
     writer.writerow([
-        'ID', 'Tag ID', 'Manufacturer', 'Pallet ID', 'Box ID', 'Contents', 'Damaged',
+        'Tag ID', 'Manufacturer', 'Pallet ID', 'Box ID', 'Contents', 'Damaged',
         'Location', 'Description', 'Tags', 'Status', 'Checked Out By', 'Checked Out At',
         'Created', 'Updated', 'Archived', 'Barcode Payload'
     ])
@@ -464,7 +464,6 @@ def export_csv(request):
 
     for item in items:
         writer.writerow([
-            item.id,
             item.tag_id,
             item.manufacturer,
             item.pallet_id,
