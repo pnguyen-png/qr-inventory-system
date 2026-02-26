@@ -236,6 +236,23 @@
         }
         .custom-tag-add:hover { background: var(--accent-hover); }
 
+        .tag-bank-toggle {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 6px 12px; border-radius: 999px; font-size: 0.78rem;
+            font-weight: 500; cursor: pointer; background: transparent;
+            color: var(--text-tertiary); border: 1px dashed var(--border);
+            transition: all 0.15s; user-select: none; font-family: inherit;
+        }
+        .tag-bank-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        .tag-bank-toggle .arrow { font-size: 0.65rem; transition: transform 0.2s; }
+        .tag-bank-toggle.open .arrow { transform: rotate(180deg); }
+        .tag-bank { display: none; margin-top: 8px; }
+        .tag-bank.open { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag-section-label {
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.04em; color: var(--text-tertiary); margin-bottom: 6px;
+        }
+
         /* ---- Nav links ---- */
         .nav-links { margin-top: 16px; text-align: center; padding-bottom: 32px; }
         .nav-links a {
@@ -364,15 +381,22 @@
                         <div class="form-group">
                             <label>Select Tags <span class="hint">(click to toggle)</span></label>
                             <div class="tag-chips" id="tagChips">
-                                <span class="tag-chip" data-tag="Standard" onclick="toggleTag(this)">Standard</span>
-                                <span class="tag-chip" data-tag="Initiating" onclick="toggleTag(this)">Initiating</span>
-                                <span class="tag-chip" data-tag="Target" onclick="toggleTag(this)">Target</span>
-                                <span class="tag-chip" data-tag="RP12" onclick="toggleTag(this)">RP12</span>
-                                <span class="tag-chip" data-tag="RP48" onclick="toggleTag(this)">RP48</span>
-                                <span class="tag-chip" data-tag="RP48-25kW" onclick="toggleTag(this)">RP48-25kW</span>
-                                <span class="tag-chip" data-tag="RP48-40kW" onclick="toggleTag(this)">RP48-40kW</span>
-                                <span class="tag-chip" data-tag="RP240" onclick="toggleTag(this)">RP240</span>
+                                {% for tag in favorite_tags %}
+                                <span class="tag-chip" data-tag="{{ tag }}" onclick="toggleTag(this)">{{ tag }}</span>
+                                {% endfor %}
                             </div>
+                            {% if other_tags %}
+                            <div style="margin-top: 10px;">
+                                <button type="button" class="tag-bank-toggle" onclick="toggleTagBank(this)">
+                                    More tags <span class="arrow">▼</span>
+                                </button>
+                                <div class="tag-bank" id="tagBank">
+                                    {% for tag in other_tags %}
+                                    <span class="tag-chip" data-tag="{{ tag }}" onclick="toggleTag(this)">{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
                             <div style="display:flex; gap:8px; margin-top:8px;">
                                 <input type="text" class="form-input" id="customTagInput" placeholder="Add custom tag..." style="flex:1;">
                                 <button type="button" onclick="addCustomTag()" class="custom-tag-add">Add</button>
@@ -458,6 +482,13 @@
             photoInput.files = e.dataTransfer.files;
             previewPhotos(photoInput);
         });
+
+        // ---- Tag bank toggle ----
+        function toggleTagBank(btn) {
+            btn.classList.toggle('open');
+            const bank = document.getElementById('tagBank');
+            bank.classList.toggle('open');
+        }
 
         // ---- Tag management ----
         function getSelectedTags() {

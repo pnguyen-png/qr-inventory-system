@@ -42,6 +42,7 @@ urlpatterns = [
     path('api/rename-tag/', views.rename_tag, name='rename_tag'),
     path('api/delete-tag/', views.delete_tag, name='delete_tag'),
     path('api/create-tag/', views.create_tag, name='create_tag'),
+    path('api/toggle-tag-favorite/', views.toggle_tag_favorite, name='toggle_tag_favorite'),
 
     # Next pallet ID
     path('api/next-pallet/', views.next_pallet_api, name='next_pallet'),
