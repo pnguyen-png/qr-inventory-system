@@ -963,9 +963,13 @@ def add_shipment(request):
     """Single-page form to create a new shipment (replaces Microsoft Form + Excel script)"""
     if request.method == 'GET':
         next_pallet = _next_pallet_id()
+        favorite_tags = list(Tag.objects.filter(favorite=True).values_list('name', flat=True))
+        other_tags = list(Tag.objects.filter(favorite=False).values_list('name', flat=True))
         return render(request, 'inventory/add_shipment.html', {
             'next_pallet_id': next_pallet,
             'location_choices': LOCATION_CHOICES,
+            'favorite_tags': favorite_tags,
+            'other_tags': other_tags,
         })
 
     # POST — process the form
@@ -1648,15 +1652,20 @@ def tag_management(request):
                     if tag not in tag_last_updated or (updated_at and updated_at > tag_last_updated[tag]):
                         tag_last_updated[tag] = updated_at
     # Include standalone tags from Tag model (0 items if not used yet)
+    # Also build a lookup for favorite status
+    tag_favorites = {}
     for standalone in Tag.objects.all():
+        tag_favorites[standalone.name] = standalone.favorite
         if standalone.name not in tag_counts:
             tag_counts[standalone.name] = 0
-    # Build list of dicts with name, count
+    # Build list of dicts with name, count, favorite
     tag_list = []
     for name, count in tag_counts.items():
         tag_list.append({
             'name': name,
             'count': count,
+            'favorite': tag_favorites.get(name, False),
+            'last_updated': tag_last_updated.get(name),
         })
     tag_list.sort(key=lambda x: (-x['count'], x['name']))
     # Split into top tags (top 5) and other tags
@@ -1736,6 +1745,24 @@ def create_tag(request):
 
         Tag.objects.create(name=tag_name)
         return JsonResponse({'success': True})
+    except Exception as e:
+        logger.exception("Unexpected error")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
+
+
+@require_http_methods(["POST"])
+def toggle_tag_favorite(request):
+    """Toggle the favorite status of a tag."""
+    try:
+        data = json.loads(request.body)
+        tag_name = data.get('tag_name', '').strip()
+        if not tag_name:
+            return JsonResponse({'success': False, 'error': 'Tag name is required.'}, status=400)
+
+        tag, created = Tag.objects.get_or_create(name=tag_name)
+        tag.favorite = not tag.favorite
+        tag.save()
+        return JsonResponse({'success': True, 'favorite': tag.favorite})
     except Exception as e:
         logger.exception("Unexpected error")
         return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)

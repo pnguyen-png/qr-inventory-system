@@ -158,6 +158,7 @@ class ScanLog(models.Model):
 class Tag(models.Model):
     """Standalone tag that can exist before being assigned to items."""
     name = models.CharField(max_length=255, unique=True)
+    favorite = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

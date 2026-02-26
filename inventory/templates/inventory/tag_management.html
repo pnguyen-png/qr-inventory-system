@@ -359,6 +359,31 @@
             color: var(--red);
             background: var(--red-bg);
         }
+        .btn-star {
+            width: 34px;
+            height: 34px;
+            border: 0.5px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+        .btn-star:hover {
+            border-color: var(--amber);
+            color: var(--amber);
+            background: var(--amber-bg);
+        }
+        .btn-star.active {
+            color: var(--amber);
+            border-color: var(--amber);
+            background: var(--amber-bg);
+        }
         .btn-icon svg {
             width: 16px;
             height: 16px;
@@ -602,6 +627,9 @@
                     </div>
                 </div>
                 <div class="tag-actions">
+                    <button class="btn-star{% if tag.favorite %} active{% endif %}" onclick="toggleFavorite('{{ tag.name|escapejs }}', this)" title="Toggle favorite">
+                        {% if tag.favorite %}★{% else %}☆{% endif %}
+                    </button>
                     <button class="btn-icon edit" onclick="openRenameModal('{{ tag.name|escapejs }}', {{ tag.count }})" title="Rename tag">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
@@ -630,6 +658,9 @@
                     </div>
                 </div>
                 <div class="tag-actions">
+                    <button class="btn-star{% if tag.favorite %} active{% endif %}" onclick="toggleFavorite('{{ tag.name|escapejs }}', this)" title="Toggle favorite">
+                        {% if tag.favorite %}★{% else %}☆{% endif %}
+                    </button>
                     <button class="btn-icon edit" onclick="openRenameModal('{{ tag.name|escapejs }}', {{ tag.count }})" title="Rename tag">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
@@ -729,6 +760,31 @@
                 toast.style.opacity = '0';
                 toast.style.pointerEvents = 'none';
             }, 3000);
+        }
+
+        // Toggle favorite
+        function toggleFavorite(tagName, btn) {
+            fetch('/api/toggle-tag-favorite/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({ tag_name: tagName })
+            })
+            .then(function(resp) { return resp.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    btn.classList.toggle('active', data.favorite);
+                    btn.textContent = data.favorite ? '\u2605' : '\u2606';
+                    showToast(data.favorite ? '"' + tagName + '" added to favorites' : '"' + tagName + '" removed from favorites');
+                } else {
+                    showToast('Error: ' + (data.error || 'Failed to toggle favorite'), true);
+                }
+            })
+            .catch(function() {
+                showToast('Network error. Please try again.', true);
+            });
         }
 
         // Layout toggle
