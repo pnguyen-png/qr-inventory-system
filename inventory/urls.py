@@ -64,9 +64,6 @@ urlpatterns = [
     # Pallet-specific QR download
     path('export/pallet-qr/<str:manufacturer>/<str:pallet_id>/', views.download_pallet_qr, name='download_pallet_qr'),
 
-    # Test print (temporary)
-    path('test-print/', views.test_print, name='test_print'),
-
     # Export
     path('export/qr-codes/', views.export_qr_codes, name='export_qr_codes'),
     path('export/csv/', views.export_csv, name='export_csv'),
