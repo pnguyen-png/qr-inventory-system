@@ -460,12 +460,9 @@
 
         /* ---- Responsive ---- */
         @media (max-width: 600px) {
-            .edit-row { grid-template-columns: 1fr; }
-            .item-card-header-inner { flex-direction: column; gap: 8px; }
-            .item-card-header-right { text-align: left; align-items: flex-start; }
             .btn-save-edit { width: 100%; text-align: center; }
-            .archive-bar { flex-direction: column; gap: 10px; align-items: flex-start; }
             .photos-grid { grid-template-columns: repeat(2, 1fr); }
+            .item-card-header h2 { font-size: 1rem; }
         }
     </style>
 </head>
@@ -565,15 +562,17 @@
                         <input type="hidden" id="editLocation" value="{{ item.location }}">
                     </div>
                     <div class="edit-group">
-                        <label>Description</label>
-                        <input type="text" class="edit-input" id="editDescription" value="{{ item.description }}">
-                    </div>
-                </div>
-                <div class="edit-row">
-                    <div class="edit-group">
                         <label>Project Number</label>
                         <input type="text" class="edit-input" id="editProjectNumber" value="{{ item.project_number }}">
                     </div>
+                </div>
+                <div class="edit-row" style="grid-template-columns:1fr;">
+                    <div class="edit-group">
+                        <label>Description</label>
+                        <textarea class="edit-input" id="editDescription" rows="3">{{ item.description }}</textarea>
+                    </div>
+                </div>
+                <div class="edit-row">
                     <div class="edit-group">
                         <label>Manufacturer / Supplier</label>
                         <input type="text" class="edit-input" id="editManufacturer" value="{{ item.manufacturer }}">
