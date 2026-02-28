@@ -157,7 +157,18 @@
         }
         .item-card-header-right {
             text-align: right; flex-shrink: 0;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
         }
+        .btn-print-qr {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 6px 14px; border-radius: 10px; font-size: 0.7rem;
+            font-weight: 600; font-family: inherit; cursor: pointer;
+            background: var(--text-primary); color: var(--card-bg);
+            border: none; transition: opacity 0.2s; white-space: nowrap;
+        }
+        .btn-print-qr:hover { opacity: 0.8; }
+        .btn-print-qr:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-print-qr .material-icons { font-size: 14px; }
 
         /* ---- Tabs ---- */
         .tab-bar {
@@ -245,25 +256,6 @@
             display: inline-block; padding: 4px 12px; border-radius: 999px;
             font-size: 0.7rem; font-weight: 600;
             background: var(--accent-light); color: var(--accent);
-        }
-
-        /* ---- QR Code ---- */
-        .qr-section {
-            padding: 20px; border-top: 0.5px solid var(--border-light); text-align: center;
-        }
-        .qr-section h3 {
-            font-size: 0.8rem; font-weight: 600; margin-bottom: 12px;
-            color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em;
-        }
-        .qr-code-img {
-            border: 0.5px solid var(--border-light); border-radius: 10px; padding: 8px;
-            background: var(--card-bg); cursor: pointer;
-            max-width: 100%; height: auto; transition: border-color 0.2s;
-        }
-        .qr-code-img:hover { border-color: var(--accent); }
-        .qr-caption {
-            margin-top: 8px; font-size: 0.8rem; font-weight: 500;
-            color: var(--text-secondary); line-height: 1.5;
         }
 
         /* ---- Photos section ---- */
@@ -571,6 +563,9 @@
                         {% if scan_count %}
                         <div class="scan-count">Scanned {{ scan_count }} time{{ scan_count|pluralize }}</div>
                         {% endif %}
+                        <button class="btn-print-qr" id="btnPrintQR" onclick="printQRCode({{ item.id }})">
+                            <span class="material-icons">print</span> Print QR
+                        </button>
                     </div>
                 </div>
             </div>
@@ -646,15 +641,6 @@
                 </div>
             </div>
             {% endif %}
-
-            <div class="qr-section">
-                <h3>QR Code</h3>
-                <img class="qr-code-img" src="{{ item.short_qr_url }}" alt="QR Code for {{ item.manufacturer }} Box #{{ item.box_id }}">
-                <div class="qr-caption">
-                    {{ item.manufacturer }}<br>
-                    Pallet {{ item.pallet_id }} &bull; Box #{{ item.box_id }}
-                </div>
-            </div>
 
             <!-- Photos -->
             <div class="photos-section">
@@ -864,6 +850,32 @@
                 });
             }
             return v;
+        }
+
+        // ---- Print QR Code ----
+        async function printQRCode(itemId) {
+            const btn = document.getElementById('btnPrintQR');
+            const origHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-icons">hourglass_empty</span> Sending...';
+            try {
+                const res = await fetch('/api/print-jobs/create/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+                    body: JSON.stringify({item_ids: [itemId]})
+                });
+                const data = await res.json();
+                if (data.success) {
+                    btn.innerHTML = '<span class="material-icons">check</span> Sent to Printer';
+                    setTimeout(() => { btn.innerHTML = origHTML; btn.disabled = false; }, 3000);
+                } else {
+                    btn.innerHTML = '<span class="material-icons">error_outline</span> Failed';
+                    setTimeout(() => { btn.innerHTML = origHTML; btn.disabled = false; }, 3000);
+                }
+            } catch (e) {
+                btn.innerHTML = '<span class="material-icons">error_outline</span> Error';
+                setTimeout(() => { btn.innerHTML = origHTML; btn.disabled = false; }, 3000);
+            }
         }
 
         // ---- Tab switching ----
