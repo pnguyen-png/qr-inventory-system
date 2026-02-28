@@ -232,8 +232,17 @@ def scanner_landing(request):
             reverse=True,
         )
 
-        preset_tags = ['Standard', 'Initiating', 'Target', 'RP12', 'RP48',
-                       'RP48-25kW', 'RP48-40kW', 'RP240']
+        # Gather ALL known tags from both items and the Tag model
+        tag_favorites = {t.name: t.favorite for t in Tag.objects.all()}
+        all_tag_names = set(tag_favorites.keys())
+        for tags_str in InventoryItem.objects.filter(archived=False).values_list('tags', flat=True):
+            if tags_str:
+                for t in tags_str.split(','):
+                    t = t.strip()
+                    if t:
+                        all_tag_names.add(t)
+        favorite_tags = sorted([n for n in all_tag_names if tag_favorites.get(n, False)])
+        other_tags = sorted([n for n in all_tag_names if not tag_favorites.get(n, False)])
 
         return render(request, 'inventory/scanner_landing.html', {
             'item': item,
@@ -243,7 +252,8 @@ def scanner_landing(request):
             'photos': photos,
             'scan_count': scan_count,
             'location_choices': LOCATION_CHOICES,
-            'preset_tags': preset_tags,
+            'favorite_tags': favorite_tags,
+            'other_tags': other_tags,
             'error': None
         })
 
@@ -1130,12 +1140,30 @@ def add_shipment(request):
                     errors.append(f'Invalid damaged box number: "{part}".')
 
     if errors:
+        # Re-gather tags for the form on error re-render
+        tag_favorites = {t.name: t.favorite for t in Tag.objects.all()}
+        all_tag_names = set(tag_favorites.keys())
+        for tags_str in InventoryItem.objects.filter(archived=False).values_list('tags', flat=True):
+            if tags_str:
+                for t in tags_str.split(','):
+                    t = t.strip()
+                    if t:
+                        all_tag_names.add(t)
+        favorite_tags = sorted([n for n in all_tag_names if tag_favorites.get(n, False)])
+        other_tags = sorted([n for n in all_tag_names if not tag_favorites.get(n, False)])
         return render(request, 'inventory/add_shipment.html', {
             'errors': errors,
             'form_data': form_data,
             'next_pallet_id': pallet_id,
             'location_choices': LOCATION_CHOICES,
+            'favorite_tags': favorite_tags,
+            'other_tags': other_tags,
         })
+
+    # Auto-sync: ensure each tag exists in the Tag model
+    if tags:
+        for t in (t.strip() for t in tags.split(',') if t.strip()):
+            Tag.objects.get_or_create(name=t)
 
     # Create items
     base_url = os.environ.get("SITE_URL", "https://web-production-57c20.up.railway.app")
@@ -1363,6 +1391,9 @@ def edit_item(request):
                     item.qr_url = _get_short_qr_url(item.id)
         if 'tags' in data:
             item.tags = data['tags']
+            # Auto-sync: ensure each tag exists in the Tag model
+            for t in (t.strip() for t in data['tags'].split(',') if t.strip()):
+                Tag.objects.get_or_create(name=t)
 
         # Handle status change within edit (requires Save Changes to log)
         status_changed = False
