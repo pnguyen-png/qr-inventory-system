@@ -215,48 +215,7 @@
             font-weight: 500;
         }
 
-        /* ---- Detail grid ---- */
-        .detail-grid {
-            display: grid; grid-template-columns: 1fr 1fr;
-            gap: 0; border-top: 0.5px solid var(--border-light);
-        }
-        .detail-cell {
-            padding: 14px 20px;
-            border-bottom: 0.5px solid var(--border-light);
-        }
-        .detail-cell:nth-child(odd) {
-            border-right: 0.5px solid var(--border-light);
-        }
-        .detail-cell label {
-            display: block; font-size: 0.65rem; text-transform: uppercase;
-            letter-spacing: 0.06em; color: var(--text-tertiary); margin-bottom: 4px;
-            font-weight: 600;
-        }
-        .detail-cell .value {
-            font-size: 0.9rem; font-weight: 500; color: var(--text-primary);
-        }
-        .damage-yes { color: var(--red-text); font-weight: 700; }
-        .damage-no { color: var(--green-text); }
-
-        /* ---- Description section ---- */
-        .description-section {
-            padding: 16px 20px; border-top: 0.5px solid var(--border-light);
-        }
-        .description-section label {
-            display: block; font-size: 0.65rem; text-transform: uppercase;
-            letter-spacing: 0.06em; color: var(--text-tertiary); margin-bottom: 6px;
-            font-weight: 600;
-        }
-        .description-section p {
-            font-size: 0.9rem; line-height: 1.5; color: var(--text-primary);
-        }
-
-        /* ---- Tags ---- */
-        .tag-display-chip {
-            display: inline-block; padding: 4px 12px; border-radius: 999px;
-            font-size: 0.7rem; font-weight: 600;
-            background: var(--accent-light); color: var(--accent);
-        }
+        /* (detail grid and description section removed — merged into edit form) */
 
         /* ---- Photos section ---- */
         .photos-section {
@@ -501,11 +460,9 @@
 
         /* ---- Responsive ---- */
         @media (max-width: 600px) {
-            .detail-grid { grid-template-columns: 1fr; }
-            .detail-cell:nth-child(odd) { border-right: none; }
             .edit-row { grid-template-columns: 1fr; }
             .item-card-header-inner { flex-direction: column; gap: 8px; }
-            .item-card-header-right { text-align: left; }
+            .item-card-header-right { text-align: left; align-items: flex-start; }
             .btn-save-edit { width: 100%; text-align: center; }
             .archive-bar { flex-direction: column; gap: 10px; align-items: flex-start; }
             .photos-grid { grid-template-columns: repeat(2, 1fr); }
@@ -554,7 +511,7 @@
                 <div class="item-card-header-inner">
                     <div>
                         <h2>{{ item.manufacturer }} - Box {{ item.box_id }}</h2>
-                        <div class="subtitle">Pallet: {{ item.pallet_id }}</div>
+                        <div class="subtitle">Pallet: {{ item.pallet_id }} &bull; Tag: {{ item.tag_id }}</div>
                     </div>
                     <div class="item-card-header-right">
                         <span class="status-badge status-{{ item.status }}" id="statusBadge">
@@ -577,96 +534,7 @@
             </div>
             {% endif %}
 
-            <div class="detail-grid">
-                <div class="detail-cell">
-                    <label>Manufacturer / Supplier</label>
-                    <div class="value">{{ item.manufacturer }}</div>
-                </div>
-                <div class="detail-cell">
-                    <label>Pallet ID</label>
-                    <div class="value">{{ item.pallet_id }}</div>
-                </div>
-                <div class="detail-cell">
-                    <label>Box ID</label>
-                    <div class="value">#{{ item.box_id }}</div>
-                </div>
-                <div class="detail-cell">
-                    <label>Tag ID</label>
-                    <div class="value" style="font-weight:700; color:var(--accent);">{{ item.tag_id }}</div>
-                </div>
-                <div class="detail-cell">
-                    <label>Contents (qty)</label>
-                    <div class="value">{{ item.content }}</div>
-                </div>
-                <div class="detail-cell">
-                    <label>Project Number</label>
-                    <div class="value">{{ item.project_number|default:"-" }}</div>
-                </div>
-                <div class="detail-cell">
-                    <label>Receiving Location</label>
-                    <div class="value">{{ item.location }}</div>
-                </div>
-                <div class="detail-cell">
-                    <label>Damage Reported</label>
-                    <div class="value {% if item.damaged %}damage-yes{% else %}damage-no{% endif %}">
-                        {{ item.get_damaged_display }}
-                    </div>
-                </div>
-                {% if item.checked_out_by %}
-                <div class="detail-cell">
-                    <label>Checked Out By</label>
-                    <div class="value">{{ item.checked_out_by }}</div>
-                </div>
-                <div class="detail-cell">
-                    <label>Checked Out Since</label>
-                    <div class="value">{{ item.checked_out_at|date:"M d, Y H:i" }}</div>
-                </div>
-                {% endif %}
-            </div>
-
-            {% if item.description %}
-            <div class="description-section">
-                <label>Brief Description of Shipment</label>
-                <p>{{ item.description }}</p>
-            </div>
-            {% endif %}
-
-            {% if item.tags %}
-            <div class="description-section">
-                <label>Tags</label>
-                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
-                    {% for tag in item.tags_list %}
-                    <span class="tag-display-chip">{{ tag }}</span>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Photos -->
-            <div class="photos-section">
-                <h3>Photos</h3>
-                <div class="photos-grid" id="photosGrid">
-                    {% for photo in photos %}
-                    <div class="photo-card" id="photo-{{ photo.id }}">
-                        <img src="{{ photo.image.url }}" alt="{{ photo.caption }}"
-                             onclick="window.open('{{ photo.image.url }}', '_blank')">
-                        <button class="photo-delete" onclick="deletePhoto({{ photo.id }})" title="Delete photo">&times;</button>
-                        {% if photo.caption %}<div class="photo-caption">{{ photo.caption }}</div>{% endif %}
-                    </div>
-                    {% empty %}
-                    <p class="no-photos-msg">No photos yet.</p>
-                    {% endfor %}
-                </div>
-                <div class="photo-upload-inline" onclick="document.getElementById('itemPhotoInput').click();">
-                    <div class="icon">&#128247;</div>
-                    <p>Click to upload a photo</p>
-                </div>
-                <input type="file" id="itemPhotoInput" accept="image/*" style="display:none;" onchange="uploadItemPhoto({{ item.id }})">
-                <div class="upload-progress" id="uploadProgress">Uploading...</div>
-            </div>
-
             <div class="edit-section">
-                <h3>Edit Details &amp; Update Status</h3>
                 <div class="edit-row">
                     <div class="edit-group">
                         <label>Contents (Qty)</label>
@@ -763,6 +631,29 @@
 
                 <button class="btn-save-edit" id="btnSaveEdit" onclick="saveEdit({{ item.id }})">Save Changes</button>
                 <div class="edit-message" id="editMessage"></div>
+            </div>
+
+            <!-- Photos -->
+            <div class="photos-section">
+                <h3>Photos</h3>
+                <div class="photos-grid" id="photosGrid">
+                    {% for photo in photos %}
+                    <div class="photo-card" id="photo-{{ photo.id }}">
+                        <img src="{{ photo.image.url }}" alt="{{ photo.caption }}"
+                             onclick="window.open('{{ photo.image.url }}', '_blank')">
+                        <button class="photo-delete" onclick="deletePhoto({{ photo.id }})" title="Delete photo">&times;</button>
+                        {% if photo.caption %}<div class="photo-caption">{{ photo.caption }}</div>{% endif %}
+                    </div>
+                    {% empty %}
+                    <p class="no-photos-msg">No photos yet.</p>
+                    {% endfor %}
+                </div>
+                <div class="photo-upload-inline" onclick="document.getElementById('itemPhotoInput').click();">
+                    <div class="icon">&#128247;</div>
+                    <p>Click to upload a photo</p>
+                </div>
+                <input type="file" id="itemPhotoInput" accept="image/*" style="display:none;" onchange="uploadItemPhoto({{ item.id }})">
+                <div class="upload-progress" id="uploadProgress">Uploading...</div>
             </div>
 
             <!-- Archive -->
