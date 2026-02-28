@@ -714,17 +714,17 @@
                 <div class="edit-group" style="margin-top:12px;">
                     <label>Tags / Keywords</label>
                     <div class="tag-chips" id="tagChips">
-                        {% for tag in favorite_tags %}
-                        <span class="tag-chip" data-tag="{{ tag }}" onclick="toggleTag(this)">{{ tag }}</span>
+                        {% for tag in assigned_tags %}
+                        <span class="tag-chip active" data-tag="{{ tag }}" onclick="toggleTag(this)">{{ tag }}</span>
                         {% endfor %}
                     </div>
-                    {% if other_tags %}
+                    {% if more_tags %}
                     <div style="margin-top: 10px;">
                         <button type="button" class="tag-bank-toggle" onclick="toggleTagBank(this)">
                             More tags <span class="arrow">&#9660;</span>
                         </button>
                         <div class="tag-bank" id="tagBank">
-                            {% for tag in other_tags %}
+                            {% for tag in more_tags %}
                             <span class="tag-chip" data-tag="{{ tag }}" onclick="toggleTag(this)">{{ tag }}</span>
                             {% endfor %}
                         </div>

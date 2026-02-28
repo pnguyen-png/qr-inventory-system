@@ -233,16 +233,17 @@ def scanner_landing(request):
         )
 
         # Gather ALL known tags from both items and the Tag model
-        tag_favorites = {t.name: t.favorite for t in Tag.objects.all()}
-        all_tag_names = set(tag_favorites.keys())
+        all_tag_names = set(t.name for t in Tag.objects.all())
         for tags_str in InventoryItem.objects.filter(archived=False).values_list('tags', flat=True):
             if tags_str:
                 for t in tags_str.split(','):
                     t = t.strip()
                     if t:
                         all_tag_names.add(t)
-        favorite_tags = sorted([n for n in all_tag_names if tag_favorites.get(n, False)])
-        other_tags = sorted([n for n in all_tag_names if not tag_favorites.get(n, False)])
+        # Split: item's assigned tags shown at top, everything else in "More tags"
+        item_tags = set(item.tags_list)
+        assigned_tags = sorted(item_tags)
+        more_tags = sorted(all_tag_names - item_tags)
 
         return render(request, 'inventory/scanner_landing.html', {
             'item': item,
@@ -252,8 +253,8 @@ def scanner_landing(request):
             'photos': photos,
             'scan_count': scan_count,
             'location_choices': LOCATION_CHOICES,
-            'favorite_tags': favorite_tags,
-            'other_tags': other_tags,
+            'assigned_tags': assigned_tags,
+            'more_tags': more_tags,
             'error': None
         })
 
